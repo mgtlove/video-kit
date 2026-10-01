@@ -1,0 +1,50 @@
+/* video-kit engine styles: structure and motion only. Every colour and face is a
+   token in the video's theme.css; nothing here names a colour. */
+
+html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
+#fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--stage);
+  color:var(--ink);font-family:var(--head);transform-origin:center center}
+#cam{position:absolute;inset:0;transform-origin:0 0;transition:transform 1.4s cubic-bezier(.4,0,.2,1)}
+#stage.snap *,#stage.snap{transition:none !important;animation-duration:0s !important}
+
+/* ---- scenes: one visible at a time ---- */
+.scene{position:absolute;inset:0;padding:110px 170px;box-sizing:border-box;opacity:0;transition:opacity .5s;pointer-events:none}
+.scene.on{opacity:1}
+.kick{font-size:24px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:28px}
+.big{font-size:88px;font-weight:800;line-height:1.1;margin:0 0 20px;max-width:1500px}
+.sub{font-size:36px;font-weight:600;line-height:1.35;color:var(--muted);max-width:1500px}
+
+/* ---- elements that arrive on a beat ---- */
+.card,.room,.who,.row{opacity:0;transform:translateY(14px);transition:opacity .45s,transform .45s}
+.card.on,.room.on,.who.on,.row.on{opacity:1;transform:none}
+.cards{display:flex;gap:40px;margin-top:34px}
+.card{flex:1;padding:34px 38px;border-radius:12px;background:var(--card-fill)}
+.card .n{font-size:46px;font-weight:800;margin-bottom:12px}
+.card .t{font-size:28px;line-height:1.4;color:var(--dim)}
+
+/* ---- the recreated screen: its box is the video's; the engine only fades it ---- */
+#mock{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .6s;overflow:hidden}
+#mock.on{opacity:1}
+#stage .hl{outline:4px solid var(--hi);outline-offset:6px;border-radius:8px;box-shadow:0 0 0 12px var(--hi-bg)}
+
+/* ---- the card that explains, placed beside its element by the engine ---- */
+#card{position:absolute;z-index:45;left:0;top:0;width:400px;padding:22px 24px;border-radius:12px;box-sizing:border-box;
+  background:var(--panel);border:1px solid var(--panel-bd);border-left:5px solid var(--accent);color:var(--ink);
+  box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s}
+#card.on{opacity:1;transform:none}
+#card .kick{font-size:15px;margin-bottom:10px}
+#card .body{font-size:28px;font-weight:700;line-height:1.4}
+
+/* ---- fade, grain, hud, start panel ---- */
+#fade{position:absolute;inset:0;z-index:95;background:var(--stage);opacity:1;transition:opacity 1s;pointer-events:none}
+#fade.clear{opacity:0}
+#stage::after{content:"";position:absolute;inset:0;z-index:90;pointer-events:none;opacity:var(--grain,0);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+#hud{position:fixed;left:12px;bottom:10px;z-index:120;font:14px monospace;color:var(--ink);opacity:.6}
+#ui{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--scrim);transition:.3s}
+#ui.gone{opacity:0;pointer-events:none}
+#panel{background:var(--panel);border:1px solid var(--panel-bd);border-radius:14px;padding:28px 32px;max-width:640px;color:var(--ink);font-family:var(--head)}
+#panel h1{margin:0 0 10px;font-size:26px}
+#panel p{margin:8px 0;font-size:16px;line-height:1.5;color:var(--muted)}
+#panel button{margin-top:14px;font-size:18px;font-weight:700;padding:12px 22px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);cursor:pointer}

@@ -5,10 +5,18 @@
   "description": "Training videos from screenshots and a script: a seekable HTML rig, rendered frame by frame, checked before anyone records anything.",
   "author": "Matthew Truelove",
   "license": "MIT",
-  "workspaces": ["packages/*"],
-  "engines": { "node": ">=18" },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "vk": "node packages/cli/bin/vk.js",
-    "test": "node --test packages/core/test"
+    "vkit": "node packages/cli/bin/vkit.js",
+    "test": "node --test packages/core/test/*.test.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1",
+    "pngjs": "7.0.0"
   }
 }

@@ -1,0 +1,121 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{{NAME}}</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="engine/rig.css">
+<style>
+/* ---- this video's own layout. Sizes here; colours in theme.css. ---- */
+.word{display:inline-block;font-size:120px;font-weight:900;line-height:1;margin-bottom:10px}
+.rooms{margin-top:30px;width:1500px}
+.row{display:flex;align-items:center;gap:30px;padding:16px 28px;border-radius:12px;margin-bottom:16px;background:var(--card-fill)}
+.row .lab{font-size:28px;font-weight:800;min-width:160px;letter-spacing:.08em}
+.row .t{font-size:30px;color:var(--dim)}
+/* ---- the recreated screen: a PLACEHOLDER. Replace from captures; keep the ids. ---- */
+#mock{background:var(--p-ground);color:var(--p-strong);font-family:var(--p-ui)}
+#mock .bar{height:64px;background:var(--p-surface);border-bottom:1px solid var(--p-border);display:flex;align-items:center;gap:36px;padding:0 40px;font-weight:600;color:var(--p-body)}
+#mock .bar b{color:var(--p-accent)}
+#mock .body{display:grid;grid-template-columns:260px 1fr;height:1016px}
+#mock .nav{background:var(--p-surface);border-right:1px solid var(--p-border);padding:24px 0}
+#mock .nav div{padding:12px 32px;color:var(--p-body);font-size:18px}
+#mock .nav div.cur{color:var(--p-accent);font-weight:700;border-left:4px solid var(--p-accent)}
+#mock .work{padding:40px 56px}
+#mock h1{font-size:30px;margin:0 0 28px}
+.frow{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:12px 8px;border-radius:8px;max-width:900px;font-size:18px}
+.flab{color:var(--p-muted);text-align:right;padding-top:10px}
+.f{border:1px solid var(--p-border);border-radius:8px;background:var(--p-surface);padding:12px 14px;min-height:22px;color:var(--p-strong)}
+</style></head>
+<body>
+<div id="fit"><div id="stage"><div id="cam">
+
+  <!-- concept opener -->
+  <div class="scene" id="s-open">
+    <div class="kick" id="k1"></div>
+    <div class="word" id="w1"></div>
+    <p class="big" id="b1"></p>
+    <p class="sub" id="u1"></p>
+  </div>
+
+  <!-- three cards -->
+  <div class="scene" id="s-cards">
+    <div class="kick" id="k2"></div>
+    <p class="big" id="b2"></p>
+    <div class="cards">
+      <div class="card" id="cardA"><div class="n" id="nA" style="color:var(--kind-a)"></div><div class="t" id="tA"></div></div>
+      <div class="card" id="cardB"><div class="n" id="nB" style="color:var(--kind-b)"></div><div class="t" id="tB"></div></div>
+      <div class="card" id="cardC"><div class="n" id="nC" style="color:var(--kind-c)"></div><div class="t" id="tC"></div></div>
+    </div>
+  </div>
+
+  <!-- the recreated screen -->
+  <div id="mock">
+    <div class="bar"><b>Placeholder app</b><span>Work items</span><span>Library</span></div>
+    <div class="body">
+      <div class="nav"><div class="cur">Setup</div><div>Review</div><div>History</div></div>
+      <div class="work">
+        <h1>Sample work item</h1>
+        <div class="frow" id="r1"><div class="flab">Category</div><div class="f" id="f1"></div></div>
+        <div class="frow" id="r2"><div class="flab">Priority</div><div class="f" id="f2">High</div></div>
+        <div class="frow" id="r3"><div class="flab">Summary</div><div class="f" id="f3">Placeholder summary</div></div>
+        <div class="frow" id="r4"><div class="flab">Outcome</div><div class="f" id="f4">Standard</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /cam -->
+  <aside id="card"><div class="kick"></div><div class="body"></div></aside>
+  <div id="fade"></div>
+</div></div>
+
+<div id="hud"></div>
+<div id="ui"><div id="panel">
+  <h1 id="title"></h1><p id="subtitle"></p><p id="pre"></p>
+  <p>S or Space starts. Space pauses. 1 to 9 jumps to a part. R restarts.</p>
+  <button id="start">Start</button>
+</div></div>
+
+<script src="engine/rig.js"></script>
+<script>
+/* ====== PARTS: one entry per voice clip, the exact measured length. `vkit measure` prints the line. ====== */
+var PARTS = [24, 26, 18];   /* ESTIMATES until the clips are measured */
+
+/* ====== COPY: every word on screen, in one place ====== */
+var COPY = {
+  title: "{{NAME}}",
+  subtitle: "Three parts, one continuous run. Press Start, let it play through.",
+  cardKicker: "What to notice",
+  kick1: "Placeholder studio · Lesson 1", word1: "Category.", big1: "Now what does that mean?",
+  sub1: "It was not picked out of the air. Each of the three has a definition.",
+  kick2: "The three kinds", big2: "Three words, three definitions.",
+  cards: [["Alpha", "The simplest kind. One person, one step."], ["Beta", "Adds a review before it moves on."], ["Gamma", "Adds the other team, because it reaches past yours."]],
+  cardField: "Category, on the record", cardOutcome: "The system returns the outcome"
+};
+function copy() {
+  var t = function (id, v) { document.getElementById(id).textContent = v; };
+  t('title', COPY.title); t('subtitle', COPY.subtitle);
+  t('k1', COPY.kick1); t('w1', COPY.word1); t('b1', COPY.big1); t('u1', COPY.sub1);
+  t('k2', COPY.kick2); t('b2', COPY.big2);
+  t('nA', COPY.cards[0][0]); t('tA', COPY.cards[0][1]); t('nB', COPY.cards[1][0]); t('tB', COPY.cards[1][1]); t('nC', COPY.cards[2][0]); t('tC', COPY.cards[2][1]);
+}
+
+/* ====== TIMELINE: one at() per sentence, offset from its part's start, the sentence in the comment ====== */
+function timeline() {
+  var t1 = P(0), t2 = P(1), t3 = P(2);
+  at(0.02, function () { fade(true); });
+
+  at(t1 + 0.2, function () { scene('s-open'); });                        /* "Every task starts somewhere."  0.0 */
+  at(t1 + 6.0, function () { scene('s-cards'); });                       /* "There are three kinds."  6.2 */
+  at(t1 + 11.0, function () { show('cardA'); });                         /* "Alpha is the simplest."  11.1 */
+  at(t1 + 15.0, function () { show('cardB'); });                         /* "Beta adds a review."  15.0 */
+  at(t1 + 19.0, function () { show('cardC'); });                         /* "Gamma adds the other team."  19.2 */
+
+  at(t2 + 0.2, function () { scene(null); show('mock'); });              /* "Here is where you set it."  0.0 */
+  at(t2 + 4.0, function () { focusEl('r1', 1.3, 40, -120); card(COPY.cardField, 'r1'); });   /* "The category field is where it starts."  4.1 */
+  at(t2 + 9.0, function () { document.getElementById('r1').classList.add('hl'); });          /* "Set it here."  9.0 */
+  at(t2 + 14.0, function () { document.getElementById('r1').classList.remove('hl'); travel('r4', 1.3, 30, -120); card(COPY.cardOutcome, 'r4'); });  /* "And the outcome is what comes back."  14.1 */
+  at(t2 + 21.0, function () { card(null); ease(3.2); home(); });         /* "That is the whole loop."  21.0 */
+
+  at(t3 + 0.2, function () { scene('s-open'); show('mock', true); });    /* "So, one more time."  0.0 */
+  at(VK.total() + 1.5, function () { fade(false); });                    /* hold, then black */
+}
+
+VK.boot();
+</script>
+</body></html>

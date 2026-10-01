@@ -1,5 +1,6 @@
 node_modules/
-*/rig/_frames/
-*/_frames/
+**/rig/_frames/
+**/rig/_playback/
+**/rig/_seek/
 *.mp4
 .DS_Store

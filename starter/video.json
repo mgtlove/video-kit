@@ -1,0 +1,11 @@
+{
+  "name": "{{NAME}}",
+  "engine": "{{ENGINE}}",
+  "created_on": "{{DATE}}",
+  "menu": {{MENU}},
+  "parts": { "part_seconds": [], "measured_on": "" },
+  "voice": { "route": "", "provider": "", "clips_generated_on": "" },
+  "render": { "fps": 30, "rendered_on": "", "machine": "" },
+  "publish": { "host": "", "url": "", "embed_url": "", "published_on": "" },
+  "edits": []
+}

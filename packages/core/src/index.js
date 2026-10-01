@@ -2,9 +2,11 @@
 // server and any app call these functions. Nothing here reads argv, prints,
 // or knows which shell is calling.
 //
-// Status: skeleton. Each export below is a contract; the body lands with its
-// frame proof, in the order docs/ROADMAP.md gives.
+// Each export is a contract; a body lands with its frame proof, in the order
+// docs/ROADMAP.md gives. notBuilt marks the ones still to come.
 
+const { newVideo } = require('./new');
+const { frames } = require('./frames');
 const voice = require('./adapters/voice');
 const render = require('./adapters/render');
 const script = require('./adapters/script');
@@ -16,11 +18,11 @@ function notBuilt(name) {
 
 module.exports = {
   // a video is a folder; these take its path
-  newVideo: notBuilt('newVideo'),            // copy starter/, write video.json with menu defaults
+  newVideo: newVideo,                        // copy starter/, engine in at this version, video.json with menu defaults
   menu: notBuilt('menu'),                    // read and write video.json.menu; list looks, patterns, brands
   narration: notBuilt('narration'),          // parts -> FULL.md, lengths, limits
   measure: notBuilt('measure'),              // clip files -> exact PART_SECONDS
-  frames: notBuilt('frames'),                // rig -> a PNG per beat (seek-correct)
+  frames: frames,                            // rig -> a PNG per beat (seek-correct)
   renderVideo: notBuilt('renderVideo'),      // rig -> every frame at 30 fps -> mux with clips -> MP4
   check: notBuilt('check'),                  // offline, deterministic, seekable, seek-correct; craft rules; brand contrast
   brand: notBuilt('brand'),                  // brand.json -> brand.css; report

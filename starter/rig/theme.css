@@ -1,0 +1,31 @@
+/* theme.css: the whole look of this video. Change a value here and every scene
+   follows. Two scopes, never merged: the teaching layer under :root is yours;
+   the recreated screen under #mock keeps the real product's palette and is
+   never restyled, because a viewer has to recognise it.
+   A brand (rig/brand/brand.json, when one is applied) sets --brand-* tokens
+   that these read first. */
+:root{
+  --head:var(--brand-font-display,"Segoe UI",Arial,sans-serif);
+  --stage:var(--brand-ground,#1c1e1d);
+  --ink:var(--brand-ink,#f5f6f4);
+  --muted:#aeb6b2;
+  --dim:#c6ccc9;
+  --accent:var(--brand-primary,#00b097);
+  --accent-ink:var(--brand-primary-ink,#00211d);
+  --hi:var(--brand-highlight,#ffb000);
+  --hi-bg:#ffb00066;
+  --kind-a:var(--brand-primary,#4ecf9d);
+  --kind-b:var(--brand-secondary,#ffb14e);
+  --kind-c:var(--brand-tertiary,#ff6b5e);
+  --card-fill:#ffffff08;
+  --panel:#101211ee;
+  --panel-bd:#ffffff22;
+  --scrim:#1c1e1dd9;
+  --shadow:0 10px 44px #00000077;
+  --grain:0;
+}
+/* the recreated screen: a placeholder palette until captures replace it */
+#mock{
+  --p-ui:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --p-ground:#f4f2fc;--p-surface:#ffffff;--p-border:#e2e4ea;--p-strong:#3b3f46;--p-body:#616874;--p-muted:#898e99;--p-accent:#5b5bd6;
+}
