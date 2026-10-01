@@ -1,0 +1,5 @@
+node_modules/
+*/rig/_frames/
+*/_frames/
+*.mp4
+.DS_Store

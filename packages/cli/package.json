@@ -1,0 +1,8 @@
+{
+  "name": "@video-kit/cli",
+  "version": "0.0.1",
+  "description": "vk: one command per step. Each command is a few lines that call @video-kit/core.",
+  "bin": { "vk": "bin/vk.js" },
+  "license": "MIT",
+  "dependencies": { "@video-kit/core": "0.0.1" }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "video-kit",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Training videos from screenshots and a script: a seekable HTML rig, rendered frame by frame, checked before anyone records anything.",
+  "author": "Matthew Truelove",
+  "license": "MIT",
+  "workspaces": ["packages/*"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "vk": "node packages/cli/bin/vk.js",
+    "test": "node --test packages/core/test"
+  }
+}

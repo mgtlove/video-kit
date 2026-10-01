@@ -1,0 +1,7 @@
+{
+  "name": "@video-kit/core",
+  "version": "0.0.1",
+  "description": "The library: clock and seek, camera, strokes, walkthrough, render, mux, measure, check, brand, looks, menu. Every shell calls these functions; none of them knows about a shell.",
+  "main": "src/index.js",
+  "license": "MIT"
+}
