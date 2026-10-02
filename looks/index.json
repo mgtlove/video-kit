@@ -1,0 +1,134 @@
+{
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/looks.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file."
+  },
+  "looks": [
+    {
+      "name": "lightboard",
+      "after": "styles/ibm-technology-lightboard.md",
+      "ground": "#0b0b0d",
+      "ink": "#f2f2f2",
+      "paper": null,
+      "accents": [
+        "#b892ff",
+        "#6fe3ff",
+        "#ff7ad9"
+      ],
+      "voice": "a colleague at the board, plain declaratives, one thesis line repeated",
+      "sceneKinds": [
+        "concept opener",
+        "diagram",
+        "cards and rooms"
+      ],
+      "file": "looks/lightboard.json"
+    },
+    {
+      "name": "code-report",
+      "after": "styles/fireship-code-report.md",
+      "ground": "#0d0d0d",
+      "ink": "#f4f4f4",
+      "paper": "#161616",
+      "accents": [
+        "#ff3b3b",
+        "#37e07a",
+        "#ffb020"
+      ],
+      "voice": "first person, present tense, dry, a verdict with numbers",
+      "sceneKinds": [
+        "concept opener",
+        "real chrome",
+        "diagram"
+      ],
+      "file": "looks/code-report.json"
+    },
+    {
+      "name": "studio-walkthrough",
+      "after": "styles/aws-developers-studio-walkthrough.md",
+      "ground": "#14161c",
+      "ink": "#ffffff",
+      "paper": "#1c1f27",
+      "accents": [
+        "#2f6fed",
+        "#7c4dff"
+      ],
+      "voice": "announce, do, explain; the why after the how",
+      "sceneKinds": [
+        "walkthrough",
+        "real chrome"
+      ],
+      "file": "looks/studio-walkthrough.json"
+    },
+    {
+      "name": "clippings",
+      "after": "styles/how-money-works-clippings.md",
+      "ground": "#101512",
+      "ink": "#1a1a1a",
+      "paper": "#f3f1ea",
+      "accents": [
+        "#35c46a",
+        "#ffe14d"
+      ],
+      "voice": "sceptical reporter, sources named, each section opened with a question",
+      "sceneKinds": [
+        "concept opener",
+        "diagram"
+      ],
+      "file": "looks/clippings.json"
+    },
+    {
+      "name": "doodle",
+      "after": "styles/casually-explained-doodle.md",
+      "ground": "#ffffff",
+      "ink": "#111111",
+      "paper": null,
+      "accents": [
+        "#d9342b"
+      ],
+      "voice": "flat first person, the point in the last clause, cut on the last word",
+      "sceneKinds": [
+        "concept opener",
+        "cards and rooms"
+      ],
+      "file": "looks/doodle.json"
+    },
+    {
+      "name": "lecture-slides",
+      "after": "styles/stephane-maarek-lecture-slides.md",
+      "ground": "#f3f4f6",
+      "ink": "#1f2328",
+      "paper": "#ffffff",
+      "accents": [
+        "#b04a00",
+        "#1f6feb",
+        "#ff9900"
+      ],
+      "voice": "a teacher, each term defined as it is named, what matters said outright",
+      "sceneKinds": [
+        "diagram",
+        "walkthrough"
+      ],
+      "file": "looks/lecture-slides.json"
+    },
+    {
+      "name": "archive-camera",
+      "after": "styles/ken-burns-pbs-archive-camera.md",
+      "ground": "#0e0c0a",
+      "ink": "#1c1a17",
+      "paper": "#efe6d6",
+      "accents": [
+        "#a63d2f",
+        "#35577a"
+      ],
+      "voice": "measured narrator, past tense, quotation then attribution, silence as punctuation",
+      "sceneKinds": [
+        "concept opener",
+        "transition"
+      ],
+      "file": "looks/archive-camera.json"
+    }
+  ]
+}

@@ -36,9 +36,15 @@
 
 `vkit check` measures the teaching layer, never the recreated screen. Three attributes tell it what is what: `data-narration` on text the voice depends on (held to the 54 px floor, 72 px the target, 7:1 contrast the target), `data-decor` on text the voice never depends on (no size floor; still inside title safe and still at 4.5:1), and `data-craft="ignore"` on anything that is not footage. Unmarked text is treated as read text. The explanation card's body is 54 px and 620 px wide for the same reason.
 
+## The token layers (engine 0.3.2)
+
+Every colour, face, size and duration the teaching layer uses is a token in `theme.css`, and each token reads three places in order: the brand (`rig/brand/brand.css`, `--brand-*`), then the look (`rig/look.css`, `--look-*`, written by `vkit look`), then its own default. So a video with no brand and no look renders identically to one that never had the layers (proved byte for byte in `look.test.js`), and a brand always wins over a look. The recreated product screen reads none of this.
+
+Tokens and what reads them: `--stage`, `--ink`, `--muted`, `--dim` (the stage and its text); `--accent`, `--kind-a/b/c` (kickers, card edges, card names); `--card-fill`, `--paper-ink`, `--paper-dim` (concept cards); `--panel`, `--panel-ink`, `--panel-kick` (the explanation card, which sits over the product screen); `--head`, `--weight`; `--size-title`, `--size-label`, `--size-body` (`.big`, `.card .n`, `.sub` and the explanation card's body; the research floors are the defaults); `--entrance-ms`, `--entrance-distance`, `--entrance-scale`, `--crossfade` (how cards arrive and scenes change); the stroke, pointer and cast tokens below. The engine reads `--stroke-rough` (1 is the house wobble, 0 a straight line) and `--stroke-glow` at beat time, so a look changes how strokes are drawn, not only their colour.
+
 ## Tokens the strokes, pointer and cast read
 
-`--stroke`, `--stroke-width`, `--stroke-draw`; `--pointer`, `--pointer-edge`, `--pointer-ring`, `--pointer-glide`; `--cast-stroke`, `--cast-width`, `--cast-fill`. All in `theme.css` with fallbacks to the theme's highlight, so a look pack changes the whole layer by changing values. (`--ink` is the theme's text colour and stays so.) The starter's highlight is a burnt orange (`#d4561e`): 4.1:1 on the dark stage and 3.7:1 on a white screen, because a stroke has to hold 3:1 on whatever it sits on, and the brighter orange measured 1.65:1 on the screen.
+`--stroke`, `--stroke-width`, `--stroke-rough`, `--stroke-glow`, `--stroke-cap`, `--stroke-draw`; `--pointer`, `--pointer-edge`, `--pointer-ring`, `--pointer-glide`; `--cast-stroke`, `--cast-width`, `--cast-fill`. All in `theme.css` with fallbacks to the theme's highlight, so a look pack changes the whole layer by changing values. (`--ink` is the theme's text colour and stays so.) The starter's highlight is a burnt orange (`#d4561e`): 4.1:1 on the dark stage and 3.7:1 on a white screen, because a stroke has to hold 3:1 on whatever it sits on, and the brighter orange measured 1.65:1 on the screen.
 
 ## What the tools call
 

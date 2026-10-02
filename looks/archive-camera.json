@@ -1,0 +1,86 @@
+{
+  "name": "archive-camera",
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/looks.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file."
+  },
+  "_keys": {
+    "ground": "stage background",
+    "ink": "text and stroke colour on that ground",
+    "paper": "the surface of a card, clipping or slide when it differs from the ground",
+    "accents": "at most three, in priority order; the checker sums their share",
+    "type": "family class, weight, case and the sizes used for title, label and body",
+    "strokes": "width in px, seeded roughness 0 to 1, glow in px, cap style",
+    "entrance": "how an element arrives: kind, duration ms, easing, distance px or scale from",
+    "camera": "static, push, or drift; percent of frame height per second; scale change over a hold",
+    "cutSeconds": "seconds between shots, full and formal",
+    "holdSeconds": "longest still without a build or a moving camera, full and formal",
+    "textOnFrame": "what kinds of text appear: none, labels, bullets, titles, code, captions",
+    "evidence": "what shows a fact: recreated screens, documents, icons, figures",
+    "sceneKinds": "the rig's scene kinds this look serves best",
+    "pacing": "words per minute: creator measured, our target; sentence average words",
+    "voice": "the register the narration takes in this look, in a phrase"
+  },
+  "after": "styles/ken-burns-pbs-archive-camera.md",
+  "ground": "#0e0c0a",
+  "ink": "#1c1a17",
+  "paper": "#efe6d6",
+  "accents": [
+    "#a63d2f",
+    "#35577a"
+  ],
+  "type": {
+    "family": "transitional serif, small caps for attribution",
+    "weight": 400,
+    "case": "sentence",
+    "title": 72,
+    "label": 54,
+    "body": 54
+  },
+  "strokes": {
+    "width": 3,
+    "roughness": 0.2,
+    "glow": 0,
+    "cap": "round"
+  },
+  "entrance": {
+    "kind": "cross-fade",
+    "ms": 600,
+    "easing": "ease-in-out",
+    "distance": 0,
+    "scaleFrom": 1
+  },
+  "camera": {
+    "kind": "drift",
+    "percentPerSecond": 3,
+    "scaleOverHold": 0.07
+  },
+  "cutSeconds": {
+    "full": 8,
+    "formal": 12
+  },
+  "holdSeconds": {
+    "full": 8,
+    "formal": 12
+  },
+  "textOnFrame": [
+    "titles",
+    "attribution after a quote"
+  ],
+  "evidence": [
+    "documents and recreated screens full bleed under the camera"
+  ],
+  "sceneKinds": [
+    "concept opener",
+    "transition"
+  ],
+  "pacing": {
+    "creatorWpm": 123,
+    "targetWpm": 140,
+    "sentenceWords": 17
+  },
+  "voice": "measured narrator, past tense, quotation then attribution, silence as punctuation"
+}

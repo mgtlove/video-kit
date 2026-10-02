@@ -11,6 +11,8 @@ const { renderVideo } = require('./render');
 const apps = require('./apps');
 const { check } = require('./check');
 const { syncReference } = require('./sync');
+const { applyLook } = require('./look');
+const { narration, measure } = require('./words');
 const voice = require('./adapters/voice');
 const render = require('./adapters/render');
 const script = require('./adapters/script');
@@ -25,13 +27,13 @@ module.exports = {
   newVideo: newVideo,                        // copy starter/, engine in at this version, video.json with menu defaults; opts.app for an app-backed video
   apps: apps,                                // recreated apps: resolveApp, installApp, appNew, appAddState, appExtract
   menu: notBuilt('menu'),                    // read and write video.json.menu; list looks, patterns, brands
-  narration: notBuilt('narration'),          // parts -> FULL.md, lengths, limits
-  measure: notBuilt('measure'),              // clip files -> exact PART_SECONDS
+  narration: narration,                      // parts -> FULL.md, limits, estimates, a PARTS line
+  measure: measure,                          // clip files -> exact PARTS in the page and video.json; re-timing items lock
   frames: frames,                            // rig -> a PNG per beat (seek-correct)
   renderVideo: renderVideo,                  // rig -> every frame at 30 fps -> mux with clips -> MP4, captions sidecar
   check: check,                              // offline, deterministic, seekable, seek-correct; craft rules; contrast; fidelity against captures
   brand: notBuilt('brand'),                  // brand.json -> brand.css; report
-  look: notBuilt('look'),                    // look pack -> theme tokens
-  syncReference: syncReference,              // ../video-reference -> rules.json (looks/ and patterns/ in step 7)
+  look: applyLook,                           // look pack -> rig/look.css tokens the theme reads; video.json.menu.look records it
+  syncReference: syncReference,              // ../video-reference -> rules.json, looks/, patterns/index.json
   adapters: { voice, render, script, hosting }
 };

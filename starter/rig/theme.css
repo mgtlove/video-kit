@@ -1,32 +1,50 @@
 /* theme.css: the whole look of this video. Change a value here and every scene
-   follows. Two scopes, never merged: the teaching layer under :root is yours;
+   follows; or apply a look pack with vkit look, which writes rig/look.css. Two scopes, never merged: the teaching layer under :root is yours;
    the recreated screen under #mock keeps the real product's palette and is
    never restyled, because a viewer has to recognise it.
    A brand (rig/brand/brand.json, when one is applied) sets --brand-* tokens
    that these read first. */
 :root{
-  --head:var(--brand-font-display,"Segoe UI",Arial,sans-serif);
-  --stage:var(--brand-ground,#1c1e1d);
-  --ink:var(--brand-ink,#f5f6f4);
-  --muted:#aeb6b2;
-  --dim:#c6ccc9;
-  --accent:var(--brand-primary,#00b097);
+  /* every token reads the brand first (rig/brand/brand.css), then the look (rig/look.css), then its own default */
+  --head:var(--brand-font-display,var(--look-head,"Segoe UI",Arial,sans-serif));
+  --weight:var(--brand-weight,var(--look-weight,800));
+  --stage:var(--brand-ground,var(--look-ground,#1c1e1d));
+  --ink:var(--brand-ink,var(--look-ink,#f5f6f4));
+  --muted:var(--look-muted,#aeb6b2);
+  --dim:var(--look-dim,#c6ccc9);
+  --accent:var(--brand-primary,var(--look-accent-1,#00b097));
   --accent-ink:var(--brand-primary-ink,#00211d);
-  --hi:var(--brand-highlight,#d4561e);   /* a burnt orange: 4.1:1 on the stage, 3.7:1 on a white screen (strokes must hold 3:1 on both) */
+  --hi:var(--brand-highlight,var(--look-stroke,#d4561e));   /* a burnt orange: 4.1:1 on the stage, 3.7:1 on a white screen (strokes must hold 3:1 on both) */
   --hi-bg:#d4561e66;
-  --kind-a:var(--brand-primary,#4ecf9d);
-  --kind-b:var(--brand-secondary,#ffb14e);
-  --kind-c:var(--brand-tertiary,#ff6b5e);
-  --card-fill:#ffffff08;
-  --panel:#101211ee;
+  --kind-a:var(--brand-primary,var(--look-kind-a,#4ecf9d));
+  --kind-b:var(--brand-secondary,var(--look-kind-b,#ffb14e));
+  --kind-c:var(--brand-tertiary,var(--look-kind-c,#ff6b5e));
+  --card-fill:var(--look-paper,#ffffff08);
+  --paper-ink:var(--look-paper-ink,var(--ink));
+  --paper-dim:var(--look-paper-dim,var(--dim));
+  --panel:var(--look-panel,#101211ee);
+  --panel-ink:var(--look-panel-ink,var(--ink));
+  --panel-kick:var(--look-panel-kick,var(--accent));
   --panel-bd:#ffffff22;
   --scrim:#1c1e1dd9;
   --shadow:0 10px 44px #00000077;
   --grain:0;
+  /* sizes: the research floors are the defaults (rules.json text); a look sets its own */
+  --size-title:var(--look-size-title,88px);
+  --size-label:var(--look-size-label,54px);
+  --size-body:var(--look-size-body,54px);
+  /* motion: a look sets how things arrive */
+  --entrance-ms:var(--look-entrance-ms,.45s);
+  --entrance-distance:var(--look-entrance-distance,14px);
+  --entrance-scale:var(--look-entrance-scale,1);
+  --crossfade:var(--look-crossfade,.5s);
   /* strokes, the pointer and the cast (engine 0.3.0); a look pack sets these. --ink above is the text colour; strokes have their own */
   --stroke:var(--hi);
-  --stroke-width:6px;
-  --stroke-draw:.6s;
+  --stroke-width:var(--look-stroke-width,6px);
+  --stroke-rough:var(--look-stroke-rough,1);
+  --stroke-glow:var(--look-stroke-glow,0px);
+  --stroke-cap:var(--look-stroke-cap,round);
+  --stroke-draw:var(--look-stroke-draw,.6s);
   --pointer:#ffffff;
   --pointer-edge:#1c1e1d;
   --pointer-ring:var(--hi);

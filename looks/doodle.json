@@ -1,0 +1,85 @@
+{
+  "name": "doodle",
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/looks.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file."
+  },
+  "_keys": {
+    "ground": "stage background",
+    "ink": "text and stroke colour on that ground",
+    "paper": "the surface of a card, clipping or slide when it differs from the ground",
+    "accents": "at most three, in priority order; the checker sums their share",
+    "type": "family class, weight, case and the sizes used for title, label and body",
+    "strokes": "width in px, seeded roughness 0 to 1, glow in px, cap style",
+    "entrance": "how an element arrives: kind, duration ms, easing, distance px or scale from",
+    "camera": "static, push, or drift; percent of frame height per second; scale change over a hold",
+    "cutSeconds": "seconds between shots, full and formal",
+    "holdSeconds": "longest still without a build or a moving camera, full and formal",
+    "textOnFrame": "what kinds of text appear: none, labels, bullets, titles, code, captions",
+    "evidence": "what shows a fact: recreated screens, documents, icons, figures",
+    "sceneKinds": "the rig's scene kinds this look serves best",
+    "pacing": "words per minute: creator measured, our target; sentence average words",
+    "voice": "the register the narration takes in this look, in a phrase"
+  },
+  "after": "styles/casually-explained-doodle.md",
+  "ground": "#ffffff",
+  "ink": "#111111",
+  "paper": null,
+  "accents": [
+    "#d9342b"
+  ],
+  "type": {
+    "family": "hand-style sans",
+    "weight": 500,
+    "case": "caps for labels",
+    "title": 80,
+    "label": 60,
+    "body": 54
+  },
+  "strokes": {
+    "width": 4,
+    "roughness": 1,
+    "glow": 0,
+    "cap": "round"
+  },
+  "entrance": {
+    "kind": "pop",
+    "ms": 180,
+    "easing": "ease-out",
+    "distance": 16,
+    "scaleFrom": 0.9
+  },
+  "camera": {
+    "kind": "static",
+    "percentPerSecond": 0,
+    "scaleOverHold": 0
+  },
+  "cutSeconds": {
+    "full": 6,
+    "formal": 9
+  },
+  "holdSeconds": {
+    "full": 6,
+    "formal": 9
+  },
+  "textOnFrame": [
+    "labels"
+  ],
+  "evidence": [
+    "recreated screens inside a drawn outline",
+    "stick figures from a small vocabulary"
+  ],
+  "sceneKinds": [
+    "concept opener",
+    "cards and rooms"
+  ],
+  "pacing": {
+    "creatorWpm": 216,
+    "targetWpm": 150,
+    "sentenceWords": 16
+  },
+  "voice": "flat first person, the point in the last clause, cut on the last word"
+}

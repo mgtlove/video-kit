@@ -146,7 +146,9 @@
   }
   function fmt(n) { return Math.round(n * 10) / 10; }
   function pathOf(pts, close) { var d = 'M' + fmt(pts[0][0]) + ' ' + fmt(pts[0][1]); for (var i = 1; i < pts.length; i++) d += ' L' + fmt(pts[i][0]) + ' ' + fmt(pts[i][1]); return close ? d + ' Z' : d; }
-  function wobble(r, amount) { return (r() - 0.5) * 2 * amount; }
+  var rough = 1;   /* --stroke-rough: 1 is the house wobble, 0 is a straight line, a look sets it */
+  function wobble(r, amount) { return (r() - 0.5) * 2 * amount * rough; }
+  function tokenNumber(name, fallback) { var v = parseFloat(getComputedStyle(stage).getPropertyValue(name)); return isNaN(v) ? fallback : v; }
 
   /* the four strokes. Each returns a list of point lists (one path each), in stage pixels. */
   var STROKES = {
@@ -193,11 +195,14 @@
     var el = $(id); if (!el || !STROKES[kind]) return;
     opts = opts || {};
     if (!opts.keep) while (svg.firstChild) svg.removeChild(svg.firstChild);
+    rough = tokenNumber('--stroke-rough', 1);
+    var glow = tokenNumber('--stroke-glow', 0);
     var paths = STROKES[kind](pos(el), rng(kind + ':' + id + ':' + (opts.seed || '')), opts), made = [];
     for (var i = 0; i < paths.length; i++) {
       var p = document.createElementNS(SVG, 'path');
       p.setAttribute('d', pathOf(paths[i], false));
       p.setAttribute('data-stroke', kind + ' ' + id);
+      if (glow > 0) p.style.filter = 'drop-shadow(0 0 ' + glow + 'px var(--stroke, var(--hi)))';   /* a lightboard glow; set only when asked, so no look is pixel-identical */
       svg.appendChild(p);
       var L = Math.ceil(p.getTotalLength()) + 2;
       p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
@@ -252,6 +257,7 @@
     var svg = layer('cast');
     if (!name) { svg.classList.remove('on'); return; }
     while (svg.firstChild) svg.removeChild(svg.firstChild);
+    rough = tokenNumber('--stroke-rough', 1);
     var r = rng('who:' + name), el = nearId ? $(nearId) : null, b = el ? pos(el) : { l: W / 2 - 100, t: H / 2 - 150, w: 200, h: 300, x: W / 2, y: H / 2 };
     var hgt = 300 + r() * 60, x = side === 'left' ? b.l - 160 : b.l + b.w + 160, y = b.t + b.h / 2 + hgt * 0.1;
     x = Math.min(Math.max(x, 140), W - 140);
@@ -442,7 +448,7 @@
   }
 
   window.VK = {
-    version: '0.3.1',
+    version: '0.3.2',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; },

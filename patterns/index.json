@@ -1,0 +1,508 @@
+{
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/patterns/",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Made by vkit sync-reference from the pattern notes; edit the notes, not this file."
+  },
+  "groups": [
+    "argument",
+    "camera",
+    "voice-and-sound",
+    "word-and-picture"
+  ],
+  "moves": [
+    {
+      "id": "announce-do-explain",
+      "title": "Announce, do, explain",
+      "group": "word-and-picture",
+      "phrases": [
+        "narrate the click",
+        "say what you are about to do",
+        "walkthrough rhythm",
+        "show me the steps"
+      ],
+      "effect": "The viewer knows where to look before the cursor moves, sees it happen, and learns why afterwards, in that order, so a step can be followed on a second screen. The loudness pattern (announce loud, do quiet, explain medium) is the same shape as the words.",
+      "needs": "The walkthrough layer (`cursorTo`, `clickAt`, `typeText`) with each beat's sentence written before the action in the storyboard; a rule that the announce sentence starts before the cursor moves.",
+      "note": "styles/patterns/announce-do-explain.md"
+    },
+    {
+      "id": "attribution-after-the-quote",
+      "title": "Attribution after the quote",
+      "group": "argument",
+      "phrases": [
+        "quote first, name second",
+        "who said that",
+        "read the quote then credit it",
+        "customer quote"
+      ],
+      "effect": "The quote is heard on its own terms before the listener knows whose it is, so the words are judged before the speaker; the name afterwards is the proof, like a footnote.",
+      "needs": "A quote scene kind: the words on the frame or in a second voice, the attribution entering on a beat after the last word, the evidence id beside it.",
+      "note": "styles/patterns/attribution-after-the-quote.md"
+    },
+    {
+      "id": "board-resolves-to-one-chain",
+      "title": "The board resolves into one arrow chain",
+      "group": "word-and-picture",
+      "phrases": [
+        "draw the structure first",
+        "container then contents",
+        "one diagram per section",
+        "the whole argument on one surface"
+      ],
+      "effect": "The viewer sees the shape of the argument before its parts, and at the end of each movement the board is the summary, so there is nothing to remember except the chain. Writing in silence makes the word's appearance the event.",
+      "needs": "Seeded strokes that draw on in order (`drawOn` sequence), a container drawn before its contents, a final arrow that connects them, and a hold with no voice while the longest word draws.",
+      "note": "styles/patterns/board-resolves-to-one-chain.md"
+    },
+    {
+      "id": "build-with-the-sentence",
+      "title": "The slide builds with the sentence",
+      "group": "word-and-picture",
+      "phrases": [
+        "bullets appear as I say them",
+        "progressive reveal",
+        "the diagram draws as I explain it",
+        "nothing ahead of the voice"
+      ],
+      "effect": "The frame is the outline of what is being said, revealed at the pace it is said, so the viewer's eye is always on the current point and never reading ahead. A whole lesson accumulates on one surface and the final frame is the summary.",
+      "needs": "Elements that enter on a beat (`on(id)`), a drawable arrow with text along it (motion path, `studies/anime-js`), and one hold rule: the slide stays until the next sentence needs a new element.",
+      "note": "styles/patterns/build-with-the-sentence.md"
+    },
+    {
+      "id": "callback",
+      "title": "The callback",
+      "group": "argument",
+      "phrases": [
+        "bring it back",
+        "tie it to the earlier point",
+        "the same idea twice",
+        "close the loop"
+      ],
+      "effect": "A callback makes two points one point; the viewer who followed both feels the structure close. In Fireship it is the argument (both answers are the same answer); in IBM it is the memory aid.",
+      "needs": "A storyboard note linking the callback beat to its origin beat, and an element that can return (the same card, the same stroke) so the picture calls back too.",
+      "note": "styles/patterns/callback.md"
+    },
+    {
+      "id": "camera-is-the-reading",
+      "title": "The camera is the reading",
+      "group": "word-and-picture",
+      "phrases": [
+        "ken burns it",
+        "move over the still",
+        "pan down the list as I read it",
+        "slow push on the document"
+      ],
+      "effect": "A still becomes a sentence-length event: the eye travels with the voice and arrives with it, so a 20 s hold on one object has a beginning, a middle and an end. The reveal on the last word makes the picture the proof of the sentence.",
+      "needs": "`camTravel` and `camEl` with ease over the sentence's length, the reveal point placed on the last word, and nothing else on the frame while the camera moves.",
+      "note": "styles/patterns/camera-is-the-reading.md"
+    },
+    {
+      "id": "catalogue-sentence",
+      "title": "The catalogue sentence over landscape",
+      "group": "argument",
+      "phrases": [
+        "list the places",
+        "show the scope",
+        "a slow list over wide shots",
+        "everywhere at once"
+      ],
+      "effect": "A list read slowly over wide, calm pictures makes the viewer feel extent rather than count it; the same list cut fast over flags makes it a tally. Both say \"many\"; the pace says what kind of many.",
+      "needs": "A sequence of stills or landscapes with a drift on each (`drift-on-every-still`), a list read at the narrator's slowest pace, no text.",
+      "note": "styles/patterns/catalogue-sentence.md"
+    },
+    {
+      "id": "cut-on-the-last-word",
+      "title": "Cut on the last word",
+      "group": "word-and-picture",
+      "phrases": [
+        "change the picture when the sentence lands",
+        "cut on the word",
+        "the frame confirms it a beat late",
+        "reveal on the last word"
+      ],
+      "effect": "The picture is the receipt for the sentence, not a preview of it. The viewer hears the claim, then sees it confirmed, so the frame never spoils the line and never competes with it. In comedy the joke is in the last clause, so the confirming frame is also where the laugh lands; in the documentary the reveal is the proof of the sentence. Either way the cut carries emphasis without the voice having to.",
+      "needs": "A beat per sentence end, timed to the clip (the rig's `at()` offsets read off the clip; the shot log method in `deep/README.md` finds the sentence ends from captions). Stroke and reveal primitives that complete on a given second (`drawOn(id, sec)`, the kit's Ken Burns primitive).",
+      "note": "styles/patterns/cut-on-the-last-word.md"
+    },
+    {
+      "id": "cut-voice",
+      "title": "The cut voice",
+      "group": "voice-and-sound",
+      "phrases": [
+        "tight edit",
+        "cut the breaths",
+        "fast but not rushed",
+        "no dead air",
+        "how fast can we talk"
+      ],
+      "effect": "The words are not faster, the silence is gone; the voice is compressed and level so nothing is loud or quiet, and emphasis has to come from the cut, the picture or the word choice. The listener never waits.",
+      "needs": "A voice route that returns tight clips (or an edit pass that removes gaps), and a part timing that measures the exact clip (kit v0.2.1).",
+      "note": "styles/patterns/cut-voice.md"
+    },
+    {
+      "id": "define-in-the-breath",
+      "title": "Define the term in the breath it is named",
+      "group": "argument",
+      "phrases": [
+        "define as you go",
+        "what is X",
+        "explain the acronym",
+        "situation, failure, definition, example"
+      ],
+      "effect": "A term defined where it is first used costs one clause and never a section; the learner is never carrying an undefined word. The AWS pattern (need first, then the name) makes the definition the answer to a question the learner just felt.",
+      "needs": "A narration rule (the term, what it is, what it does, in one sentence) and a storyboard column for the term each scene introduces.",
+      "note": "styles/patterns/define-in-the-breath.md"
+    },
+    {
+      "id": "drawn-figure-over-real-photo",
+      "title": "A drawn figure over a real photograph",
+      "group": "word-and-picture",
+      "phrases": [
+        "stick figure on the screenshot",
+        "cartoon reaction on a real image",
+        "the photo is the straight man"
+      ],
+      "effect": "The photograph supplies reality and the drawing supplies the attitude; neither has to be good at the other's job. A drawn figure gives a real screen a human reaction without a presenter.",
+      "needs": "A character layer that can sit beside, not on, a recreated screen (the template's rule), hand lettering as a face token, one accent.",
+      "note": "styles/patterns/drawn-figure-over-real-photo.md"
+    },
+    {
+      "id": "drift-on-every-still",
+      "title": "Drift on every still",
+      "group": "camera",
+      "phrases": [
+        "keep it moving",
+        "the still should not look like a slide",
+        "slow zoom on the image",
+        "ken burns everything"
+      ],
+      "effect": "A moving still is alive and a static one is a slide; the drift costs nothing and buys the hold. It is wallpaper motion: it does not read the picture (see `camera-is-the-reading`), it keeps it from going dead.",
+      "needs": "A default drift on the evidence layer (`styles/preview` already drifts `#art` only), the rate as a look token.",
+      "note": "styles/patterns/drift-on-every-still.md"
+    },
+    {
+      "id": "exhibit-screenshot",
+      "title": "The exhibit screenshot",
+      "group": "word-and-picture",
+      "phrases": [
+        "show the screenshot as evidence",
+        "the post on screen",
+        "rotated screenshot with a shadow",
+        "make it look like an exhibit"
+      ],
+      "effect": "An exhibit is something the narrator found, not something the narrator made, so it carries the authority of the outside world. The rotation and shadow say \"object,\" which is why the same screenshot flat on the frame reads as a slide.",
+      "needs": "An evidence still with an id and a frame treatment (rotation, shadow, mat) as a token, plus the push-in from `highlighter-on-the-cited-line`.",
+      "note": "styles/patterns/exhibit-screenshot.md"
+    },
+    {
+      "id": "fixed-lines",
+      "title": "The fixed lines",
+      "group": "argument",
+      "phrases": [
+        "sign-off",
+        "the same closing line every time",
+        "house format",
+        "the ident"
+      ],
+      "effect": "A fixed line at a fixed place is the format's signature: the viewer knows the video has started properly (the ident after the hook) and has ended (the line). It also carries the channel name without a logo.",
+      "needs": "`COPY` slots for an opener and a sign-off, and a brief rule for where the ident sits (after the hook, never first).",
+      "note": "styles/patterns/fixed-lines.md"
+    },
+    {
+      "id": "hard-way-on-purpose",
+      "title": "The hard way first, on purpose",
+      "group": "argument",
+      "phrases": [
+        "show the raw API first",
+        "understand before the shortcut",
+        "why we are doing it this way",
+        "justify the structure"
+      ],
+      "effect": "Naming the cost of the structure while the viewer is paying it turns impatience into trust: the viewer knows the shortcut exists and is being withheld for a reason that will be shown. The payoff at the end makes the long middle retroactively necessary.",
+      "needs": "A spoken line at the point of friction and a payoff beat at the close; a storyboard that marks which scene pays which promise.",
+      "note": "styles/patterns/hard-way-on-purpose.md"
+    },
+    {
+      "id": "hedge-before-the-claim",
+      "title": "The hedge before the biggest claim",
+      "group": "argument",
+      "phrases": [
+        "from what I can tell",
+        "say what you are not sure of",
+        "admit the simplification",
+        "trust devices"
+      ],
+      "effect": "One hedge in the right place buys the whole video credibility; nineteen set a register (the sceptical reporter). Admitting a simplification or a stub at the moment it happens means the viewer never discovers it later and discounts everything.",
+      "needs": "A narration rule: say the simplification, the cost or the stub in the sentence that makes it; a `verified: false` marker in the storyboard where the voice should hedge.",
+      "note": "styles/patterns/hedge-before-the-claim.md"
+    },
+    {
+      "id": "highlighter-on-the-cited-line",
+      "title": "The highlighter on the cited line",
+      "group": "word-and-picture",
+      "phrases": [
+        "show the quote in the document",
+        "highlight the line as it is read",
+        "evidence on screen",
+        "the source, not a slide about the source"
+      ],
+      "effect": "Reading with the voice turns a claim into a citation: the viewer sees the words on the page as they are spoken and does not have to take the narrator's word. Pushing in from the whole document to the line keeps the context (what the document is) and the proof (the line) in one move.",
+      "needs": "An evidence still with an id, a highlight that draws on at the moment the words are said, and a push-in (`camEl`, `camTravel`) from the whole to the line.",
+      "note": "styles/patterns/highlighter-on-the-cited-line.md"
+    },
+    {
+      "id": "honest-costs-in-the-verdict",
+      "title": "Honest costs in the verdict",
+      "group": "argument",
+      "phrases": [
+        "what it does not do",
+        "the downside",
+        "promising but not perfect",
+        "say the price"
+      ],
+      "effect": "A verdict that names costs is believed; one that does not is an advertisement. Saying the price before the hands-on means nobody feels tricked later.",
+      "needs": "A verdict card scene with the numbers as `COPY`, and the rule that any number shown is sourced.",
+      "note": "styles/patterns/honest-costs-in-the-verdict.md"
+    },
+    {
+      "id": "information-holds-jokes-cut",
+      "title": "Information holds, jokes cut",
+      "group": "word-and-picture",
+      "phrases": [
+        "hold on the diagram",
+        "let the demo sit",
+        "fast in argument, slow in explanation",
+        "how long to hold a frame"
+      ],
+      "effect": "The viewer gets time where there is something to read and none where there is not. A diagram held while the voice explains it twice (abstract, then \"for example\") lets the second explanation land on a picture the eye already knows.",
+      "needs": "A hold rule per scene kind: evidence and diagrams held for the whole passage that uses them, with a build or a camera move inside the hold; cards and reactions short.",
+      "note": "styles/patterns/information-holds-jokes-cut.md"
+    },
+    {
+      "id": "loud-question-quiet-answer",
+      "title": "Loud question, quiet answer",
+      "group": "voice-and-sound",
+      "phrases": [
+        "drop the voice for the conclusion",
+        "understate the verdict",
+        "emphasis by getting quieter",
+        "raise the question"
+      ],
+      "effect": "A dropped voice makes the listener lean in, and a conclusion delivered quietly sounds already settled; a raised question sounds open. The shape is measurable and the opposite of the natural habit of stressing the conclusion.",
+      "needs": "A narration direction note per sentence (question up, conclusion down) that survives into a generated voice, or a human read; nothing in the rig.",
+      "note": "styles/patterns/loud-question-quiet-answer.md"
+    },
+    {
+      "id": "mock-cite-admit-balance",
+      "title": "Mock, cite, admit, balance",
+      "group": "argument",
+      "phrases": [
+        "make fun of it then explain it",
+        "joke before the fact",
+        "the definition section",
+        "sceptical explainer"
+      ],
+      "effect": "The joke lowers the guard and the citation raises the floor; the admission and the balancing source make the narrator look fair while the jokes make him look unimpressed. The order matters: mockery after a fair statement is earned, before it is cheap.",
+      "needs": "A narration shape per definition (cite, admit the gap, balance), and an evidence still for the citation.",
+      "note": "styles/patterns/mock-cite-admit-balance.md"
+    },
+    {
+      "id": "music-bed-or-none",
+      "title": "A music bed, or none",
+      "group": "voice-and-sound",
+      "phrases": [
+        "background music",
+        "no music",
+        "keep the bed under the voice",
+        "sound design"
+      ],
+      "effect": "A bed makes a long run feel continuous and hides the edit; silence between sentences becomes impossible, so the pace is set by the words alone. Without a bed the voice has the whole dynamic range and a pause is available as a device.",
+      "needs": "A decision per look (`looks.json` has no sound key yet; roadmap step 9), and a mux step that can carry a bed at a fixed level under the measured clips.",
+      "note": "styles/patterns/music-bed-or-none.md"
+    },
+    {
+      "id": "naive-view-then-overturn",
+      "title": "The naive view, then the overturn",
+      "group": "argument",
+      "phrases": [
+        "start with what people think",
+        "how hard can it be",
+        "the obvious reading first",
+        "set up the misconception"
+      ],
+      "effect": "Stating the viewer's own first thought makes the correction land as a discovery rather than a lecture, and gives each section a turn. Granting the sceptical reading first is also a trust device: the narrator has considered it.",
+      "needs": "A storyboard beat per section that states the naive view in the viewer's words before the explanation; nothing in the rig.",
+      "note": "styles/patterns/naive-view-then-overturn.md"
+    },
+    {
+      "id": "one-literal-noun",
+      "title": "One literal noun per sentence",
+      "group": "word-and-picture",
+      "phrases": [
+        "show the word",
+        "a picture for every sentence",
+        "b-roll that matches the noun",
+        "wallpaper footage"
+      ],
+      "effect": "Because the vocabulary repeats until it is invisible, the viewer stops reading the pictures and listens; the frame confirms that the voice is still on topic and asks nothing of the eye. It is a way of filling seventeen minutes without a single frame that needs attention.",
+      "needs": "A library of a few dozen stills or loops, each tagged with the noun it stands for; a drift on every still so a hold never reads as a slide (see `drift-on-every-still`).",
+      "note": "styles/patterns/one-literal-noun.md"
+    },
+    {
+      "id": "only-structural-text",
+      "title": "Only structural text on the frame",
+      "group": "word-and-picture",
+      "phrases": [
+        "no text on screen",
+        "keep the words in the voice",
+        "just the chapter card",
+        "numbers spoken not written"
+      ],
+      "effect": "With nothing to read, the viewer listens, and the voice can carry precision (a date, an IP address, a percentage) at speaking pace. Structural text (a chapter, a checklist) tells the viewer where they are without competing with what is being said.",
+      "needs": "A restraint rule in `COPY` (kickers, chapter cards, a checklist; no numbers, no sentences), and captions as the one text layer when they are needed.",
+      "note": "styles/patterns/only-structural-text.md"
+    },
+    {
+      "id": "questions-then-outline-then-checklist",
+      "title": "Questions, outline, checklist",
+      "group": "argument",
+      "phrases": [
+        "open with the questions",
+        "tell them what they will learn",
+        "tick off the list",
+        "promise then deliver"
+      ],
+      "effect": "The viewer knows the shape of the video before it starts and can see progress through it; a question asked in the viewer's words is a promise that the video will answer it, and the checklist is the receipt. Restating the outline at the close is the summary for free.",
+      "needs": "A chapter-card scene kind, a checklist element that ticks on a beat, and a brief whose scene list is the checklist.",
+      "note": "styles/patterns/questions-then-outline-then-checklist.md"
+    },
+    {
+      "id": "reset-frame",
+      "title": "The reset frame",
+      "group": "word-and-picture",
+      "phrases": [
+        "section break",
+        "come back to the host",
+        "chapter card",
+        "wipe between sections",
+        "a new board"
+      ],
+      "effect": "A reset tells the viewer the previous point is closed and resets attention; the same device every time becomes the channel's signature and lets the viewer predict the structure. A reset that is also a question (How Money Works' clipping) sets up the next section's job.",
+      "needs": "A scene kind for the break (a card, a wipe, a plain frame) with one token for its look, and a storyboard rule that each section opens with it.",
+      "note": "styles/patterns/reset-frame.md"
+    },
+    {
+      "id": "reversal-definition",
+      "title": "The reversal definition",
+      "group": "argument",
+      "phrases": [
+        "define it as the opposite",
+        "a one-line definition that is a joke",
+        "taxonomy of types",
+        "eleven kinds of"
+      ],
+      "effect": "A taxonomy told as reversals teaches the real categories (the viewer has to know what a civil engineer does to get the joke) while never sounding like a list. The empty slot is the list admitting it is a list.",
+      "needs": "A card-per-item scene with a cut per item on the last word; the straight form needs only the cards.",
+      "note": "styles/patterns/reversal-definition.md"
+    },
+    {
+      "id": "silence-for-the-biggest-line",
+      "title": "Silence before the biggest line",
+      "group": "voice-and-sound",
+      "phrases": [
+        "pause before the punchline",
+        "let it breathe",
+        "write in silence",
+        "a beat before the answer"
+      ],
+      "effect": "A silence is the loudest thing a level voice can do: it marks the next line as the one to hear. In the lightboard the silence is also where the eye watches the word appear, so nothing is lost; in the documentary it is where the viewer does the work.",
+      "needs": "A beat with no narration and one thing happening on the frame; the clip's silence measured, not estimated (the narration tool reads the gap).",
+      "note": "styles/patterns/silence-for-the-biggest-line.md"
+    },
+    {
+      "id": "sponsor-as-continuation",
+      "title": "The sponsor as a continuation of the essay",
+      "group": "argument",
+      "phrases": [
+        "introduce the product inside the story",
+        "the pivot",
+        "make the ad part of the argument",
+        "where to put the product"
+      ],
+      "effect": "A product that enters as the answer to the question the video asked is part of the argument, and a verdict with costs is what makes the praise believable. The disclosure inside the sentence makes it part of the story rather than an interruption.",
+      "needs": "For a product video the same shape is: the learner's problem first, the product as the answer, honest limits stated; a storyboard beat for each.",
+      "note": "styles/patterns/sponsor-as-continuation.md"
+    },
+    {
+      "id": "three-framings",
+      "title": "Three framings of one set",
+      "group": "camera",
+      "phrases": [
+        "cut between two angles",
+        "wide and close",
+        "the presenter on set",
+        "picture in picture"
+      ],
+      "effect": "The cut between two angles of the same thing is motion without a new picture: it marks sentence boundaries and keeps a talking frame alive without interrupting the talk. Closer means \"listen,\" wider means \"look\".",
+      "needs": "A camera scale change of 10 to 20 percent on the same scene at sentence boundaries (`camFocus` with a small scale and `camEase`), and no new content on the cut.",
+      "note": "styles/patterns/three-framings.md"
+    },
+    {
+      "id": "three-registers",
+      "title": "Three registers of voice",
+      "group": "voice-and-sound",
+      "phrases": [
+        "narrator and quotes",
+        "let someone else say it",
+        "the witness says what the narrator cannot",
+        "read the document in a different voice"
+      ],
+      "effect": "The myth and its complication can both be stated without the narrator contradicting himself: the narrator carries facts, the documents carry proof, the witnesses carry judgement. The viewer is never told what to feel by the voice that told them what happened.",
+      "needs": "Two or three voices in the clips (a narrator, a quoted document, a quoted person), each with its own frame treatment, and attribution as a beat after the quote, not before.",
+      "note": "styles/patterns/three-registers.md"
+    },
+    {
+      "id": "triplets",
+      "title": "Triplets",
+      "group": "argument",
+      "phrases": [
+        "three things",
+        "rule of three",
+        "list it in threes",
+        "planning, execution, verification"
+      ],
+      "effect": "Three is the smallest number that reads as a pattern and the largest that is held in one breath; a triplet on a board is also a complete picture. The comedians break the rule on purpose with a fourth item that does not belong.",
+      "needs": "Nothing in the rig; a narration rule and a three-item card scene.",
+      "note": "styles/patterns/triplets.md"
+    },
+    {
+      "id": "two-channels",
+      "title": "Two channels: the voice argues, the picture editorialises",
+      "group": "word-and-picture",
+      "phrases": [
+        "the picture makes a different joke",
+        "say one thing, show another",
+        "counterpoint",
+        "the frame has its own opinion"
+      ],
+      "effect": "Two things happen at once and the viewer assembles them. The voice can stay fair and factual (the mechanism explained in two straight sentences) while the picture carries the attitude, so the argument is never interrupted by its own commentary, and a viewer who disagrees with the picture still gets the argument.",
+      "needs": "A second layer in the frame that is not the subject (a caption, a label, a reaction), timed independently of the voice; and a rule for when the second channel is allowed to speak.",
+      "note": "styles/patterns/two-channels.md"
+    },
+    {
+      "id": "worked-example-in-first-person",
+      "title": "The worked example in the first person",
+      "group": "argument",
+      "phrases": [
+        "let us say I have",
+        "a concrete example",
+        "read the number out in full",
+        "make it specific"
+      ],
+      "effect": "A specific number or a voiced character turns a mechanism into a scene the listener can picture; the first person puts the narrator on the learner's side of the desk and makes the example a confession rather than a lecture.",
+      "needs": "`COPY` values that are real-looking and read aloud exactly as shown; the rule that product output is captured, never invented.",
+      "note": "styles/patterns/worked-example-in-first-person.md"
+    }
+  ]
+}

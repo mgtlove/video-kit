@@ -55,9 +55,12 @@ async function open(rigDir, opts) {
     window.VK.recording(true);
     var m = document.createElement('div');
     m.id = 'vk-mark';
-    m.style.cssText = 'position:fixed;left:0;top:0;width:0;height:1px;z-index:1000;pointer-events:none;background:#fff';
+    m.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:1px;z-index:1000;pointer-events:none;background:#000';   /* a black base, so a white page cannot read as a mark */
+    var bar = document.createElement('div');
+    bar.style.cssText = 'position:absolute;left:0;top:0;width:0;height:1px;background:#fff';
+    m.appendChild(bar);
     document.body.appendChild(m);
-    window.__vkSetMark = function (w) { m.style.width = w + 'px'; };
+    window.__vkSetMark = function (w) { bar.style.width = w + 'px'; };
   });
   await page.waitForTimeout(150);
   return { browser, page, srv, errors, mark: 0, waits: 0, close: async () => { await browser.close(); srv.close(); } };

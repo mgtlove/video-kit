@@ -2,6 +2,7 @@
 // vkit: the command table. Every command calls one core function and prints
 // the result. The plugin and the MCP server reuse this table.
 const path = require('path');
+const fs = require('fs');
 const core = require('@video-kit/core');
 
 const COMMANDS = {
@@ -9,13 +10,14 @@ const COMMANDS = {
   'app':            ['new|add-state|extract ...', 'recreated apps: app new family/tool; app add-state family/tool id [--capture f]; app extract <video> family/tool id'],
   'menu':           ['[dir]', 'walk through the ten choices a video makes; or show them'],
   'capture':        ['[dir]', 'capture a task in the browser as tagged screenshots (later)'],
-  'narration':      ['[dir]', 'check the script parts, rebuild FULL.md, estimate lengths'],
-  'measure':        ['[dir]', 'measure the voice clips and write the exact part lengths'],
+  'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
+  'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
   'frames':         ['[dir] [times...|--every N]', 'a still per beat so you can look before recording anything'],
   'render':         ['[dir] [--fps N]', 'every frame from the seek, the voice muxed, captions beside it: out/<name>.mp4'],
   'check':          ['[dir] [--quick]', 'is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick skips the slow proofs'],
   'brand':          ['[dir] [--check]', 'write brand.css from brand.json; --check reports what is applied'],
-  'sync-reference': ['[path]', 'copy rules.json from ../video-reference (looks/ and patterns/ come in step 7)'],
+  'look':           ['<name>|none [dir]', 'apply a look pack from looks/ as tokens in rig/look.css; none empties it'],
+  'sync-reference': ['[path] [--only rules|looks|patterns]', 'copy rules.json, looks/ and patterns/index.json from ../video-reference'],
   'publish':        ['[dir]', 'hand the MP4 to a host adapter and record the URL']
 };
 
@@ -100,8 +102,33 @@ async function main() {
     return r.failures ? 1 : 0;
   }
   if (cmd === 'sync-reference') {
-    const r = core.syncReference({ path: args[0] });
-    console.log('rules.json copied from ' + r.done.rules.source + (r.done.rules.commit ? ' at ' + r.done.rules.commit : '') + '. Looks and patterns come in step 7.');
+    let p = null, only = null;
+    for (let i = 0; i < args.length; i++) { if (args[i] === '--only') only = args[++i]; else p = args[i]; }
+    const r = core.syncReference({ path: p, only });
+    if (r.done.rules) console.log('rules.json from ' + r.done.rules.source);
+    if (r.done.looks) console.log(r.done.looks.count + ' looks into looks/ from ' + r.done.looks.source);
+    if (r.done.patterns) console.log(r.done.patterns.count + ' moves into patterns/index.json from ' + r.done.patterns.source);
+    console.log('reference ' + r.reference + (r.done.rules && r.done.rules.commit ? ' at ' + r.done.rules.commit : ' (no commit recorded)'));
+    return 0;
+  }
+  if (cmd === 'narration') {
+    let dir = '.', wpm = null;
+    for (let i = 0; i < args.length; i++) { if (args[i] === '--wpm') wpm = Number(args[++i]); else dir = args[i]; }
+    const r = core.narration(dir, { wpm });
+    for (const p of r.parts) console.log('part ' + p.part + ': ' + p.sentences + ' sentences, ' + p.words + ' words, ' + p.characters + ' characters, about ' + p.estimateSeconds + ' s' + (p.problems.length ? '\n  ' + p.problems.join('\n  ') : ''));
+    console.log('about ' + r.total + ' s at ' + r.wpm + ' wpm. ' + r.partsLine + '\nwrote ' + path.relative(process.cwd(), r.full) + (r.problems ? '\n' + r.problems + ' problem(s) above the limits' : ''));
+    return r.problems ? 1 : 0;
+  }
+  if (cmd === 'measure') {
+    const r = core.measure(args[0] || '.');
+    for (const c of r.clips) console.log('part ' + c.part + ': ' + c.file + ' ' + c.seconds.toFixed(2) + ' s');
+    console.log(r.line + '\ntotal ' + r.total + ' s, written to rig/index.html and video.json' + (r.locked.length ? '; locked: ' + r.locked.join(', ') : '') + (r.extra.length ? '\nclips beyond the PARTS count ignored: part ' + r.extra.join(', ') : ''));
+    return 0;
+  }
+  if (cmd === 'look') {
+    if (!args[0]) { console.error('vkit look <name>|none [dir]. Looks: ' + (fs.existsSync(path.join(core.apps.KIT || '', 'looks')) ? '' : '') + 'see looks/index.json'); return 2; }
+    const r = core.look(args[1] || '.', args[0]);
+    console.log('look ' + r.name + ' written to ' + path.relative(process.cwd(), r.file) + (r.notes.length ? '\n  ' + r.notes.join('\n  ') : '') + '\nvkit frames to look, vkit check --quick to measure.');
     return 0;
   }
   console.error(cmd + ': not built yet. See docs/ROADMAP.md.');

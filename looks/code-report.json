@@ -1,0 +1,91 @@
+{
+  "name": "code-report",
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/looks.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file."
+  },
+  "_keys": {
+    "ground": "stage background",
+    "ink": "text and stroke colour on that ground",
+    "paper": "the surface of a card, clipping or slide when it differs from the ground",
+    "accents": "at most three, in priority order; the checker sums their share",
+    "type": "family class, weight, case and the sizes used for title, label and body",
+    "strokes": "width in px, seeded roughness 0 to 1, glow in px, cap style",
+    "entrance": "how an element arrives: kind, duration ms, easing, distance px or scale from",
+    "camera": "static, push, or drift; percent of frame height per second; scale change over a hold",
+    "cutSeconds": "seconds between shots, full and formal",
+    "holdSeconds": "longest still without a build or a moving camera, full and formal",
+    "textOnFrame": "what kinds of text appear: none, labels, bullets, titles, code, captions",
+    "evidence": "what shows a fact: recreated screens, documents, icons, figures",
+    "sceneKinds": "the rig's scene kinds this look serves best",
+    "pacing": "words per minute: creator measured, our target; sentence average words",
+    "voice": "the register the narration takes in this look, in a phrase"
+  },
+  "after": "styles/fireship-code-report.md",
+  "ground": "#0d0d0d",
+  "ink": "#f4f4f4",
+  "paper": "#161616",
+  "accents": [
+    "#ff3b3b",
+    "#37e07a",
+    "#ffb020"
+  ],
+  "type": {
+    "family": "geometric sans, monospace for code",
+    "weight": 700,
+    "case": "caps for labels",
+    "title": 96,
+    "label": 64,
+    "body": 54
+  },
+  "strokes": {
+    "width": 8,
+    "roughness": 0,
+    "glow": 0,
+    "cap": "square"
+  },
+  "entrance": {
+    "kind": "scale-in",
+    "ms": 220,
+    "easing": "ease-out",
+    "distance": 0,
+    "scaleFrom": 0.92
+  },
+  "camera": {
+    "kind": "static",
+    "percentPerSecond": 0,
+    "scaleOverHold": 0
+  },
+  "cutSeconds": {
+    "full": 3.5,
+    "formal": 6
+  },
+  "holdSeconds": {
+    "full": 4,
+    "formal": 8
+  },
+  "textOnFrame": [
+    "labels",
+    "code",
+    "titles"
+  ],
+  "evidence": [
+    "screenshots with ids, rotated 2 degrees with a shadow",
+    "figures",
+    "a levels diagram of bands"
+  ],
+  "sceneKinds": [
+    "concept opener",
+    "real chrome",
+    "diagram"
+  ],
+  "pacing": {
+    "creatorWpm": 220,
+    "targetWpm": 165,
+    "sentenceWords": 16
+  },
+  "voice": "first person, present tense, dry, a verdict with numbers"
+}

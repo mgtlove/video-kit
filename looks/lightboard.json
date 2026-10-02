@@ -1,0 +1,89 @@
+{
+  "name": "lightboard",
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/looks.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file."
+  },
+  "_keys": {
+    "ground": "stage background",
+    "ink": "text and stroke colour on that ground",
+    "paper": "the surface of a card, clipping or slide when it differs from the ground",
+    "accents": "at most three, in priority order; the checker sums their share",
+    "type": "family class, weight, case and the sizes used for title, label and body",
+    "strokes": "width in px, seeded roughness 0 to 1, glow in px, cap style",
+    "entrance": "how an element arrives: kind, duration ms, easing, distance px or scale from",
+    "camera": "static, push, or drift; percent of frame height per second; scale change over a hold",
+    "cutSeconds": "seconds between shots, full and formal",
+    "holdSeconds": "longest still without a build or a moving camera, full and formal",
+    "textOnFrame": "what kinds of text appear: none, labels, bullets, titles, code, captions",
+    "evidence": "what shows a fact: recreated screens, documents, icons, figures",
+    "sceneKinds": "the rig's scene kinds this look serves best",
+    "pacing": "words per minute: creator measured, our target; sentence average words",
+    "voice": "the register the narration takes in this look, in a phrase"
+  },
+  "after": "styles/ibm-technology-lightboard.md",
+  "ground": "#0b0b0d",
+  "ink": "#f2f2f2",
+  "paper": null,
+  "accents": [
+    "#b892ff",
+    "#6fe3ff",
+    "#ff7ad9"
+  ],
+  "type": {
+    "family": "rounded hand-style sans",
+    "weight": 500,
+    "case": "sentence",
+    "title": 88,
+    "label": 64,
+    "body": 54
+  },
+  "strokes": {
+    "width": 6,
+    "roughness": 0.6,
+    "glow": 6,
+    "cap": "round"
+  },
+  "entrance": {
+    "kind": "draw-on",
+    "ms": 1100,
+    "easing": "ease-out",
+    "distance": 0,
+    "scaleFrom": 1
+  },
+  "camera": {
+    "kind": "push",
+    "percentPerSecond": 0,
+    "scaleOverHold": 0.05
+  },
+  "cutSeconds": {
+    "full": 12,
+    "formal": 16
+  },
+  "holdSeconds": {
+    "full": 8,
+    "formal": 12
+  },
+  "textOnFrame": [
+    "labels",
+    "titles"
+  ],
+  "evidence": [
+    "recreated screens sketched in outline",
+    "icons"
+  ],
+  "sceneKinds": [
+    "concept opener",
+    "diagram",
+    "cards and rooms"
+  ],
+  "pacing": {
+    "creatorWpm": 125,
+    "targetWpm": 150,
+    "sentenceWords": 14
+  },
+  "voice": "a colleague at the board, plain declaratives, one thesis line repeated"
+}

@@ -227,7 +227,10 @@ async function check(videoDir, opts) {
 
   // accent share and stroke contrast, from the pixels
   const tok = pass1[0].data.tokens;
-  const accents = ['--accent', '--hi', '--stroke', '--kind-a', '--kind-b', '--kind-c'].map((k) => rgbOf(tok[k]) || null).filter(Boolean);
+  /* an accent is a colour that is neither the ground nor the text colour; a kind colour that fell back to ink is not one */
+  const far = (a, b) => { const d = Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2); return d > Col.matchDistance; };
+  const groundRgb = pass1[0].data.stageBg, inkRgb = rgbOf(tok['--ink']);
+  const accents = ['--accent', '--hi', '--stroke', '--kind-a', '--kind-b', '--kind-c'].map((k) => rgbOf(tok[k]) || null).filter(Boolean).filter((c) => far(c, groundRgb) && (!inkRgb || far(c, inkRgb)));
   let worstShare = 0, worstAt = null; const strokeLow = []; let strokeCount = 0;
   for (const s of pass1) {
     const png = decode(s.png);

@@ -1,0 +1,14 @@
+{
+  "_about": "A look pack names a type family as a class, not a font. This maps each class to a stack of faces already on a Mac or Windows machine, so nothing downloads and no licence is taken on. A face shipped inside a video or a look pack needs its own licence row first (C-TYPE-15, docs/CARRYOVER.md): OFL or an explicit web or app licence; until then looks use system stacks and a render is pixel-identical per machine, not across machines. Edit by hand; vkit sync-reference does not write this file.",
+  "families": {
+    "rounded hand-style sans": { "head": "\"Chalkboard SE\", \"Comic Neue\", \"Segoe Print\", \"Marker Felt\", sans-serif" },
+    "hand-style sans": { "head": "\"Marker Felt\", \"Chalkboard SE\", \"Segoe Print\", \"Comic Sans MS\", sans-serif" },
+    "geometric sans, monospace for code": { "head": "\"Avenir Next\", Futura, \"Century Gothic\", \"Segoe UI\", sans-serif", "mono": "\"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace" },
+    "geometric sans": { "head": "\"Avenir Next\", Futura, \"Century Gothic\", \"Segoe UI\", sans-serif" },
+    "humanist sans": { "head": "\"Segoe UI\", \"Helvetica Neue\", \"Gill Sans\", Arial, sans-serif" },
+    "light humanist sans": { "head": "\"Segoe UI\", \"Helvetica Neue\", \"Gill Sans\", Arial, sans-serif", "weight": 300 },
+    "serif for headlines, sans for ids": { "head": "Georgia, \"Times New Roman\", serif", "label": "\"Segoe UI\", Arial, sans-serif" },
+    "transitional serif, small caps for attribution": { "head": "Baskerville, Georgia, \"Times New Roman\", serif", "smallCaps": true }
+  },
+  "fallback": { "head": "\"Segoe UI\", Arial, sans-serif" }
+}

@@ -1,0 +1,87 @@
+{
+  "name": "clippings",
+  "_source": {
+    "repo": "video-reference",
+    "file": "styles/looks.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file."
+  },
+  "_keys": {
+    "ground": "stage background",
+    "ink": "text and stroke colour on that ground",
+    "paper": "the surface of a card, clipping or slide when it differs from the ground",
+    "accents": "at most three, in priority order; the checker sums their share",
+    "type": "family class, weight, case and the sizes used for title, label and body",
+    "strokes": "width in px, seeded roughness 0 to 1, glow in px, cap style",
+    "entrance": "how an element arrives: kind, duration ms, easing, distance px or scale from",
+    "camera": "static, push, or drift; percent of frame height per second; scale change over a hold",
+    "cutSeconds": "seconds between shots, full and formal",
+    "holdSeconds": "longest still without a build or a moving camera, full and formal",
+    "textOnFrame": "what kinds of text appear: none, labels, bullets, titles, code, captions",
+    "evidence": "what shows a fact: recreated screens, documents, icons, figures",
+    "sceneKinds": "the rig's scene kinds this look serves best",
+    "pacing": "words per minute: creator measured, our target; sentence average words",
+    "voice": "the register the narration takes in this look, in a phrase"
+  },
+  "after": "styles/how-money-works-clippings.md",
+  "ground": "#101512",
+  "ink": "#1a1a1a",
+  "paper": "#f3f1ea",
+  "accents": [
+    "#35c46a",
+    "#ffe14d"
+  ],
+  "type": {
+    "family": "serif for headlines, sans for ids",
+    "weight": 600,
+    "case": "sentence",
+    "title": 80,
+    "label": 54,
+    "body": 54
+  },
+  "strokes": {
+    "width": 28,
+    "roughness": 0.3,
+    "glow": 0,
+    "cap": "square"
+  },
+  "entrance": {
+    "kind": "fade-drift",
+    "ms": 300,
+    "easing": "ease-in-out",
+    "distance": 0,
+    "scaleFrom": 1
+  },
+  "camera": {
+    "kind": "drift",
+    "percentPerSecond": 1.5,
+    "scaleOverHold": 0.06
+  },
+  "cutSeconds": {
+    "full": 5,
+    "formal": 8
+  },
+  "holdSeconds": {
+    "full": 8,
+    "formal": 12
+  },
+  "textOnFrame": [
+    "titles",
+    "labels"
+  ],
+  "evidence": [
+    "documents as paper clippings with a source id",
+    "a highlighter along the line being read"
+  ],
+  "sceneKinds": [
+    "concept opener",
+    "diagram"
+  ],
+  "pacing": {
+    "creatorWpm": 198,
+    "targetWpm": 160,
+    "sentenceWords": 18
+  },
+  "voice": "sceptical reporter, sources named, each section opened with a question"
+}
