@@ -8,14 +8,14 @@ const core = require('@video-kit/core');
 const COMMANDS = {
   'new':            ['<name> [--app family/tool]', 'create a video folder from starter/, engine copied in; --app copies a recreated app in'],
   'app':            ['new|add-state|extract ...', 'recreated apps: app new family/tool; app add-state family/tool id [--capture f]; app extract <video> family/tool id'],
-  'menu':           ['[dir]', 'walk through the ten choices a video makes; or show them'],
+  'menu':           ['[dir] [--show] [--set item[.field]=value [--note t]] [--explain item] [--walk]', 'walk through the ten choices one at a time (Enter keeps, a number picks, ? explains, 0 types your own, S saves and runs frames, Q stops); --show prints them; --set answers one from a script'],
   'capture':        ['[dir]', 'capture a task in the browser as tagged screenshots (later)'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
   'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
   'frames':         ['[dir] [times...|--every N]', 'a still per beat so you can look before recording anything'],
   'render':         ['[dir] [--fps N]', 'every frame from the seek, the voice muxed, captions beside it: out/<name>.mp4'],
   'check':          ['[dir] [--quick]', 'is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick skips the slow proofs'],
-  'brand':          ['[dir] [--check]', 'write brand.css from brand.json; --check reports what is applied'],
+  'brand':          ['<name>|none [dir] [--check]', 'apply a brand from brands/ (copied to rig/brand/, tokens in rig/brand.css); no name rebuilds from rig/brand/brand.json; --check reports what it does to the rules'],
   'look':           ['<name>|none [dir]', 'apply a look pack from looks/ as tokens in rig/look.css; none empties it'],
   'sync-reference': ['[path] [--only rules|looks|patterns]', 'copy rules.json, looks/ and patterns/index.json from ../video-reference'],
   'publish':        ['[dir]', 'hand the MP4 to a host adapter and record the URL']
@@ -124,6 +124,85 @@ async function main() {
     for (const c of r.clips) console.log('part ' + c.part + ': ' + c.file + ' ' + c.seconds.toFixed(2) + ' s');
     console.log(r.line + '\ntotal ' + r.total + ' s, written to rig/index.html and video.json' + (r.locked.length ? '; locked: ' + r.locked.join(', ') : '') + (r.extra.length ? '\nclips beyond the PARTS count ignored: part ' + r.extra.join(', ') : ''));
     return 0;
+  }
+  if (cmd === 'menu') {
+    const menu = core.menu;
+    let dir = '.', show = false, sets = [], explain = null, note = null, walk = false;
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--show') show = true;
+      else if (args[i] === '--walk') walk = true;
+      else if (args[i] === '--set') sets.push(args[++i]);
+      else if (args[i] === '--note') note = args[++i];
+      else if (args[i] === '--explain') explain = args[++i];
+      else dir = args[i];
+    }
+    if (explain) {
+      const e = menu.explain(explain);
+      console.log(e.title + ': ' + e.ask + '\n' + e.reason + '\n');
+      for (const f of e.fields) { console.log((e.fields.length > 1 ? f.name + ':' : 'options:') + (f.free ? ' (or type your own: ' + f.free + ')' : '') + (f.many ? ' (several, comma separated)' : '')); for (const o of f.options) console.log('  ' + o.value.padEnd(28) + o.means); }
+      return 0;
+    }
+    if (sets.length) {
+      for (const sline of sets) {
+        const m = /^([a-z_]+)(?:\.([a-z_]+))?=(.*)$/.exec(sline);
+        if (!m) { console.error('--set item=value or --set item.field=value: ' + sline); return 2; }
+        const r = menu.set(dir, m[1], m[2] || null, m[3], note);
+        console.log(r.key + (r.field !== 'value' ? '.' + r.field : '') + ' = ' + (Array.isArray(r.value) ? r.value.join(', ') : r.value || '(cleared)') + (r.ran ? '  (ran ' + r.ran + ')' : ''));
+      }
+      return 0;
+    }
+    if (show || (!process.stdin.isTTY && !walk)) { console.log(menu.format(menu.show(dir))); if (!show) console.log('\n(no terminal to walk the items; vkit menu --set item=value answers one, --walk reads answers from a pipe)'); return 0; }
+    /* the walk: one item at a time; every answer goes through menu.set, so a look or a brand is applied as it is chosen */
+    const readline = require('readline');
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: !!process.stdin.isTTY });
+    /* answers are queued as they arrive, so a pipe of answers (one per line) walks the same way a person does; the end of input stops the walk like Q */
+    const queue = []; let waiting = null, closed = false;
+    const echo = (l) => { if (!process.stdin.isTTY) process.stdout.write(l + '\n'); return l; };
+    rl.on('line', (l) => { if (waiting) { const w = waiting; waiting = null; w(echo(l)); } else queue.push(l); });
+    rl.on('close', () => { closed = true; if (waiting) { const w = waiting; waiting = null; w('Q'); } });
+    const ask = (q) => { process.stdout.write(q); if (queue.length) return Promise.resolve(echo(queue.shift())); if (closed) return Promise.resolve('Q'); return new Promise((res) => { waiting = res; }); };
+    let runFrames = false, stop = false;
+    try {
+      console.log(menu.format(menu.show(dir)) + '\n\nEnter keeps the answer. A number picks. ? explains. 0 types your own. S saves and runs frames. Q stops.\n');
+      for (const it of menu.items(dir)) {
+        if (stop) break;
+        console.log(it.n + '. ' + it.title + ': ' + it.ask + (it.locked ? '\n   LOCKED: ' + it.locked : ''));
+        for (const f of it.fields) {
+          if (stop) break;
+          const cur = Array.isArray(f.current) ? f.current.join(', ') : f.current;
+          const label = it.fields.length > 1 ? '   ' + f.name : '  ';
+          if (f.options.length) f.options.forEach((o, k) => console.log(label + ' ' + String(k + 1).padStart(3) + ') ' + o.value.padEnd(26) + (o.means || '').slice(0, 90)));
+          for (;;) {
+            const a = (await ask(label + ' [' + (cur === '' ? 'not chosen' : cur) + ']' + (f.free && !f.options.length ? ' (type a value)' : '') + ' > ')).trim();
+            if (a === '') break;
+            if (a === 'Q' || a === 'q') { stop = true; break; }
+            if (a === 'S' || a === 's') { stop = true; runFrames = true; break; }
+            if (a === '?') { console.log('   ' + it.reason + (f.free ? '\n   ' + f.free : '')); continue; }
+            let value;
+            if (a === '0') value = (await ask(label + ' type it > ')).trim();
+            else if (/^[\d ,]+$/.test(a) && f.options.length) { const picks = a.split(/[ ,]+/).filter(Boolean).map((x) => f.options[Number(x) - 1]); if (picks.some((x) => !x)) { console.log('   no such number'); continue; } value = f.many ? picks.map((x) => x.value) : picks[0].value; }
+            else value = a;
+            try { const r = menu.set(dir, it.key, f.name, value); console.log('   ' + (Array.isArray(r.value) ? r.value.join(', ') : r.value) + ' chosen' + (r.ran ? '; ran ' + r.ran : '')); break; }
+            catch (e) { console.log('   ' + e.message); }
+          }
+        }
+      }
+    } finally { rl.close(); }
+    console.log('\n' + menu.format(menu.show(dir)));
+    if (runFrames) { const r = await core.frames(dir, { channel }); console.log('\n' + r.files.length + ' frames in ' + path.relative(process.cwd(), path.dirname(r.files[0])) + '. Open them and look.'); }
+    return 0;
+  }
+  if (cmd === 'brand') {
+    let name = null, dir = '.', check = false;
+    for (const a of args) { if (a === '--check') check = true; else if (name === null && (a === 'none' || core.brands.listBrands().includes(a) || fs.existsSync(path.join(a, 'brand.json')))) name = a; else dir = a; }
+    if (!check) {
+      const r = core.brand(dir, name);
+      console.log('brand ' + r.name + ' written to ' + path.relative(process.cwd(), r.file) + (r.hasMark ? ', mark ' + r.tokens['--brand-mark-when'] + ' at ' + r.tokens['--brand-mark-where'] : '') + (r.hasBanner ? ', banner ' + r.tokens['--brand-banner-when'] + ' at the ' + r.tokens['--brand-banner-where'] : '') + (r.notes.length ? '\n  ' + r.notes.join('\n  ') : ''));
+    }
+    const c = core.brandCheck(dir);
+    console.log(core.brands.formatCheck(c));
+    if (!check) console.log('vkit frames to look, vkit check --quick to measure.');
+    return c.failures ? 1 : 0;
   }
   if (cmd === 'look') {
     if (!args[0]) { console.error('vkit look <name>|none [dir]. Looks: ' + (fs.existsSync(path.join(core.apps.KIT || '', 'looks')) ? '' : '') + 'see looks/index.json'); return 2; }

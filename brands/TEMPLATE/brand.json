@@ -1,0 +1,8 @@
+{
+  "name": "",
+  "_about": "The empty shape of a brand. Copy this folder to brands/<name>/, fill in what you have and leave the rest empty: an empty colour keeps the look's or the theme's value; an empty mark text with no file means no mark; when: never turns a mark or banner off.",
+  "colours": { "ground": "", "ink": "", "primary": "", "secondary": "", "highlight": "" },
+  "faces": { "display": "", "text": "" },
+  "mark": { "text": "", "file": "", "when": "never", "where": "top-right", "size": 40, "opacity": 0.9, "seconds": 5 },
+  "banner": { "text": "", "when": "never", "where": "bottom", "size": 36, "opacity": 1, "seconds": 5, "fill": "primary", "ink": "auto" }
+}

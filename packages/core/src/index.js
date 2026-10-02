@@ -3,7 +3,7 @@
 // or knows which shell is calling.
 //
 // Each export is a contract; a body lands with its frame proof, in the order
-// docs/ROADMAP.md gives. notBuilt marks the ones still to come.
+// docs/ROADMAP.md gives. Capture (step 9) and publish (step 11) arrive as adapters.
 
 const { newVideo } = require('./new');
 const { frames } = require('./frames');
@@ -13,26 +13,26 @@ const { check } = require('./check');
 const { syncReference } = require('./sync');
 const { applyLook } = require('./look');
 const { narration, measure } = require('./words');
+const brand = require('./brand');
+const menu = require('./menu');
 const voice = require('./adapters/voice');
 const render = require('./adapters/render');
 const script = require('./adapters/script');
 const hosting = require('./adapters/hosting');
 
-function notBuilt(name) {
-  return function () { throw new Error(name + ' is not built yet. See docs/ROADMAP.md.'); };
-}
-
 module.exports = {
   // a video is a folder; these take its path
   newVideo: newVideo,                        // copy starter/, engine in at this version, video.json with menu defaults; opts.app for an app-backed video
   apps: apps,                                // recreated apps: resolveApp, installApp, appNew, appAddState, appExtract
-  menu: notBuilt('menu'),                    // read and write video.json.menu; list looks, patterns, brands
+  menu: menu,                                // the ten choices: items, show, set, explain, format; options from looks/, brands/, patterns/, apps
   narration: narration,                      // parts -> FULL.md, limits, estimates, a PARTS line
   measure: measure,                          // clip files -> exact PARTS in the page and video.json; re-timing items lock
   frames: frames,                            // rig -> a PNG per beat (seek-correct)
   renderVideo: renderVideo,                  // rig -> every frame at 30 fps -> mux with clips -> MP4, captions sidecar
   check: check,                              // offline, deterministic, seekable, seek-correct; craft rules; contrast; fidelity against captures
-  brand: notBuilt('brand'),                  // brand.json -> brand.css; report
+  brand: brand.applyBrand,                   // brands/<name>/ -> rig/brand/ and rig/brand.css tokens the theme reads first; the engine builds the mark and banner
+  brandCheck: brand.brandCheck,              // what the brand does to the contrast rules, measured without a browser
+  brands: brand,                             // listBrands, loadBrand, tokensFor, formatCheck
   look: applyLook,                           // look pack -> rig/look.css tokens the theme reads; video.json.menu.look records it
   syncReference: syncReference,              // ../video-reference -> rules.json, looks/, patterns/index.json
   adapters: { voice, render, script, hosting }

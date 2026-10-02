@@ -26,13 +26,14 @@ function engineVersion() {
   return m ? m[1] : '0.0.0';
 }
 
+const EXPLAIN = ['reason', 'kinds', 'title', 'ask', 'options', 'options_from', 'fields'];
 function menuDefaults() {
   const d = JSON.parse(fs.readFileSync(path.join(KIT, 'menu-defaults.json'), 'utf8'));
   const menu = {};
   for (const [k, v] of Object.entries(d)) {
     if (k.startsWith('_')) continue;
     const item = Object.assign({}, v);
-    delete item.reason; delete item.kinds;   /* explanations stay in the kit; a video records choices */
+    for (const x of EXPLAIN) delete item[x];   /* the menu's words stay in the kit; a video records choices */
     const own = k === 'job' || k === 'sources';
     menu[k] = Object.assign(item, { from: own ? '' : 'defaults', chosen_on: '', note: '' });
   }
@@ -59,4 +60,4 @@ function newVideo(name, opts) {
   return { dir: dst, engine: engine, app: app ? { ref: app.ref, version: app.app.version, states: app.states.map((s) => s.id) } : null };
 }
 
-module.exports = { newVideo, engineVersion, menuDefaults, KIT };
+module.exports = { newVideo, engineVersion, menuDefaults, EXPLAIN, KIT };

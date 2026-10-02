@@ -2,11 +2,12 @@
    follows; or apply a look pack with vkit look, which writes rig/look.css. Two scopes, never merged: the teaching layer under :root is yours;
    the recreated screen under #mock keeps the real product's palette and is
    never restyled, because a viewer has to recognise it.
-   A brand (rig/brand/brand.json, when one is applied) sets --brand-* tokens
-   that these read first. */
+   A brand (vkit brand <name>: rig/brand/brand.json to rig/brand.css) sets
+   --brand-* tokens that these read first. */
 :root{
   /* every token reads the brand first (rig/brand/brand.css), then the look (rig/look.css), then its own default */
   --head:var(--brand-font-display,var(--look-head,"Segoe UI",Arial,sans-serif));
+  --text:var(--brand-font-text,var(--head));   /* sentences and card bodies: a brand's second face; otherwise the heading face */
   --weight:var(--brand-weight,var(--look-weight,800));
   --stage:var(--brand-ground,var(--look-ground,#1c1e1d));
   --ink:var(--brand-ink,var(--look-ink,#f5f6f4));

@@ -13,7 +13,7 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 .scene.on{opacity:1}
 .kick{font-size:24px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:28px}
 .big{font-size:var(--size-title,88px);font-weight:var(--weight,800);line-height:1.1;margin:0 0 20px;max-width:1500px}
-.sub{font-size:var(--size-body,54px);font-weight:600;line-height:1.35;color:var(--muted);max-width:1500px}   /* 54 px: the floor for text a learner reads */
+.sub{font-size:var(--size-body,54px);font-weight:600;line-height:1.35;color:var(--muted);max-width:1500px;font-family:var(--text,var(--head))}   /* 54 px: the floor for text a learner reads; the text face (a brand's second face) */
 
 /* ---- elements that arrive on a beat ---- */
 .card,.room,.who,.row{opacity:0;transform:translateY(var(--entrance-distance,14px)) scale(var(--entrance-scale,1));transition:opacity var(--entrance-ms,.45s),transform var(--entrance-ms,.45s)}
@@ -21,7 +21,7 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 .cards{display:flex;gap:40px;margin-top:34px}
 .card{flex:1;padding:34px 38px;border-radius:12px;background:var(--card-fill);color:var(--paper-ink,var(--ink))}
 .card .n{font-size:var(--size-label,54px);font-weight:var(--weight,800);margin-bottom:12px}   /* a card's name is read text */
-.card .t{font-size:28px;line-height:1.4;color:var(--paper-dim,var(--dim))}   /* a card's body is decoration under the rules; mark it data-decor, or make it 54 px */
+.card .t{font-size:28px;line-height:1.4;color:var(--paper-dim,var(--dim));font-family:var(--text,var(--head))}   /* a card's body is decoration under the rules; mark it data-decor, or make it 54 px */
 
 /* ---- the recreated screen: its box is the video's; the engine only fades it ---- */
 #mock{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .6s;overflow:hidden}
@@ -54,7 +54,24 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 #card.on{opacity:1;transform:none}
 #card{transition:opacity var(--entrance-ms,.45s),transform var(--entrance-ms,.45s)}
 #card .kick{font-size:20px;margin-bottom:12px;color:var(--panel-kick,var(--accent))}
-#card .body{font-size:var(--size-body,54px);font-weight:700;line-height:1.25}   /* the voice depends on it: 54 px floor (rules.json text.readMinPx) */
+#card .body{font-size:var(--size-body,54px);font-weight:700;line-height:1.25;font-family:var(--text,var(--head))}   /* the voice depends on it: 54 px floor (rules.json text.readMinPx) */
+
+/* ---- the brand mark and banner: built by the engine from --brand-* tokens (vkit brand), shown by beats.
+        A corner sits inside title safe (96 and 54 px) and above the caption band (200 px); a bottom banner too. ---- */
+#mark,#banner{position:absolute;z-index:60;pointer-events:none;opacity:0;transition:opacity var(--crossfade,.5s);font-family:var(--brand-font-display,var(--head));white-space:nowrap;line-height:1}   /* line-height 1: the text box is the size, so a corner mark stays inside title safe */
+#mark{display:flex;align-items:center;gap:.4em;height:var(--brand-mark-size,40px);font-size:var(--brand-mark-size,40px);font-weight:var(--weight,800);letter-spacing:.06em;color:var(--brand-mark-ink,var(--ink))}
+#mark .img{display:block;height:100%;aspect-ratio:1;background-position:center;background-size:contain;background-repeat:no-repeat}   /* the image, square, the mark's height; the engine sets its url */
+#mark .t:empty{display:none}
+#mark[data-where="top-left"]{left:96px;top:54px}
+#mark[data-where="top-right"]{right:96px;top:54px}
+#mark[data-where="bottom-left"]{left:96px;bottom:200px}
+#mark[data-where="bottom-right"]{right:96px;bottom:200px}
+#banner{left:0;right:0;font-size:var(--brand-banner-size,36px);font-weight:700;background:var(--brand-banner-fill,var(--accent));color:var(--brand-banner-ink,var(--accent-ink))}
+#banner[data-where="top"]{top:0;padding:54px 96px 22px}
+#banner[data-where="bottom"]{bottom:200px;padding:22px 96px}
+#mark.on{opacity:var(--brand-mark-opacity,1)}
+#banner.on{opacity:var(--brand-banner-opacity,1)}
+#stage.screen #mark[data-when="always"],#stage.screen #banner[data-when="always"]{opacity:0}   /* never over the recreated screen; watermark is the one that stays */
 
 /* ---- fade, grain, hud, start panel ---- */
 #fade{position:absolute;inset:0;z-index:95;background:var(--stage);opacity:1;transition:opacity 1s;pointer-events:none}

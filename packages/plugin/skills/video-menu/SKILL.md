@@ -14,7 +14,7 @@ metadata:
 
 Every choice a video makes lives in `video.json` under `menu`, and this skill is the only way those choices are set or changed. The person is walked through the items with their hand held: each item says what the question is asking, why it matters, the options with one line of context each, which is the default and why, and what picking it will change. Nothing is chosen for them. The same menu opens at the start and at any point later.
 
-The items and their full explanations are in `references/menu-items.md`. Read it before showing the menu; it is the script. The lists it offers come from data files in the kit (`looks/`, `patterns/index.json`, `brands/`, `menu-defaults.json`), never from this file.
+The items and their full explanations are in `references/menu-items.md`. Read it before showing the menu; it is the script. The lists it offers come from data files in the kit (`looks/`, `patterns/index.json`, `brands/`, `menu-defaults.json`), never from this file. The commands behind the skill (step 7b): `vkit menu --show` prints the ten items as the video has them; `vkit menu --explain <item>` prints an item's question, reason and options from the data files; `vkit menu --set item=value` or `--set item.field=value` (`--note "..."` beside it) writes one answer and, for a look or a brand, applies it at once; a locked item is refused with its reason. Write through these, never by editing `video.json` by hand.
 
 ## How the menu looks
 

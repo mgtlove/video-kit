@@ -7,6 +7,7 @@ One video: its script, words, recreated screen and timeline. Made by `vkit new`.
 | `rig/index.html` | The rig: scenes, the recreated screen, `COPY`, the timeline. It is the footage, not a preview |
 | `rig/theme.css` | Every token of the teaching layer under `:root`, each reading the brand, then the look, then its default; the product palette under `#mock` when the screen is inline |
 | `rig/look.css` | Empty until `vkit look <name>` writes a look pack's tokens into it; `vkit look none` empties it again |
+| `rig/brand.css` | Empty until `vkit brand <name>` writes a brand's tokens into it (colours, faces, the mark and banner); `rig/brand/` then holds the brand's own files; `vkit brand none` empties it again |
 | `rig/app/` | Only with `vkit new --app`: the recreated app as copied in (`tokens.css`, `screen.css`, `states/`, `manifest.csv`, `states.js`). Change the app and make the video again; never edit here |
 | `narration/part-N.md` | The script, one file per voice clip, one sentence per line; `vkit narration` holds them to the limits and writes `FULL.md` |
 | `voice/` | The clips, `part-N.wav` or `.mp3`; `vkit measure` reads them and writes the exact `PARTS` line, and the menu items that would re-time the video lock |
@@ -14,4 +15,4 @@ One video: its script, words, recreated screen and timeline. Made by `vkit new`.
 | `video.json` | Every choice this video made (`menu`), the parts, the voice, how it was published |
 | `out/` | What `vkit render` wrote (the MP4, `.vtt`, `.srt`, `render.json`) and what `vkit check` wrote (`check.json`, `check/` stills, `fidelity/` side-by-sides) |
 
-Order: `vkit menu` (or `vkit look <name>` for now), write the parts and `vkit narration`, generate or record the voice, `vkit measure`, build the screen and the beats, `vkit frames` and look, `vkit check --quick` while you work, `vkit render`, `vkit check`, `vkit publish`. Text the voice depends on carries `data-narration`; text it never depends on carries `data-decor`; the checker holds the first to the 54 px floor.
+Order: `vkit menu` (the ten choices; a look or a brand chosen there is applied at once), write the parts and `vkit narration`, generate or record the voice, `vkit measure`, build the screen and the beats, `vkit frames` and look, `vkit check --quick` while you work, `vkit render`, `vkit check`, `vkit publish`. Text the voice depends on carries `data-narration`; text it never depends on carries `data-decor`; the checker holds the first to the 54 px floor.

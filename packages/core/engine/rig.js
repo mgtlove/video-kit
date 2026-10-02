@@ -1,4 +1,4 @@
-/* video-kit engine: the clock, the timeline, seek, the camera, scenes and the card.
+/* video-kit engine: the clock, the timeline, seek, the camera, scenes, the card, the brand mark.
    One file, no dependencies, loaded by a video's rig page from rig/engine/.
 
    The page supplies:
@@ -83,11 +83,41 @@
   var mockHome = '', screenState = null;
   function state(id) {
     var m = $('mock'); if (!m) return;
+    stage.classList.toggle('screen', !!id);             /* a brand mark set to `always` hides while a screen is up (rig.css) */
     if (!id) { m.classList.remove('on'); return; }
     if (window.STATES && window.STATES[id] !== undefined) {
       if (screenState !== id) { m.innerHTML = window.STATES[id]; screenState = id; }
     }
     m.classList.add('on');
+  }
+
+  /* ---------- the brand mark and banner (engine 0.4.0) ----------
+     vkit brand writes rig/brand.css: --brand-mark-when (never, opener, close, both, always,
+     watermark), -where (a corner), -size, -opacity, -seconds, -text, -image; the same for
+     --brand-banner-* with where top or bottom. The elements are built here at boot from those
+     tokens, so a video with no brand has no elements and renders exactly as before, and they are
+     shown and hidden by beats, so a frame at t shows the mark as playback would. Placement is
+     rig.css: inside title safe, above the caption band. */
+  function token(name) { var v = getComputedStyle(stage).getPropertyValue(name).trim(); return v.replace(/^"(.*)"$/, '$1'); }
+  function brandEl(id) {
+    var when = token('--brand-' + id + '-when');
+    if (!when || when === 'never') return null;
+    var el = document.createElement('div'); el.id = id; el.setAttribute('data-when', when); el.setAttribute('data-where', token('--brand-' + id + '-where') || (id === 'mark' ? 'top-right' : 'bottom'));
+    var img = id === 'mark' ? token('--brand-mark-image') : '';
+    if (img) { var i = document.createElement('i'); i.className = 'img'; i.style.backgroundImage = img; el.appendChild(i); }   /* inline, so the url resolves against the page, not the engine's folder */
+    var t = document.createElement('span'); t.className = 't'; t.textContent = token('--brand-' + id + '-text'); t.setAttribute('data-decor', ''); el.appendChild(t);   /* the voice never depends on a brand line */
+    stage.insertBefore(el, fade);                       /* under the fade, over everything else */
+    return el;
+  }
+  function brandBeats() {
+    ['mark', 'banner'].forEach(function (id) {
+      var el = $(id); if (!el) return;
+      var when = el.getAttribute('data-when'), sec = parseFloat(token('--brand-' + id + '-seconds')) || 5;
+      var on = function () { el.classList.add('on'); }, off = function () { el.classList.remove('on'); };
+      if (when === 'always' || when === 'watermark') at(0, on, true);
+      if (when === 'opener' || when === 'both') { at(0, on, true); at(sec, off, true); }
+      if (when === 'close' || when === 'both') at(Math.max(0, TOTAL - sec), on, true);
+    });
   }
 
   var cardNear = null, cardSide = null;
@@ -293,12 +323,12 @@
     var castL = $('cast'); if (castL) while (castL.firstChild) castL.removeChild(castL.firstChild);
     var ptr = $('pointer'); if (ptr) { ptr.style.transform = 'translate(' + (W - 80) + 'px,' + (H - 80) + 'px)'; pointAt = null; }   /* home: bottom right, hidden */
     var typed = document.querySelectorAll('.typing'); for (var ty = 0; ty < typed.length; ty++) typed[ty].classList.remove('typing');
-    cardNear = null; cardSide = null;
+    cardNear = null; cardSide = null; stage.classList.remove('screen');
     for (var k = 0; k < resetHooks.length; k++) resetHooks[k]();
     snapping = true; home(); snapping = false;
     void stage.offsetHeight;
     stage.classList.remove('snap');
-    beats = []; window.timeline(); beats.sort(function (a, b) { return a.t - b.t; });
+    beats = []; window.timeline(); brandBeats(); beats.sort(function (a, b) { return a.t - b.t; });
   }
   /* holdAll(anims, msOf): each animation held at msOf(a) and then baked: the value it has at
      that time is read on the main thread, written inline with transitions off for one style
@@ -436,6 +466,7 @@
     if (typeof window.copy === 'function') window.copy();
     var mk = $('mock'); if (mk) mockHome = mk.innerHTML;         /* after copy(), so COPY strings are part of home */
     layer('ink'); layer('cast'); pointerEl();                      /* the layers exist from the start */
+    brandEl('mark'); brandEl('banner');                            /* only when brand.css says so */
     addEventListener('resize', fit); fit();
     addEventListener('keydown', keys);
     var btn = $('start'); if (btn) btn.addEventListener('click', start);
@@ -448,7 +479,7 @@
   }
 
   window.VK = {
-    version: '0.3.2',
+    version: '0.4.0',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; },

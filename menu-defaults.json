@@ -1,39 +1,85 @@
 {
-  "_note": "House answers for the video menu. A new video starts with these, marked from: defaults, until each is confirmed. Items 1 (job) and 2 (sources) are each video's own. Change a value here with its reason and every new video picks it up.",
+  "_note": "House answers for the video menu, and the menu's own words. A new video starts with these values, marked from: defaults, until each is confirmed. Items 1 (job) and 2 (sources) are each video's own. Change a value here with its reason and every new video picks it up. title, ask, options and fields are what vkit menu shows; options_from names the data folder that fills an option list (looks, brands, patterns, apps), so nobody types a list into a skill.",
   "job": {
+    "title": "The job",
+    "ask": "What is this video for?",
     "kind": "",
     "length": "",
-    "audience": ""
+    "audience": "",
+    "fields": {
+      "kind": { "options": [
+        { "value": "walkthrough", "means": "a task in a recreated screen, start to finish" },
+        { "value": "concept", "means": "an idea explained with words and drawings, no screen" },
+        { "value": "mixed", "means": "a concept opener, then the screen, then a recap (the starter)" }
+      ] },
+      "length": { "free": "a target in seconds or minutes, under five minutes (rules.json pacing)" },
+      "audience": { "free": "who watches and what they already know" }
+    },
+    "reason": "Each video's own. The kind decides which patterns are offered first."
   },
   "sources": {
+    "title": "The sources",
+    "ask": "Where does the screen come from?",
     "kind": "",
     "app": "",
     "ids": "",
     "surfaces": "",
     "missing": "",
-    "kinds": {
-      "none": "whiteboard or theory: no screen at all",
-      "inline": "a one-off screen built in the video from a couple of captures, as the starter does",
-      "app": "a recreated app: vkit new --app family/tool copies its states in; vkit app extract lifts an inline screen into one the day it is needed twice"
-    }
+    "fields": {
+      "kind": { "options": [
+        { "value": "none", "means": "whiteboard or theory: no screen at all" },
+        { "value": "inline", "means": "a one-off screen built in the video from a couple of captures, as the starter does" },
+        { "value": "app", "means": "a recreated app: vkit new --app family/tool copies its states in; vkit app extract lifts an inline screen into one the day it is needed twice" }
+      ] },
+      "app": { "options_from": "apps", "free": "family/tool of a recreated app in $VKIT_APPS, ../apps or examples/apps" },
+      "ids": { "free": "the element ids the timeline points at" },
+      "surfaces": { "free": "the screens shown, by name" },
+      "missing": { "free": "controls the captures do not show; a screen with no capture is a concept scene" }
+    },
+    "reason": "Recreate from your own captures, cite each, never invent a control."
   },
   "layout": {
+    "title": "The layout",
+    "ask": "How does the screen sit in the frame?",
     "value": "full",
-    "reason": "The screen at native pixels fills the frame; text is large; the explanation is a card beside its element. The review of earlier work found text slides read as empty and an inset screen as three quarters of the frame."
+    "options": [
+      { "value": "full", "means": "the screen at native pixels fills the frame; text is large; the explanation card sits beside its element" }
+    ],
+    "reason": "The screen at native pixels fills the frame; text is large; the explanation is a card beside its element. The review of earlier work found text slides read as empty and an inset screen as three quarters of the frame. The classic inset layout with a rail is not built; the rail and caption band rows in rules.json are marked not applicable."
   },
   "brand": {
+    "title": "The brand",
+    "ask": "Whose colours, faces and mark?",
     "value": "none",
-    "reason": "No brand until one is applied through vkit brand; the theme defaults render."
+    "options": [
+      { "value": "none", "means": "no brand: the look and the theme defaults render" }
+    ],
+    "options_from": "brands",
+    "reason": "No brand until one is applied through vkit brand; the theme defaults render. Choosing one here runs vkit brand <name>."
   },
   "look": {
+    "title": "The look",
+    "ask": "Which studied look?",
     "value": "house",
-    "reason": "Modern whiteboard, marker on charcoal. The studied looks are offered once looks/ is filled."
+    "options": [
+      { "value": "house", "means": "modern whiteboard, marker on charcoal: the theme's own defaults" }
+    ],
+    "options_from": "looks",
+    "reason": "Modern whiteboard, marker on charcoal. The studied looks are offered from looks/. Choosing one here runs vkit look <name>. Locked once the clips are measured: a look changes entrance and crossfade times."
   },
   "tone": {
+    "title": "The tone",
+    "ask": "How much restraint?",
     "value": "formal",
-    "reason": "One accent, no grain, cuts rather than glides, longer holds. Capability stays; restraint is a setting."
+    "options": [
+      { "value": "formal", "means": "one accent, no grain, cuts rather than glides, longer holds allowed (12 s); capability stays, restraint is a setting" },
+      { "value": "full", "means": "the look's whole range: glides, grain where the look has it, holds under 8 s" }
+    ],
+    "reason": "One accent, no grain, cuts rather than glides, longer holds. Capability stays; restraint is a setting. vkit check reads the tone for the still-run limit (rules.json motion.maxStillSeconds). Locked once the clips are measured."
   },
   "patterns": {
+    "title": "The patterns",
+    "ask": "Which measured moves does this video lean on?",
     "walkthrough": [
       "announce-do-explain",
       "build-with-the-sentence"
@@ -43,20 +89,54 @@
       "cut-on-the-last-word",
       "define-in-the-breath"
     ],
-    "reason": "The measured moves closest to a walkthrough and a definitions opener."
+    "fields": {
+      "walkthrough": { "options_from": "patterns", "many": true },
+      "concept": { "options_from": "patterns", "many": true }
+    },
+    "reason": "The measured moves closest to a walkthrough and a definitions opener. The 35 come from patterns/index.json with the phrase a person would say. Locked once the clips are measured: a pattern sets where the cuts fall."
   },
   "voice": {
+    "title": "The voice",
+    "ask": "How does the narration get made, and what goes beside it?",
     "route": "clips",
     "captions": "sidecar",
     "music": "none",
-    "reason": "Clips per part, measured, are the clock; captions as a file; no bed so a pause stays available."
+    "fields": {
+      "route": { "options": [
+        { "value": "clips", "means": "one clip per part in voice/, measured by vkit measure; the clips are the clock" },
+        { "value": "none", "means": "no narration track: the MP4 is silent and the PARTS line stays an estimate" }
+      ] },
+      "captions": { "options": [
+        { "value": "sidecar", "means": "a VTT and an SRT beside the MP4, from storyboard.md" },
+        { "value": "none", "means": "no caption files" }
+      ] },
+      "music": { "options": [
+        { "value": "none", "means": "no bed, so a pause stays available; a bed is not built" }
+      ] }
+    },
+    "reason": "Clips per part, measured, are the clock; captions as a file; no bed so a pause stays available. Locked once the clips are measured."
   },
   "characters": {
+    "title": "The cast",
+    "ask": "Does a stick figure appear?",
     "value": "off",
+    "options": [
+      { "value": "off", "means": "no figures; who() in the timeline is the author's call either way" },
+      { "value": "on", "means": "a figure may point, look and wait beside the thing being explained" }
+    ],
     "reason": "Off when the tone is formal."
   },
   "fixed_lines": {
+    "title": "The fixed lines",
+    "ask": "Where does the series card go?",
     "card": "after-hook",
+    "fields": {
+      "card": { "options": [
+        { "value": "after-hook", "means": "a series card after the opening hook" },
+        { "value": "before-hook", "means": "a series card first; delays the reason to watch" },
+        { "value": "none", "means": "no series card" }
+      ] }
+    },
     "reason": "A series card after the opening hook; one before it delays the reason to watch."
   }
 }

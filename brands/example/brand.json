@@ -1,0 +1,38 @@
+{
+  "name": "example",
+  "_about": "A neutral brand that shows the shape: five colours, two faces, a mark and a banner. Copy this folder under brands/<your-name>/, change the values, keep the keys. vkit brand <name> applies it to a video; vkit brand --check reports what it does to the contrast rules.",
+  "colours": {
+    "ground": "#14213d",
+    "ink": "#f4f1ea",
+    "primary": "#fca311",
+    "secondary": "#8ecae6",
+    "highlight": "#1f8f82"
+  },
+  "_colours": "ground is the stage; ink is the text on it (4.5:1 against ground); primary is the accent and the kicker (3:1 against ground); secondary is the second kind colour; highlight is the stroke, the outline and the pointer ring, which sit on the ground and on white product screens, so it holds 3:1 on both. Leave a colour empty and the look or the theme default stays.",
+  "faces": {
+    "display": "\"Avenir Next\", \"Segoe UI\", Arial, sans-serif",
+    "text": "Georgia, \"Times New Roman\", serif"
+  },
+  "_faces": "display is headings, labels and the mark; text is sentences, card bodies and the explanation card. System stacks only, until a shipped face has a licence row (C-TYPE-15).",
+  "mark": {
+    "text": "EXAMPLE STUDIO",
+    "file": "mark.svg",
+    "when": "both",
+    "where": "top-right",
+    "size": 40,
+    "opacity": 0.9,
+    "seconds": 5
+  },
+  "_mark": "when: never, opener (the first `seconds`), close (the last `seconds`), both, always (the whole run, hidden while a recreated screen is up so it never covers the product), watermark (the whole run, over the screen too). where: top-left, top-right, bottom-left, bottom-right; every corner sits inside title safe (96 and 54 px) and above the caption band (200 px). size is the mark's height in pixels; file is an image in this folder (optional) shown to the left of the text.",
+  "banner": {
+    "text": "Example Studio. A lesson series.",
+    "when": "close",
+    "where": "bottom",
+    "size": 36,
+    "opacity": 1,
+    "seconds": 5,
+    "fill": "primary",
+    "ink": "auto"
+  },
+  "_banner": "A strip across the frame. where: top or bottom (bottom sits above the caption band). fill is one of the five colour names or a colour; ink is a colour, or auto for black or white, whichever holds the better ratio on the fill."
+}
