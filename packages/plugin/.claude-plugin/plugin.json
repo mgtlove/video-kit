@@ -1,0 +1,9 @@
+{
+  "name": "vkit",
+  "version": "0.0.1",
+  "description": "Skills over the vkit command line (start, menu, build, frames, measure, brand) and guardrails: no browser download, no force push, no delete without asking, no paid call without a go-ahead.",
+  "author": { "name": "Matthew Truelove" },
+  "repository": "https://github.com/mgtlove/video-kit",
+  "license": "MIT",
+  "keywords": ["video", "training", "explainer", "rig"]
+}
