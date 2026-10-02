@@ -13,9 +13,9 @@ const COMMANDS = {
   'measure':        ['[dir]', 'measure the voice clips and write the exact part lengths'],
   'frames':         ['[dir] [times...|--every N]', 'a still per beat so you can look before recording anything'],
   'render':         ['[dir] [--fps N]', 'every frame from the seek, the voice muxed, captions beside it: out/<name>.mp4'],
-  'check':          ['[dir]', 'offline, deterministic, seek-correct, craft rules, brand contrast'],
+  'check':          ['[dir] [--quick]', 'is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick skips the slow proofs'],
   'brand':          ['[dir] [--check]', 'write brand.css from brand.json; --check reports what is applied'],
-  'sync-reference': ['[path]', 'regenerate rules.json, looks/ and patterns/index.json from ../video-reference'],
+  'sync-reference': ['[path]', 'copy rules.json from ../video-reference (looks/ and patterns/ come in step 7)'],
   'publish':        ['[dir]', 'hand the MP4 to a host adapter and record the URL']
 };
 
@@ -90,6 +90,18 @@ async function main() {
     if (r.clips.length) console.log('voice: ' + r.clips.map((c) => c.file + ' at ' + c.offset + ' s').join(', '));
     if (r.parts_without_a_clip.length) console.log('no clip for part ' + r.parts_without_a_clip.join(', ') + (r.clips.length ? '' : '; the track is silent') + '. Clips go in voice/part-N.wav or .mp3');
     console.log('report: ' + rel(r.files.report) + '. Play the MP4 and look.');
+    return 0;
+  }
+  if (cmd === 'check') {
+    let dir = '.', quick = false;
+    for (const a of args) { if (a === '--quick') quick = true; else dir = a; }
+    const r = await core.check(dir, { quick, channel });
+    console.log(require('@video-kit/core/src/check').format(r));
+    return r.failures ? 1 : 0;
+  }
+  if (cmd === 'sync-reference') {
+    const r = core.syncReference({ path: args[0] });
+    console.log('rules.json copied from ' + r.done.rules.source + (r.done.rules.commit ? ' at ' + r.done.rules.commit : '') + '. Looks and patterns come in step 7.');
     return 0;
   }
   console.error(cmd + ': not built yet. See docs/ROADMAP.md.');

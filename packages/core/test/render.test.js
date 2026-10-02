@@ -74,7 +74,7 @@ test('vkit render: the MP4 is the run, the voice sits at the part offsets', asyn
   assert.strictEqual(p.frames, Math.round(total * fps));
   assert.ok(Math.abs(p.duration - total) < 1 / fps, `duration ${p.duration} is not the sum of the parts ${total}`);
   assert.strictEqual(out.clips.length, parts.length);
-  assert.strictEqual(out.captions, 12, 'one cue per storyboard sentence');
+  assert.strictEqual(out.captions, 17, 'one cue per storyboard sentence');
 
   // 2 and 3. the picture at each moment
   const sought = await render.frames(rig, asked, path.join(rig, '_seek'), opts);

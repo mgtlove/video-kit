@@ -4,10 +4,11 @@
 <style>
 /* ---- this video's own layout. Sizes here; colours in theme.css. ---- */
 .word{display:inline-block;font-size:120px;font-weight:900;line-height:1;margin-bottom:10px}
+.sub{max-width:960px}   /* at 54 px, 960 px keeps a line under 42 characters in a narrow face like Arial (40) as well as a wide one (34) */
 .rooms{margin-top:30px;width:1500px}
 .row{display:flex;align-items:center;gap:30px;padding:16px 28px;border-radius:12px;margin-bottom:16px;background:var(--card-fill)}
-.row .lab{font-size:28px;font-weight:800;min-width:160px;letter-spacing:.08em}
-.row .t{font-size:30px;color:var(--dim)}
+.row .lab{font-size:54px;font-weight:800;min-width:160px;letter-spacing:.08em}
+.row .t{font-size:54px;color:var(--dim)}
 /* screen:inline */
 /* ---- the recreated screen: a PLACEHOLDER built inline. Replace from captures; keep the ids.
      vkit new --app replaces this block with the app's screen.css. ---- */
@@ -30,20 +31,20 @@
 
   <!-- concept opener -->
   <div class="scene" id="s-open">
-    <div class="kick" id="k1"></div>
-    <div class="word" id="w1"></div>
-    <p class="big" id="b1"></p>
+    <div class="kick" id="k1" data-decor></div>
+    <div class="word" id="w1" data-narration></div>
+    <p class="big" id="b1" data-narration></p>
     <p class="sub" id="u1"></p>
   </div>
 
   <!-- three cards -->
   <div class="scene" id="s-cards">
-    <div class="kick" id="k2"></div>
-    <p class="big" id="b2"></p>
+    <div class="kick" id="k2" data-decor></div>
+    <p class="big" id="b2" data-narration></p>
     <div class="cards">
-      <div class="card" id="cardA"><div class="n" id="nA" style="color:var(--kind-a)"></div><div class="t" id="tA"></div></div>
-      <div class="card" id="cardB"><div class="n" id="nB" style="color:var(--kind-b)"></div><div class="t" id="tB"></div></div>
-      <div class="card" id="cardC"><div class="n" id="nC" style="color:var(--kind-c)"></div><div class="t" id="tC"></div></div>
+      <div class="card" id="cardA"><div class="n" id="nA" style="color:var(--kind-a)" data-narration></div><div class="t" id="tA" data-decor></div></div>
+      <div class="card" id="cardB"><div class="n" id="nB" style="color:var(--kind-b)" data-narration></div><div class="t" id="tB" data-decor></div></div>
+      <div class="card" id="cardC"><div class="n" id="nC" style="color:var(--kind-c)" data-narration></div><div class="t" id="tC" data-decor></div></div>
     </div>
   </div>
 
@@ -63,7 +64,7 @@
   <!-- /screen:inline --></div>
 
 </div><!-- /cam -->
-  <aside id="card"><div class="kick"></div><div class="body"></div></aside>
+  <aside id="card"><div class="kick" data-decor></div><div class="body" data-narration></div></aside>
   <div id="fade"></div>
 </div></div>
 
@@ -120,7 +121,9 @@ function timeline() {
   type(t2 + 17.0, 'f4', COPY.typed, 12);                                 /* "And type the outcome you want."  17.0; one row, nine minor beats */
   at(t2 + 21.0, function () { pointer(null); card(null); ease(3.2); home(); });   /* "That is the whole loop."  21.0 */
 
-  at(t3 + 0.2, function () { scene('s-open'); state(null);  });         /* "So, one more time."  0.0 */
+  at(t3 + 0.2, function () { scene('s-open'); state(null); });          /* "So, one more time."  0.0 */
+  at(t3 + 6.0, function () { scene('s-cards'); show('cardA'); show('cardB'); show('cardC'); });   /* "Three kinds, three definitions."  6.0 */
+  at(t3 + 11.0, function () { ink('frame', 'cardB'); });                 /* "And the review step is the one people forget."  11.0 */
   at(VK.total() + 1.5, function () { fade(false); });                    /* hold, then black */
 }
 

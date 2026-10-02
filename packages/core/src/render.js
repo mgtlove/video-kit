@@ -40,7 +40,7 @@ function findClips(videoDir, parts) {
 // rows of storyboard.md: Part | Sentence | Start (s) | ... Start is seconds
 // into the part. A cue ends where the next sentence in its part starts, or at
 // the part's end.
-function storyboardCues(videoDir, parts) {
+function storyboardRows(videoDir, parts) {
   const file = path.join(videoDir, 'storyboard.md');
   if (!fs.existsSync(file)) return [];
   const rows = [];
@@ -51,6 +51,10 @@ function storyboardCues(videoDir, parts) {
     if (!Number.isInteger(part) || part < 1 || part > parts.length || !cells[1] || isNaN(start)) continue;
     rows.push({ part, text: cells[1], start });
   }
+  return rows;
+}
+function storyboardCues(videoDir, parts) {
+  const rows = storyboardRows(videoDir, parts);
   const P = (i) => parts.slice(0, i).reduce((a, b) => a + b, 0);
   const cues = [];
   for (let i = 0; i < rows.length; i++) {
@@ -158,4 +162,4 @@ async function renderVideo(videoDir, opts) {
   return Object.assign({ files }, report);
 }
 
-module.exports = { renderVideo, haveFfmpeg, findClips, storyboardCues, ffmpegArgs, vtt, srt };
+module.exports = { renderVideo, haveFfmpeg, findClips, storyboardRows, storyboardCues, ffmpegArgs, vtt, srt };

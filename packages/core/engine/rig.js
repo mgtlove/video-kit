@@ -442,7 +442,7 @@
   }
 
   window.VK = {
-    version: '0.3.0',
+    version: '0.3.1',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; },

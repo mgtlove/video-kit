@@ -13,15 +13,15 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 .scene.on{opacity:1}
 .kick{font-size:24px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:28px}
 .big{font-size:88px;font-weight:800;line-height:1.1;margin:0 0 20px;max-width:1500px}
-.sub{font-size:36px;font-weight:600;line-height:1.35;color:var(--muted);max-width:1500px}
+.sub{font-size:54px;font-weight:600;line-height:1.35;color:var(--muted);max-width:1500px}   /* 54 px: the floor for text a learner reads */
 
 /* ---- elements that arrive on a beat ---- */
 .card,.room,.who,.row{opacity:0;transform:translateY(14px);transition:opacity .45s,transform .45s}
 .card.on,.room.on,.who.on,.row.on{opacity:1;transform:none}
 .cards{display:flex;gap:40px;margin-top:34px}
 .card{flex:1;padding:34px 38px;border-radius:12px;background:var(--card-fill)}
-.card .n{font-size:46px;font-weight:800;margin-bottom:12px}
-.card .t{font-size:28px;line-height:1.4;color:var(--dim)}
+.card .n{font-size:54px;font-weight:800;margin-bottom:12px}   /* a card's name is read text */
+.card .t{font-size:28px;line-height:1.4;color:var(--dim)}   /* a card's body is decoration under the rules; mark it data-decor, or make it 54 px */
 
 /* ---- the recreated screen: its box is the video's; the engine only fades it ---- */
 #mock{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .6s;overflow:hidden}
@@ -48,12 +48,12 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 .typing::after{content:"";display:inline-block;width:2px;height:1em;margin-left:1px;vertical-align:-2px;background:var(--p-strong,currentColor)}
 
 /* ---- the card that explains, placed beside its element by the engine ---- */
-#card{position:absolute;z-index:45;left:0;top:0;width:400px;padding:22px 24px;border-radius:12px;box-sizing:border-box;
+#card{position:absolute;z-index:45;left:0;top:0;width:620px;padding:26px 30px;border-radius:12px;box-sizing:border-box;
   background:var(--panel);border:1px solid var(--panel-bd);border-left:5px solid var(--accent);color:var(--ink);
   box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s}
 #card.on{opacity:1;transform:none}
-#card .kick{font-size:15px;margin-bottom:10px}
-#card .body{font-size:28px;font-weight:700;line-height:1.4}
+#card .kick{font-size:20px;margin-bottom:12px}
+#card .body{font-size:54px;font-weight:700;line-height:1.25}   /* the voice depends on it: 54 px floor (rules.json text.readMinPx) */
 
 /* ---- fade, grain, hud, start panel ---- */
 #fade{position:absolute;inset:0;z-index:95;background:var(--stage);opacity:1;transition:opacity 1s;pointer-events:none}

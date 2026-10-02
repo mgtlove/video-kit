@@ -1,3 +1,3 @@
-Placeholder sentence one for part 3.
-Placeholder sentence two for part 3.
-Placeholder sentence three for part 3.
+So, one more time.
+Three kinds, three definitions.
+And the review step is the one people forget.

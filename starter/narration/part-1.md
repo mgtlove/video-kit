@@ -1,3 +1,6 @@
-Placeholder sentence one for part 1.
-Placeholder sentence two for part 1.
-Placeholder sentence three for part 1.
+Every task starts somewhere.
+Someone has to name it.
+There are three kinds.
+Alpha is the simplest.
+Beta adds a review.
+Gamma adds the other team.

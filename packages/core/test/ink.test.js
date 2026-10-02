@@ -18,7 +18,7 @@ test('two renders of the starter are identical, stroke for stroke', async () => 
   const a = await core.frames(r.dir, Object.assign({ outDir: path.join(r.dir, 'rig', '_a') }, opts));
   const b = await core.frames(r.dir, Object.assign({ outDir: path.join(r.dir, 'rig', '_b') }, opts));
   assert.deepStrictEqual(b.times, a.times);
-  assert.strictEqual(a.files.length, 20, 'the starter samples 20 stills: 16 before step 4, plus the figure, the stroke, the pointer and the first typed character');
+  assert.strictEqual(a.files.length, 22, 'the starter samples 22 stills: 16 before step 4, the figure, the stroke, the pointer and the first typed character, and the two recap beats of part 3');
   assert.ok(a.times.includes(27.3) === false && a.times.includes(41.3), 'typing lands as one sampled still at its first character, not one per character');
   let same = 0;
   for (let i = 0; i < a.files.length; i++) {

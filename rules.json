@@ -1,0 +1,140 @@
+{
+  "_about": "The measurable half of the craft notes, in one place, so tools/craft.js and the notes cannot drift apart. Every number cites the rule ids it implements; the notes hold the sources. Frame geometry is the rig's: 1920x1080, a 480 px right rail, a 200 px caption band.",
+  "frame": {
+    "width": 1920,
+    "height": 1080,
+    "railWidth": 480,
+    "bandHeight": 200
+  },
+  "safeArea": {
+    "_rules": [
+      "C-COMP-1",
+      "C-COMP-2",
+      "C-TYPE-12"
+    ],
+    "titleSafe": {
+      "x": 96,
+      "y": 54
+    },
+    "actionSafe": {
+      "x": 67,
+      "y": 38
+    }
+  },
+  "band": {
+    "_rules": [
+      "C-COMP-3",
+      "C-ACC-6"
+    ],
+    "keepClear": true
+  },
+  "contrast": {
+    "_rules": [
+      "C-COMP-9",
+      "C-COL-1",
+      "C-TYPE-14",
+      "C-ACC-7",
+      "C-COL-3",
+      "C-ACC-8"
+    ],
+    "text": 4.5,
+    "largeText": 3,
+    "largeTextPx": 24,
+    "largeTextBoldPx": 18.66,
+    "nonText": 3,
+    "narrationTextTarget": 7
+  },
+  "text": {
+    "_rules": [
+      "C-TYPE-1",
+      "C-TYPE-2",
+      "C-TYPE-3",
+      "C-TYPE-4",
+      "C-TYPE-5",
+      "C-TYPE-6"
+    ],
+    "captionMinPx": 72,
+    "railMinPx": 72,
+    "readMinPx": 54,
+    "maxCharsPerLine": 42,
+    "captionMaxCharsPerLine": 37,
+    "captionMaxLines": 2,
+    "bodyLineHeight": [
+      1.35,
+      1.45
+    ],
+    "captionLineHeight": [
+      1.2,
+      1.3
+    ],
+    "bodyWeight": [
+      300,
+      500
+    ],
+    "railWeight": [
+      400,
+      600
+    ]
+  },
+  "colour": {
+    "_rules": [
+      "C-COMP-13",
+      "C-COL-4",
+      "C-COL-8",
+      "C-COL-9"
+    ],
+    "accentMaxShare": 0.1,
+    "accentTokens": [
+      "--accent",
+      "--accent-2",
+      "--accent-3"
+    ],
+    "matchDistance": 40
+  },
+  "motion": {
+    "_rules": [
+      "C-ACC-11",
+      "C-PACE-7",
+      "C-CAM-6",
+      "C-CAM-7"
+    ],
+    "maxFlashesPerSecond": 3,
+    "flashLuminanceDelta": 0.1,
+    "maxStillSeconds": {
+      "full": 8,
+      "formal": 12
+    },
+    "holdAfterMoveSeconds": 0.833,
+    "settleBeforeCutSeconds": 0.5,
+    "sampleFps": 10
+  },
+  "pacing": {
+    "_rules": [
+      "C-PACE-1",
+      "C-PACE-2",
+      "C-PACE-3",
+      "C-PACE-9",
+      "C-PACE-10",
+      "C-ACC-5"
+    ],
+    "wordsPerMinute": [
+      140,
+      170
+    ],
+    "wordsPerMinuteFloor": 130,
+    "maxWordsPerSentence": 30,
+    "maxSceneSeconds": 60,
+    "maxVideoSeconds": 300,
+    "hardMaxVideoSeconds": 360,
+    "captionMaxWpm": 160,
+    "captionMinSeconds": 2,
+    "captionMaxSeconds": 7
+  },
+  "_source": {
+    "repo": "video-reference",
+    "file": "craft/rules.json",
+    "commit": "",
+    "copied_on": "2026-10-02",
+    "note": "Copied by vkit sync-reference; edit the reference, not this file. The frame geometry rows (rail, caption band) describe the older inset layout; the kit has one full-frame layout and captions as a sidecar, so vkit check applies safe areas, contrast, text, colour, motion and pacing and marks the band and rail rows as not applicable."
+  }
+}

@@ -6,6 +6,8 @@
 //   every(rigDir, fps, onFrame, opts)   -> count        every frame of the run, each PNG
 //                                                       buffer handed to onFrame(buf, n, t)
 //                                                       in order; nothing written to disk
+//   survey(rigDir, times, fn, opts)     -> [{t,png,data}] a still and fn's reading of the page at each time
+//   shoot(rigDir, poseFn, arg, opts)    -> PNG buffer   one still after poseFn(arg) ran in the page
 //
 // opts.channel: 'chrome' uses the Chrome already installed (no download);
 // unset uses Playwright's bundled Chromium if present. Nothing here downloads
@@ -162,4 +164,33 @@ async function every(rigDir, fps, onFrame, opts) {
   return n;
 }
 
-module.exports = { name: 'local-chromium', frames, playbackFrames, info, every };
+// survey(rigDir, times, measureFn, opts): at each time, the still as a PNG
+// buffer and whatever measureFn (a function serialised into the page) returns
+// about the page state at that time. vkit check reads the DOM this way: sizes,
+// colours, boxes, with the camera where it is at that moment.
+async function survey(rigDir, times, measureFn, opts) {
+  const b = await open(rigDir, opts);
+  const out = [];
+  try {
+    for (const t of times) {
+      await seek(b, t);
+      const png = await capture(b);
+      const data = await b.page.evaluate(measureFn, t);
+      out.push({ t, png, data });
+    }
+  } finally { await b.close(); }
+  if (b.errors.length) throw new Error('page errors: ' + b.errors.join('; '));
+  return out;
+}
+
+// shoot(rigDir, poseFn, arg, opts): one still of the page after poseFn(arg) has
+// run in it (a state shown alone, say), captured once its commit is on screen.
+async function shoot(rigDir, poseFn, arg, opts) {
+  const b = await open(rigDir, opts);
+  try {
+    await b.page.evaluate(([fnSource, a, w]) => { (new Function('return (' + fnSource + ')')())(a); window.__vkSetMark(w); }, [poseFn.toString(), arg, nextMark(b)]);
+    return await capture(b);
+  } finally { await b.close(); }
+}
+
+module.exports = { name: 'local-chromium', frames, playbackFrames, info, every, survey, shoot };

@@ -14,6 +14,8 @@ From the video folder: `PW_CHANNEL=chrome vkit frames` writes a still per beat (
 
 Then look at every frame and say what is wrong before touching anything: a beat on the wrong element, a card covering the field it names, text outside title safe (96 px sides, 54 px top and bottom), a camera that cut a field in half, a scene still fading when the next arrives, anything under `#mock` that does not match its capture.
 
+After looking, `PW_CHANNEL=chrome vkit check --quick` measures what can be measured (text floors, title safe, contrast, accent share, the longest hold, storyboard against narration) and names each break by its rule id; `vkit check` without `--quick` adds the seek proof and flash sampling and is what lands a video. A rule the checker cannot measure yet says so and where the number lives.
+
 A change that should not change the footage is proven by comparing frames byte for byte before and after (keep the old `_frames` aside, render again, compare). A change that should change it is proven by the person looking at the new frames. `npm test` in the kit proves a seek equals playback; run it after any engine change.
 
 Never judge from the code, never from a description of the code, never from one frame.

@@ -11,6 +11,6 @@ One video: its script, words, recreated screen and timeline. Made by `vkit new`.
 | `voice/` | The measured clips, `part-N.wav` or `.mp3` |
 | `storyboard.md` | One row per sentence, mirrored by the timeline's beats (typing is one row; its characters are minor beats) |
 | `video.json` | Every choice this video made (`menu`), the parts, the voice, how it was published |
-| `out/` | What `vkit render` wrote: the MP4, its captions (`.vtt`, `.srt`) and `render.json` with the numbers of that render |
+| `out/` | What `vkit render` wrote (the MP4, `.vtt`, `.srt`, `render.json`) and what `vkit check` wrote (`check.json`, `check/` stills, `fidelity/` side-by-sides) |
 
-Order: `vkit menu`, write the parts, generate or record the voice, `vkit measure`, build the screen and the beats, `vkit frames` and look, `vkit render`, `vkit check`, `vkit publish`.
+Order: `vkit menu`, write the parts, generate or record the voice, `vkit measure`, build the screen and the beats, `vkit frames` and look, `vkit check --quick` while you work, `vkit render`, `vkit check`, `vkit publish`. Text the voice depends on carries `data-narration`; text it never depends on carries `data-decor`; the checker holds the first to the 54 px floor.
