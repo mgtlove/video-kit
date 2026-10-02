@@ -6,7 +6,7 @@ Read in this order, about ten minutes:
 2. `project-brief.md`: what is being built and why, the flow, the adapters.
 3. `roadmap-and-status.md`: what is done, with proof, and what is next.
 4. `decisions.md`: the choices already made, so they are not re-argued.
-5. `video-kit/docs/ARCHITECTURE.md`, `ROADMAP.md`, `ENGINE.md`, `CARRYOVER.md`.
+5. `video-kit/docs/ARCHITECTURE.md`, `ROADMAP.md`, `ENGINE.md`, `CARRYOVER.md`, `TWIN-CARRYOVER.md`.
 6. `research-to-rewrite.md`: the inventory of what `video-reference` holds; `video-reference/CATALOG.md` is its index.
 
 Then run the thing once before changing it:

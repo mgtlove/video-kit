@@ -2,7 +2,7 @@
 
 Training videos from screenshots and a script. The screen is recreated in HTML from stills, the explanation is timed to the voice, every frame is rendered from a seekable clock, and a checker proves the footage before anyone records anything. One library, a CLI, a Claude plugin, and the seams for an MCP server and a cloud renderer.
 
-Status: October 2026, roadmap steps 1 to 3 and 5 of 11. `vkit new`, `vkit frames` and `vkit render` work: a seek matches real playback pixel for pixel, and the MP4 is the run, the voice at its part offsets, captions beside it (`npm test` proves both; it renders the whole starter, so allow six minutes). The engine is rebuilt clean from measured studies of how good explainer video is made; `docs/ROADMAP.md` has the order, `docs/ARCHITECTURE.md` the shape, `docs/ENGINE.md` what a rig page can call. Next: strokes and the pointer (step 4), then the checker (step 6); a two-minute sample and the first release follow.
+Status: October 2026, roadmap steps 1 to 3 and 5 of 11. `vkit new`, `vkit frames` and `vkit render` work: a seek matches real playback pixel for pixel, and the MP4 is the run, the voice at its part offsets, captions beside it (`npm test` proves both; it renders the whole starter, so allow six minutes). The engine is rebuilt clean from measured studies of how good explainer video is made; `docs/ROADMAP.md` has the order, `docs/ARCHITECTURE.md` the shape, `docs/ENGINE.md` what a rig page can call. Next: the app folder and `screen()` (step 5a), then strokes and the pointer (step 4), then the checker (step 6); a two-minute sample and the first release follow.
 
 ```
 vkit new my-video        a video is a folder
