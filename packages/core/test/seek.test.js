@@ -4,8 +4,11 @@
 // reads the exact time each picture shows, seeks to that time, and compares
 // the PNGs pixel by pixel. Needs playwright; PW_CHANNEL=chrome uses the
 // installed Chrome. Tolerance: no more than 0.05 percent of pixels may differ
-// by more than 8 levels (transform transitions run on the compositor thread,
-// which can be a frame ahead at the edges of a moving screen).
+// by more than 8 levels. Measured with engine 0.1.1: 0 pixels at all four
+// moments (held transitions are baked on the main thread and every capture
+// waits for its commit to be on screen; before that a crossfade measured up
+// to 6 levels and a camera move 225 edge pixels, and the figures varied
+// between browser sessions).
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');

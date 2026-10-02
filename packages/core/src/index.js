@@ -7,6 +7,7 @@
 
 const { newVideo } = require('./new');
 const { frames } = require('./frames');
+const { renderVideo } = require('./render');
 const voice = require('./adapters/voice');
 const render = require('./adapters/render');
 const script = require('./adapters/script');
@@ -23,7 +24,7 @@ module.exports = {
   narration: notBuilt('narration'),          // parts -> FULL.md, lengths, limits
   measure: notBuilt('measure'),              // clip files -> exact PART_SECONDS
   frames: frames,                            // rig -> a PNG per beat (seek-correct)
-  renderVideo: notBuilt('renderVideo'),      // rig -> every frame at 30 fps -> mux with clips -> MP4
+  renderVideo: renderVideo,                  // rig -> every frame at 30 fps -> mux with clips -> MP4, captions sidecar
   check: notBuilt('check'),                  // offline, deterministic, seekable, seek-correct; craft rules; brand contrast
   brand: notBuilt('brand'),                  // brand.json -> brand.css; report
   look: notBuilt('look'),                    // look pack -> theme tokens

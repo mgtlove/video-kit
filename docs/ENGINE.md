@@ -30,9 +30,14 @@
 
 `VK.ready()`, `VK.total()`, `VK.parts()`, `VK.beats()`, `VK.seekTo(t)`, `VK.playTo(t, done)`, `VK.recording(true)`, `VK.version`.
 
+The render adapter opens the page at 1920 by 1082: `#fit` centres the stage at rows 1 to 1080 and row 0 carries a 1 px marker strip the adapter adds, whose width it sets in the same task as a seek. A capture waits until a screenshot of row 0 shows that width, which proves the compositor has drawn the seek's commit, then takes rows 1 to 1080. A screenshot taken straight after a seek can be the frame before it.
+
 ## The contracts
 
 - A frame at `t` equals playback at `t`. `seekTo` resets, snaps every beat older than the motion window (6 s), re-fires the rest with motion on and holds each animation they started at `t minus its beat time`. Proof in `packages/core/test/seek.test.js`.
+- A held transition is baked (engine 0.1.1). After holding, the engine reads the value the transition has at that time on the main thread, writes it inline with transitions off for one style flush, and cancels the transition; `playTo` does the same when it pauses. Left to the compositor, a held transition is drawn on the compositor's own clock, which steps about every 10 ms with a phase that differs between browser sessions, so the same still could differ by a few levels from one run to the next. Baked, a still is the main thread's exact value. Keyframe animations are held, not baked; a video that uses one should expect that difference until baking covers it.
+- A reset never animates: it snaps while it clears classes and baked values, so nothing is in flight when the beats replay.
+- `recording(true)` removes the start panel at once rather than fading it; its fade would sit over the first frames.
 - Motion is CSS transitions and animations only, started by a class change inside a beat. No timers, no `requestAnimationFrame` chains in a video, nothing that reads the wall clock.
 - Beats are replayable from a reset: a beat sets state (a class, a camera position); it never accumulates.
 - Keyframe animations fill forwards.

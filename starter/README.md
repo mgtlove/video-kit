@@ -10,5 +10,6 @@ One video: its script, words, recreated screen and timeline. Made by `vkit new`.
 | `voice/` | The measured clips, `part-N.wav` or `.mp3` |
 | `storyboard.md` | One row per beat, mirrored by the timeline |
 | `video.json` | Every choice this video made (`menu`), the parts, the voice, how it was published |
+| `out/` | What `vkit render` wrote: the MP4, its captions (`.vtt`, `.srt`) and `render.json` with the numbers of that render |
 
 Order: `vkit menu`, write the parts, generate or record the voice, `vkit measure`, build the screen and the beats, `vkit frames` and look, `vkit render`, `vkit check`, `vkit publish`.

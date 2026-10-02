@@ -116,30 +116,61 @@
   function onReset(fn) { resetHooks.push(fn); }
   function resetAll() {
     playing = false; clock = 0; lastNow = null; camNextSec = null;
+    stage.classList.add('snap');                      /* a reset never animates, and it cancels anything in flight */
     var touched = document.querySelectorAll('.on, .clear');
     for (var i = 0; i < touched.length; i++) { touched[i].classList.remove('on'); touched[i].classList.remove('clear'); }
+    for (var j = 0; j < baked.length; j++) baked[j][0].style.removeProperty(baked[j][1]);
+    baked = [];
     cardNear = null; cardSide = null;
     for (var k = 0; k < resetHooks.length; k++) resetHooks[k]();
     snapping = true; home(); snapping = false;
+    void stage.offsetHeight;
+    stage.classList.remove('snap');
     beats = []; window.timeline(); beats.sort(function (a, b) { return a.t - b.t; });
+  }
+  /* holdAll(anims, msOf): each animation held at msOf(a) and then baked: the value it has at
+     that time is read on the main thread, written inline with transitions off for one style
+     flush, and the animation is cancelled. A held animation left to the compositor is drawn on
+     the compositor's own clock, which steps about every 10 ms with a phase that differs between
+     browser sessions, so the same still could differ by a few levels from one run to the next;
+     and cancelling a transition after an inline write without transitions off starts a new one.
+     Transitions only; a keyframe animation stays held. Every value is read before any is
+     written, because writing one element's value cancels its other transitions. */
+  var baked = [];
+  function holdAll(anims, msOf) {
+    var i, a, el, prop, items = [];
+    for (i = 0; i < anims.length; i++) {
+      a = anims[i]; a.pause();
+      try { a.currentTime = msOf(a); } catch (e) { continue; }   /* a finished animation is gone already */
+      el = a.effect && a.effect.target; prop = a.transitionProperty;
+      if (el && prop) items.push({ a: a, el: el, prop: prop, v: getComputedStyle(el).getPropertyValue(prop), tp: el.style.getPropertyValue('transition-property') });
+    }
+    for (i = 0; i < items.length; i++) {
+      el = items[i].el;
+      el.style.setProperty('transition-property', 'none');
+      el.style.setProperty(items[i].prop, items[i].v);
+      items[i].a.cancel();
+      baked.push([el, items[i].prop]);
+    }
+    if (items.length) void stage.offsetHeight;
+    for (i = 0; i < items.length; i++) {
+      el = items[i].el;
+      if (items[i].tp) el.style.setProperty('transition-property', items[i].tp); else el.style.removeProperty('transition-property');
+    }
   }
   function fireSnapped(b) {
     stage.classList.add('snap'); b.fn(); b.done = true;
     void stage.offsetHeight;                          /* flush the style with transitions off */
     stage.classList.remove('snap');
   }
-  function fireLive(b, hold) {
+  function fireLive(b, holdSec) {
     var before = document.getAnimations ? document.getAnimations() : [];
     b.fn(); b.done = true;
     void stage.offsetHeight;                          /* start the transitions now */
     if (!document.getAnimations) return;
-    var after = document.getAnimations();
-    for (var i = 0; i < after.length; i++) {
-      if (before.indexOf(after[i]) >= 0) continue;
-      var a = after[i], ms = Math.max(0, hold * 1000);
-      a.pause();
-      try { a.currentTime = ms; } catch (e) { /* a finished animation is gone already */ }
-    }
+    var after = document.getAnimations(), fresh = [];
+    for (var i = 0; i < after.length; i++) if (before.indexOf(after[i]) < 0) fresh.push(after[i]);
+    holdAll(fresh, function () { return Math.max(0, holdSec * 1000); });
   }
   /* seekTo(t): the still frame at t, exactly as playback would show it */
   function seekTo(t) {
@@ -173,6 +204,7 @@
         }
         if (reached < 0) reached = clock;
         clock = reached;
+        holdAll(all.filter(function (a) { return a.currentTime !== null; }), function (a) { return a.currentTime; });   /* baked, like a seek */
         requestAnimationFrame(function () { requestAnimationFrame(function () { done(reached); }); });
         return;
       }
@@ -183,7 +215,7 @@
   /* recording mode: no start panel, no hud; what the frame shows is the footage */
   function recording(on) {
     var ui = $('ui'), hud = $('hud');
-    if (ui) ui.classList.toggle('gone', !!on);
+    if (ui) { ui.classList.toggle('gone', !!on); ui.style.display = on ? 'none' : ''; }   /* gone at once; its fade would sit over the footage */
     if (hud) hud.style.display = on ? 'none' : '';
   }
   function tick(now) {
@@ -229,7 +261,7 @@
   }
 
   window.VK = {
-    version: '0.1.0',
+    version: '0.1.1',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.map(function (b) { return b.t; }); },
     ready: function () { return ready; },
