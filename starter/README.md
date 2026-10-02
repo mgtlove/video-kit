@@ -5,7 +5,8 @@ One video: its script, words, recreated screen and timeline. Made by `vkit new`.
 | Path | What |
 |---|---|
 | `rig/index.html` | The rig: scenes, the recreated screen, `COPY`, the timeline. It is the footage, not a preview |
-| `rig/theme.css` | Every colour and face: the teaching layer under `:root`, the product palette under `#mock` |
+| `rig/theme.css` | Every colour and face of the teaching layer under `:root`; the product palette under `#mock` when the screen is inline |
+| `rig/app/` | Only with `vkit new --app`: the recreated app as copied in (`tokens.css`, `screen.css`, `states/`, `manifest.csv`, `states.js`). Change the app and make the video again; never edit here |
 | `narration/part-N.md` | The script, one file per voice clip, one sentence per line |
 | `voice/` | The measured clips, `part-N.wav` or `.mp3` |
 | `storyboard.md` | One row per beat, mirrored by the timeline |

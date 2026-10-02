@@ -8,7 +8,9 @@
 .row{display:flex;align-items:center;gap:30px;padding:16px 28px;border-radius:12px;margin-bottom:16px;background:var(--card-fill)}
 .row .lab{font-size:28px;font-weight:800;min-width:160px;letter-spacing:.08em}
 .row .t{font-size:30px;color:var(--dim)}
-/* ---- the recreated screen: a PLACEHOLDER. Replace from captures; keep the ids. ---- */
+/* screen:inline */
+/* ---- the recreated screen: a PLACEHOLDER built inline. Replace from captures; keep the ids.
+     vkit new --app replaces this block with the app's screen.css. ---- */
 #mock{background:var(--p-ground);color:var(--p-strong);font-family:var(--p-ui)}
 #mock .bar{height:64px;background:var(--p-surface);border-bottom:1px solid var(--p-border);display:flex;align-items:center;gap:36px;padding:0 40px;font-weight:600;color:var(--p-body)}
 #mock .bar b{color:var(--p-accent)}
@@ -21,6 +23,7 @@
 .frow{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:12px 8px;border-radius:8px;max-width:900px;font-size:18px}
 .flab{color:var(--p-muted);text-align:right;padding-top:10px}
 .f{border:1px solid var(--p-border);border-radius:8px;background:var(--p-surface);padding:12px 14px;min-height:22px;color:var(--p-strong)}
+/* /screen:inline */
 </style></head>
 <body>
 <div id="fit"><div id="stage"><div id="cam">
@@ -44,8 +47,8 @@
     </div>
   </div>
 
-  <!-- the recreated screen -->
-  <div id="mock">
+  <!-- the recreated screen: state(id) shows it. Inline here; with vkit new --app a state of the app fills it. -->
+  <div id="mock"><!-- screen:inline -->
     <div class="bar"><b>Placeholder app</b><span>Work items</span><span>Library</span></div>
     <div class="body">
       <div class="nav"><div class="cur">Setup</div><div>Review</div><div>History</div></div>
@@ -57,7 +60,7 @@
         <div class="frow" id="r4"><div class="flab">Outcome</div><div class="f" id="f4">Standard</div></div>
       </div>
     </div>
-  </div>
+  <!-- /screen:inline --></div>
 
 </div><!-- /cam -->
   <aside id="card"><div class="kick"></div><div class="body"></div></aside>
@@ -106,13 +109,13 @@ function timeline() {
   at(t1 + 15.0, function () { show('cardB'); });                         /* "Beta adds a review."  15.0 */
   at(t1 + 19.0, function () { show('cardC'); });                         /* "Gamma adds the other team."  19.2 */
 
-  at(t2 + 0.2, function () { scene(null); show('mock'); });              /* "Here is where you set it."  0.0 */
+  at(t2 + 0.2, function () { scene(null); state('work-item'); });      /* "Here is where you set it."  0.0 */
   at(t2 + 4.0, function () { focusEl('r1', 1.3, 40, -120); card(COPY.cardField, 'r1'); });   /* "The category field is where it starts."  4.1 */
   at(t2 + 9.0, function () { document.getElementById('r1').classList.add('hl'); });          /* "Set it here."  9.0 */
   at(t2 + 14.0, function () { document.getElementById('r1').classList.remove('hl'); travel('r4', 1.3, 30, -120); card(COPY.cardOutcome, 'r4'); });  /* "And the outcome is what comes back."  14.1 */
   at(t2 + 21.0, function () { card(null); ease(3.2); home(); });         /* "That is the whole loop."  21.0 */
 
-  at(t3 + 0.2, function () { scene('s-open'); show('mock', true); });    /* "So, one more time."  0.0 */
+  at(t3 + 0.2, function () { scene('s-open'); state(null);  });         /* "So, one more time."  0.0 */
   at(VK.total() + 1.5, function () { fade(false); });                    /* hold, then black */
 }
 

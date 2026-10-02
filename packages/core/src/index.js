@@ -8,6 +8,7 @@
 const { newVideo } = require('./new');
 const { frames } = require('./frames');
 const { renderVideo } = require('./render');
+const apps = require('./apps');
 const voice = require('./adapters/voice');
 const render = require('./adapters/render');
 const script = require('./adapters/script');
@@ -19,7 +20,8 @@ function notBuilt(name) {
 
 module.exports = {
   // a video is a folder; these take its path
-  newVideo: newVideo,                        // copy starter/, engine in at this version, video.json with menu defaults
+  newVideo: newVideo,                        // copy starter/, engine in at this version, video.json with menu defaults; opts.app for an app-backed video
+  apps: apps,                                // recreated apps: resolveApp, installApp, appNew, appAddState, appExtract
   menu: notBuilt('menu'),                    // read and write video.json.menu; list looks, patterns, brands
   narration: notBuilt('narration'),          // parts -> FULL.md, lengths, limits
   measure: notBuilt('measure'),              // clip files -> exact PART_SECONDS

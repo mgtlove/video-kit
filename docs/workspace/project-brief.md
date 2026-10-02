@@ -37,7 +37,7 @@ Rules the whole thing rests on are in `video-kit/docs/ARCHITECTURE.md`. The shor
 
 ## Recreated apps, and the three kinds of video
 
-A recreated app is the screen side of a tool, built once and used by many videos and later by a twin. It lives beside the videos, not inside one and not in the kit: `apps/<family>/<tool>/` (for example `apps/aws/bedrock/`) with `app.json` (name, what it extends, its states), `tokens.css` (the tool's measured colours and faces, scoped to the screen, never restyled), `states/` (one HTML fragment per captured state, such as `playground-empty.html`), `captures/` (the screenshots each state came from) and `manifest.csv` (id, file, screen, state, capture date, note). One app is what a learner would call "the tool": per AWS service, plus `console` for the landing page and `cli` for a terminal. A state is one screen in one condition. Ten to thirty states is comfortable; past that, split by area. Every state names its capture and date, because consoles change and a learner notices.
+A recreated app is the screen side of a tool, built once and used by many videos and later by a twin. It lives beside the videos, not inside one and not in the kit: `apps/<family>/<tool>/` (for example `apps/aws/bedrock/`) with `app.json` (name, what it extends, its states), `tokens.css` (the tool's measured colours and faces, scoped to the screen, never restyled), `screen.css` (its structure, scoped the same way), `states/` (one HTML fragment per captured state, such as `playground-empty.html`), `captures/` (the screenshots each state came from) and `manifest.csv`, the one list of states (id, file, screen, state, capture, capture date, note). One app is what a learner would call "the tool": per AWS service, plus `console` for the landing page and `cli` for a terminal. A state is one screen in one condition. Ten to thirty states is comfortable; past that, split by area. Every state names its capture and date, because consoles change and a learner notices.
 
 App repos are private, one per family (`video-apps-aws`), cloned into `apps/<family>/`. The kit never knows which repo a folder came from; it looks for `apps/<family>/<tool>/app.json`.
 
@@ -45,7 +45,7 @@ Three kinds of video, and the engine does not care which:
 
 - **Whiteboard or theory.** No screen. `vkit new` as it is; the menu's sources item says "no screen".
 - **One-off screen.** Built inline in the video from a couple of captures, as the starter does. Nothing to maintain.
-- **App-backed.** `vkit new --app aws/bedrock`; `video.json` names the app; the states the video uses are copied in at build time, like the engine, so the finished video opens from disk and never changes when the app moves on. `screen(state)` in the engine puts a state on the stage.
+- **App-backed.** `vkit new --app aws/bedrock`; `video.json` names the app; the states the video uses are copied in at build time, like the engine, so the finished video opens from disk and never changes when the app moves on. `state(id)` in the engine puts a state on the stage.
 
 `vkit app new`, `vkit app add-state` and `vkit app extract` (lift a video's inline screen into an app the day it is needed twice). Nobody builds an app ahead of need. The rule for every recreated screen: recreate from your own captures, cite each, never invent a control.
 

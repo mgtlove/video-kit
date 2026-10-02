@@ -1,0 +1,5 @@
+/* example/placeholder: the palette of the kit's placeholder screen, scoped to #mock. A real app measures these from its captures and never restyles them. */
+#mock{
+  --p-ui:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --p-ground:#f4f2fc;--p-surface:#ffffff;--p-border:#e2e4ea;--p-strong:#3b3f46;--p-body:#616874;--p-muted:#898e99;--p-accent:#5b5bd6;
+}

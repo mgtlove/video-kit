@@ -72,6 +72,22 @@
   function show(id, off) { $(id).classList.toggle('on', !off); }
   function fadeTo(clear) { fade.classList.toggle('clear', !!clear); }
 
+  /* state(id): the recreated screen. With states present (window.STATES, written by vkit new
+     --app from the app's states/), state `id` fills #mock and shows; with none, the inline
+     #mock shows as it is. state(null) hides it. (Not named screen: window.screen is the
+     browser's display object.) On every reset #mock goes back to the markup
+     the page loaded with, so a beat that changed a state (a highlight, a typed value) never
+     leaks into an earlier frame. */
+  var mockHome = '', screenState = null;
+  function state(id) {
+    var m = $('mock'); if (!m) return;
+    if (!id) { m.classList.remove('on'); return; }
+    if (window.STATES && window.STATES[id] !== undefined) {
+      if (screenState !== id) { m.innerHTML = window.STATES[id]; screenState = id; }
+    }
+    m.classList.add('on');
+  }
+
   var cardNear = null, cardSide = null;
   var SAFE = { l: 96, t: 54, r: W - 96, b: H - 54 }, GAP = 24;
   function card(text, nearId, side) {
@@ -121,6 +137,7 @@
     for (var i = 0; i < touched.length; i++) { touched[i].classList.remove('on'); touched[i].classList.remove('clear'); }
     for (var j = 0; j < baked.length; j++) baked[j][0].style.removeProperty(baked[j][1]);
     baked = [];
+    var mk = $('mock'); if (mk && (screenState !== null || mk.innerHTML !== mockHome)) { mk.innerHTML = mockHome; screenState = null; }
     cardNear = null; cardSide = null;
     for (var k = 0; k < resetHooks.length; k++) resetHooks[k]();
     snapping = true; home(); snapping = false;
@@ -249,6 +266,7 @@
     stage = $('stage'); cam = $('cam'); fade = $('fade');
     TOTAL = P(window.PARTS.length);
     if (typeof window.copy === 'function') window.copy();
+    var mk = $('mock'); if (mk) mockHome = mk.innerHTML;         /* after copy(), so COPY strings are part of home */
     addEventListener('resize', fit); fit();
     addEventListener('keydown', keys);
     var btn = $('start'); if (btn) btn.addEventListener('click', start);
@@ -261,17 +279,17 @@
   }
 
   window.VK = {
-    version: '0.1.1',
+    version: '0.2.0',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.map(function (b) { return b.t; }); },
     ready: function () { return ready; },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
-    scene: scene, show: show, fade: fadeTo, card: card,
+    scene: scene, show: show, state: state, fade: fadeTo, card: card,
     focus: focus, focusEl: focusEl, travel: travel, ease: ease, home: home, camTo: camTo, pos: pos,
     W: W, H: H
   };
   /* short names for the page's timeline */
   window.at = at; window.P = P;
-  window.scene = scene; window.show = show; window.fade = fadeTo; window.card = card;
+  window.scene = scene; window.show = show; window.state = state; window.fade = fadeTo; window.card = card;
   window.focusAt = focus; window.focusEl = focusEl; window.travel = travel; window.ease = ease; window.home = home; window.pos = pos;
 })();

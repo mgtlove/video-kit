@@ -24,8 +24,10 @@
   --shadow:0 10px 44px #00000077;
   --grain:0;
 }
-/* the recreated screen: a placeholder palette until captures replace it */
+/* screen:inline */
+/* the recreated screen: a placeholder palette until captures replace it. vkit new --app replaces this block with the app's tokens.css. */
 #mock{
   --p-ui:system-ui,-apple-system,"Segoe UI",sans-serif;
   --p-ground:#f4f2fc;--p-surface:#ffffff;--p-border:#e2e4ea;--p-strong:#3b3f46;--p-body:#616874;--p-muted:#898e99;--p-accent:#5b5bd6;
 }
+/* /screen:inline */

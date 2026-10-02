@@ -1,0 +1,13 @@
+/* example/placeholder: the structure of the kit's placeholder screen (bar, navigation, rows), scoped to #mock. A real app measures these at 1920x1080 from its captures. */
+#mock{background:var(--p-ground);color:var(--p-strong);font-family:var(--p-ui)}
+#mock .bar{height:64px;background:var(--p-surface);border-bottom:1px solid var(--p-border);display:flex;align-items:center;gap:36px;padding:0 40px;font-weight:600;color:var(--p-body)}
+#mock .bar b{color:var(--p-accent)}
+#mock .body{display:grid;grid-template-columns:260px 1fr;height:1016px}
+#mock .nav{background:var(--p-surface);border-right:1px solid var(--p-border);padding:24px 0}
+#mock .nav div{padding:12px 32px;color:var(--p-body);font-size:18px}
+#mock .nav div.cur{color:var(--p-accent);font-weight:700;border-left:4px solid var(--p-accent)}
+#mock .work{padding:40px 56px}
+#mock h1{font-size:30px;margin:0 0 28px}
+.frow{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:12px 8px;border-radius:8px;max-width:900px;font-size:18px}
+.flab{color:var(--p-muted);text-align:right;padding-top:10px}
+.f{border:1px solid var(--p-border);border-radius:8px;background:var(--p-surface);padding:12px 14px;min-height:22px;color:var(--p-strong)}

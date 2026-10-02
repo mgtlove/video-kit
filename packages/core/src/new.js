@@ -1,6 +1,7 @@
 // newVideo(name, opts): a video is a folder. Copies starter/, fills the
 // placeholders, copies the engine in at this kit's version, writes video.json
-// with the menu defaults marked "from: defaults".
+// with the menu defaults marked "from: defaults". opts.app (family/tool) makes
+// it app-backed: the recreated app is copied into rig/app/ (see apps.js).
 const fs = require('fs');
 const path = require('path');
 
@@ -31,7 +32,7 @@ function menuDefaults() {
   for (const [k, v] of Object.entries(d)) {
     if (k.startsWith('_')) continue;
     const item = Object.assign({}, v);
-    delete item.reason;
+    delete item.reason; delete item.kinds;   /* explanations stay in the kit; a video records choices */
     const own = k === 'job' || k === 'sources';
     menu[k] = Object.assign(item, { from: own ? '' : 'defaults', chosen_on: '', note: '' });
   }
@@ -53,7 +54,9 @@ function newVideo(name, opts) {
   for (const f of ['rig.js', 'rig.css']) fs.copyFileSync(path.join(KIT, 'packages', 'core', 'engine', f), path.join(eng, f));
   fs.writeFileSync(path.join(eng, 'VERSION'), engine + '\n');
   JSON.parse(fs.readFileSync(path.join(dst, 'video.json'), 'utf8'));   // proves the fill produced valid JSON
-  return { dir: dst, engine: engine };
+  let app = null;
+  if (opts.app) app = require('./apps').installApp(dst, opts.app);     // app-backed: the app copied in, the page pointed at it
+  return { dir: dst, engine: engine, app: app ? { ref: app.ref, version: app.app.version, states: app.states.map((s) => s.id) } : null };
 }
 
 module.exports = { newVideo, engineVersion, menuDefaults, KIT };

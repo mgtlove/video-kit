@@ -5,7 +5,8 @@ const path = require('path');
 const core = require('@video-kit/core');
 
 const COMMANDS = {
-  'new':            ['<name>', 'create a video folder from starter/, engine copied in, menu defaults filled'],
+  'new':            ['<name> [--app family/tool]', 'create a video folder from starter/, engine copied in; --app copies a recreated app in'],
+  'app':            ['new|add-state|extract ...', 'recreated apps: app new family/tool; app add-state family/tool id [--capture f]; app extract <video> family/tool id'],
   'menu':           ['[dir]', 'walk through the ten choices a video makes; or show them'],
   'capture':        ['[dir]', 'capture a task in the browser as tagged screenshots (later)'],
   'narration':      ['[dir]', 'check the script parts, rebuild FULL.md, estimate lengths'],
@@ -31,10 +32,35 @@ async function main() {
   const channel = process.env.PW_CHANNEL || undefined;
 
   if (cmd === 'new') {
-    if (!args[0]) { console.error('vkit new <name>'); return 2; }
-    const r = core.newVideo(args[0]);
-    console.log('created ' + path.relative(process.cwd(), r.dir) + ' on engine ' + r.engine + '. Next: cd ' + args[0] + ' && vkit menu');
+    let name = null, app = null;
+    for (let i = 0; i < args.length; i++) { if (args[i] === '--app') app = args[++i]; else name = args[i]; }
+    if (!name) { console.error('vkit new <name> [--app family/tool]'); return 2; }
+    const r = core.newVideo(name, { app });
+    console.log('created ' + path.relative(process.cwd(), r.dir) + ' on engine ' + r.engine + (r.app ? ', app ' + r.app.ref + ' ' + r.app.version + ' (states: ' + r.app.states.join(', ') + ')' : '') + '. Next: cd ' + name + ' && vkit menu');
     return 0;
+  }
+  if (cmd === 'app') {
+    const sub = args[0], rest = args.slice(1), flags = {}, pos = [];
+    for (let i = 0; i < rest.length; i++) { if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]; else pos.push(rest[i]); }
+    if (sub === 'new') {
+      if (!pos[0]) { console.error('vkit app new family/tool [--title "Shown name"] [--extends family/other]'); return 2; }
+      const r = core.apps.appNew(pos[0], { title: flags.title, extends: flags.extends });
+      console.log('made ' + r.dir + '. Put captures in captures/, then vkit app add-state ' + pos[0] + ' <id> --capture <file>');
+      return 0;
+    }
+    if (sub === 'add-state') {
+      if (!pos[0] || !pos[1]) { console.error('vkit app add-state family/tool <id> [--capture file] [--screen name] [--state condition] [--note text]'); return 2; }
+      const r = core.apps.appAddState(pos[0], pos[1], { capture: flags.capture, screen: flags.screen, state: flags.state, note: flags.note, captured_on: flags['captured-on'] });
+      console.log('added state ' + r.id + ': ' + path.relative(process.cwd(), r.file) + '. Recreate the markup inside #mock there from the capture; keep the ids the timeline points at.');
+      return 0;
+    }
+    if (sub === 'extract') {
+      if (!pos[0] || !pos[1] || !pos[2]) { console.error('vkit app extract <video> family/tool <state-id> [--capture file]'); return 2; }
+      const r = core.apps.appExtract(pos[0], pos[1], pos[2], { capture: flags.capture, note: flags.note });
+      console.log('lifted ' + pos[0] + '\'s inline screen into ' + r.dir + ' as state ' + r.id + (r.tokens ? ', with its palette' : ', no palette block found') + (r.screen ? ' and its rules' : ', no rules block found') + '. A starting point: check it against the capture.');
+      return 0;
+    }
+    console.error('vkit app new|add-state|extract'); return 2;
   }
   if (cmd === 'frames') {
     let dir = '.', times = [], every = null;

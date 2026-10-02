@@ -1,13 +1,62 @@
 {
   "_note": "House answers for the video menu. A new video starts with these, marked from: defaults, until each is confirmed. Items 1 (job) and 2 (sources) are each video's own. Change a value here with its reason and every new video picks it up.",
-  "job": { "kind": "", "length": "", "audience": "" },
-  "sources": { "ids": "", "surfaces": "", "missing": "" },
-  "layout": { "value": "full", "reason": "The screen at native pixels fills the frame; text is large; the explanation is a card beside its element. The review of earlier work found text slides read as empty and an inset screen as three quarters of the frame." },
-  "brand": { "value": "none", "reason": "No brand until one is applied through vkit brand; the theme defaults render." },
-  "look": { "value": "house", "reason": "Modern whiteboard, marker on charcoal. The studied looks are offered once looks/ is filled." },
-  "tone": { "value": "formal", "reason": "One accent, no grain, cuts rather than glides, longer holds. Capability stays; restraint is a setting." },
-  "patterns": { "walkthrough": ["announce-do-explain", "build-with-the-sentence"], "concept": ["build-with-the-sentence", "cut-on-the-last-word", "define-in-the-breath"], "reason": "The measured moves closest to a walkthrough and a definitions opener." },
-  "voice": { "route": "clips", "captions": "sidecar", "music": "none", "reason": "Clips per part, measured, are the clock; captions as a file; no bed so a pause stays available." },
-  "characters": { "value": "off", "reason": "Off when the tone is formal." },
-  "fixed_lines": { "card": "after-hook", "reason": "A series card after the opening hook; one before it delays the reason to watch." }
+  "job": {
+    "kind": "",
+    "length": "",
+    "audience": ""
+  },
+  "sources": {
+    "kind": "",
+    "app": "",
+    "ids": "",
+    "surfaces": "",
+    "missing": "",
+    "kinds": {
+      "none": "whiteboard or theory: no screen at all",
+      "inline": "a one-off screen built in the video from a couple of captures, as the starter does",
+      "app": "a recreated app: vkit new --app family/tool copies its states in; vkit app extract lifts an inline screen into one the day it is needed twice"
+    }
+  },
+  "layout": {
+    "value": "full",
+    "reason": "The screen at native pixels fills the frame; text is large; the explanation is a card beside its element. The review of earlier work found text slides read as empty and an inset screen as three quarters of the frame."
+  },
+  "brand": {
+    "value": "none",
+    "reason": "No brand until one is applied through vkit brand; the theme defaults render."
+  },
+  "look": {
+    "value": "house",
+    "reason": "Modern whiteboard, marker on charcoal. The studied looks are offered once looks/ is filled."
+  },
+  "tone": {
+    "value": "formal",
+    "reason": "One accent, no grain, cuts rather than glides, longer holds. Capability stays; restraint is a setting."
+  },
+  "patterns": {
+    "walkthrough": [
+      "announce-do-explain",
+      "build-with-the-sentence"
+    ],
+    "concept": [
+      "build-with-the-sentence",
+      "cut-on-the-last-word",
+      "define-in-the-breath"
+    ],
+    "reason": "The measured moves closest to a walkthrough and a definitions opener."
+  },
+  "voice": {
+    "route": "clips",
+    "captions": "sidecar",
+    "music": "none",
+    "reason": "Clips per part, measured, are the clock; captions as a file; no bed so a pause stays available."
+  },
+  "characters": {
+    "value": "off",
+    "reason": "Off when the tone is formal."
+  },
+  "fixed_lines": {
+    "card": "after-hook",
+    "reason": "A series card after the opening hook; one before it delays the reason to watch."
+  }
 }

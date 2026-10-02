@@ -1,0 +1,10 @@
+{
+  "name": "placeholder",
+  "family": "example",
+  "title": "Placeholder app",
+  "extends": "",
+  "version": "0.1.0",
+  "created_on": "2026-10-02",
+  "rule": "Recreate from your own captures, cite each, never invent a control.",
+  "note": "The kit's example app: the starter's placeholder screen as one state, so the app-backed path can be tested from a bare clone. Invented on purpose; it cites no capture and is not a real product."
+}

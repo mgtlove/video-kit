@@ -22,9 +22,9 @@ The script the `video-menu` skill reads from. For each item: what the question i
 
 **Why it matters.** Nothing on a recreated screen is invented; every element cites a capture. A screen with no capture becomes a concept scene and a note of what to go and capture, or `vkit capture` fetches it from a browser (roadmap step 9).
 
-**Options.** Free text: capture ids or a folder; the document's path; what is missing by screen, state and control.
+**Options.** First the kind, read from `menu-defaults.json` `sources.kinds` (no screen; a one-off screen inline; a recreated app, named `family/tool`, found in `apps/`). Then free text: capture ids or a folder; the document's path; what is missing by screen, state and control.
 
-**Default.** None; if the person does not know, the agent lists the capture folder and proposes. **Writes** `video.json.menu.sources`.
+**Default.** None; if the person does not know, the agent lists the capture folder and the apps it can find, and proposes. **Writes** `video.json.menu.sources` (`vkit new --app` already fills `kind` and `app`).
 
 ---
 
