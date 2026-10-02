@@ -88,7 +88,8 @@ var COPY = {
   sub1: "It was not picked out of the air. Each of the three has a definition.",
   kick2: "The three kinds", big2: "Three words, three definitions.",
   cards: [["Alpha", "The simplest kind. One person, one step."], ["Beta", "Adds a review before it moves on."], ["Gamma", "Adds the other team, because it reaches past yours."]],
-  cardField: "Category, on the record", cardOutcome: "The system returns the outcome"
+  cardField: "Category, on the record", cardOutcome: "The system returns the outcome",
+  typed: "Escalated"
 };
 function copy() {
   var t = function (id, v) { document.getElementById(id).textContent = v; };
@@ -104,16 +105,20 @@ function timeline() {
   at(0.02, function () { fade(true); });
 
   at(t1 + 0.2, function () { scene('s-open'); });                        /* "Every task starts somewhere."  0.0 */
-  at(t1 + 6.0, function () { scene('s-cards'); });                       /* "There are three kinds."  6.2 */
+  at(t1 + 3.0, function () { who('ada', 'point', 'b1', 'right'); });       /* "Someone has to name it."  3.0 */
+  at(t1 + 6.0, function () { scene('s-cards'); who(null); });            /* "There are three kinds."  6.2 */
   at(t1 + 11.0, function () { show('cardA'); });                         /* "Alpha is the simplest."  11.1 */
   at(t1 + 15.0, function () { show('cardB'); });                         /* "Beta adds a review."  15.0 */
   at(t1 + 19.0, function () { show('cardC'); });                         /* "Gamma adds the other team."  19.2 */
 
   at(t2 + 0.2, function () { scene(null); state('work-item'); });      /* "Here is where you set it."  0.0 */
   at(t2 + 4.0, function () { focusEl('r1', 1.3, 40, -120); card(COPY.cardField, 'r1'); });   /* "The category field is where it starts."  4.1 */
-  at(t2 + 9.0, function () { document.getElementById('r1').classList.add('hl'); });          /* "Set it here."  9.0 */
-  at(t2 + 14.0, function () { document.getElementById('r1').classList.remove('hl'); travel('r4', 1.3, 30, -120); card(COPY.cardOutcome, 'r4'); });  /* "And the outcome is what comes back."  14.1 */
-  at(t2 + 21.0, function () { card(null); ease(3.2); home(); });         /* "That is the whole loop."  21.0 */
+  at(t2 + 9.0, function () { ink('circle', 'r1'); });                     /* "Set it here."  9.0 */
+  at(t2 + 14.0, function () { ink(null); travel('r4', 1.3, 30, -120); card(COPY.cardOutcome, 'r4'); });  /* "And the outcome is what comes back."  14.1 */
+  at(t2 + 15.0, function () { pointer('f4', -60, 0); });                 /* "Point to it."  15.0 */
+  at(t2 + 16.2, function () { click(); });                               /* "Click."  16.2 */
+  type(t2 + 17.0, 'f4', COPY.typed, 12);                                 /* "And type the outcome you want."  17.0; one row, nine minor beats */
+  at(t2 + 21.0, function () { pointer(null); card(null); ease(3.2); home(); });   /* "That is the whole loop."  21.0 */
 
   at(t3 + 0.2, function () { scene('s-open'); state(null);  });         /* "So, one more time."  0.0 */
   at(VK.total() + 1.5, function () { fade(false); });                    /* hold, then black */

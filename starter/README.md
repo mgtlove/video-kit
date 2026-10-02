@@ -9,7 +9,7 @@ One video: its script, words, recreated screen and timeline. Made by `vkit new`.
 | `rig/app/` | Only with `vkit new --app`: the recreated app as copied in (`tokens.css`, `screen.css`, `states/`, `manifest.csv`, `states.js`). Change the app and make the video again; never edit here |
 | `narration/part-N.md` | The script, one file per voice clip, one sentence per line |
 | `voice/` | The measured clips, `part-N.wav` or `.mp3` |
-| `storyboard.md` | One row per beat, mirrored by the timeline |
+| `storyboard.md` | One row per sentence, mirrored by the timeline's beats (typing is one row; its characters are minor beats) |
 | `video.json` | Every choice this video made (`menu`), the parts, the voice, how it was published |
 | `out/` | What `vkit render` wrote: the MP4, its captions (`.vtt`, `.srt`) and `render.json` with the numbers of that render |
 

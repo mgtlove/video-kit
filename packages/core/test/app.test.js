@@ -5,7 +5,7 @@
 //            one state is the starter's screen
 //   lifted   vkit app extract on the inline video into a new app in a temp
 //            apps folder, then vkit new --app on that (the round trip)
-// Every one of the 16 starter frames must be byte for byte identical across
+// Every one of the starter's stills (20 since step 4) must be byte for byte identical across
 // the three. Also checks the shape of what vkit new --app wrote. About 30 s.
 const test = require('node:test');
 const assert = require('node:assert');
@@ -48,7 +48,7 @@ test('an app-backed video renders the same frames as the inline one, and the rou
   const a = await core.frames(inline.dir, opts);
   const b = await core.frames(backed.dir, opts);
   const c = await core.frames(relifted.dir, opts);
-  assert.strictEqual(a.files.length, 16); assert.strictEqual(b.files.length, 16); assert.strictEqual(c.files.length, 16);
+  assert.strictEqual(a.files.length, 20); assert.strictEqual(b.files.length, 20); assert.strictEqual(c.files.length, 20);
   assert.deepStrictEqual(b.times, a.times); assert.deepStrictEqual(c.times, a.times);
   let same = 0;
   for (let i = 0; i < a.files.length; i++) {
@@ -57,5 +57,5 @@ test('an app-backed video renders the same frames as the inline one, and the rou
     assert.ok(A.equals(fs.readFileSync(c.files[i])), 'inline and round-tripped differ at ' + path.basename(a.files[i]));
     same++;
   }
-  console.log(same + ' of 16 frames byte for byte identical across inline, app-backed and round-tripped (engine ' + a.engine + ')');
+  console.log(same + ' of ' + a.files.length + ' frames byte for byte identical across inline, app-backed and round-tripped (engine ' + a.engine + ')');
 });

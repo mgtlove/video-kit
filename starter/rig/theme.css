@@ -23,6 +23,17 @@
   --scrim:#1c1e1dd9;
   --shadow:0 10px 44px #00000077;
   --grain:0;
+  /* strokes, the pointer and the cast (engine 0.3.0); a look pack sets these. --ink above is the text colour; strokes have their own */
+  --stroke:var(--brand-highlight,#ffb000);
+  --stroke-width:6px;
+  --stroke-draw:.6s;
+  --pointer:#ffffff;
+  --pointer-edge:#1c1e1d;
+  --pointer-ring:var(--brand-highlight,#ffb000);
+  --pointer-glide:1s;
+  --cast-stroke:var(--stroke);
+  --cast-width:5px;
+  --cast-fill:transparent;
 }
 /* screen:inline */
 /* the recreated screen: a placeholder palette until captures replace it. vkit new --app replaces this block with the app's tokens.css. */

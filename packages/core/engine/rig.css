@@ -28,6 +28,25 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 #mock.on{opacity:1}
 #stage .hl{outline:4px solid var(--hi);outline-offset:6px;border-radius:8px;box-shadow:0 0 0 12px var(--hi-bg)}
 
+/* ---- strokes, the pointer, the cast: built by the engine at beat time; colours and widths are tokens ---- */
+#ink,#cast{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;overflow:visible}
+#ink path{fill:none;stroke:var(--stroke,var(--hi));stroke-width:var(--stroke-width,6px);stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke-dashoffset var(--stroke-draw,.6s) cubic-bezier(.3,0,.5,1)}
+#ink path.on{stroke-dashoffset:0 !important}
+#cast{opacity:0;transition:opacity .4s}
+#cast.on{opacity:1}
+#cast path{fill:none;stroke:var(--cast-stroke,var(--stroke,var(--hi)));stroke-width:var(--cast-width,5px);stroke-linecap:round;stroke-linejoin:round}
+#cast path.head{fill:var(--cast-fill,transparent)}
+#pointer{position:absolute;left:0;top:0;z-index:50;pointer-events:none;opacity:0;transform:translate(1840px,1000px);
+  transition:transform var(--pointer-glide,1s) cubic-bezier(.4,0,.2,1),opacity .25s}
+#pointer.on{opacity:1}
+#pointer svg path{fill:var(--pointer,#ffffff);stroke:var(--pointer-edge,#000000);stroke-width:1.5}
+#ring{position:absolute;left:0;top:0;z-index:49;pointer-events:none;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
+  border:3px solid var(--pointer-ring,var(--hi));opacity:0;transform:scale(.4);transition:transform .5s ease-out,opacity .5s ease-out}
+#ring.on{opacity:0;transform:scale(1.8)}   /* click() first sets it bright and small with no transition, then this is what it transitions to */
+.typing{box-shadow:inset 0 0 0 2px var(--p-accent,var(--hi))}
+.typing::after{content:"";display:inline-block;width:2px;height:1em;margin-left:1px;vertical-align:-2px;background:var(--p-strong,currentColor)}
+
 /* ---- the card that explains, placed beside its element by the engine ---- */
 #card{position:absolute;z-index:45;left:0;top:0;width:400px;padding:22px 24px;border-radius:12px;box-sizing:border-box;
   background:var(--panel);border:1px solid var(--panel-bd);border-left:5px solid var(--accent);color:var(--ink);

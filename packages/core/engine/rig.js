@@ -30,7 +30,9 @@
 
   /* ---------- parts and time ---------- */
   function P(i) { var s = 0; for (var k = 0; k < i; k++) s += window.PARTS[k]; return s; }
-  function at(t, fn) { beats.push({ t: t, fn: fn, done: false }); }
+  /* at(t, fn, minor): a beat. A minor beat (one character of typing) is not a moment vkit frames
+     samples; VK.beats() leaves them out. */
+  function at(t, fn, minor) { beats.push({ t: t, fn: fn, done: false, minor: !!minor }); }
 
   /* ---------- fit the stage to the window (recording is 1:1 only at 1920x1080) ---------- */
   function fit() {
@@ -127,6 +129,149 @@
     c.style.left = Math.round(x) + 'px'; c.style.top = Math.round(y) + 'px';
   }
 
+  /* ---------- seeded strokes, the pointer, the cast (step 4) ----------
+     Everything here is built at beat time from pos(), after fonts and copy, so sizes are right;
+     geometry is seeded from the kind and the element id, so a re-render is identical; motion is
+     CSS transitions on a class, so a seek holds and bakes it like any other. Colours and widths
+     are tokens (--stroke, --stroke-width, --stroke-draw, --pointer, --cast-stroke, --cast-fill) from theme.css;
+     --ink is the theme's text colour and is not touched. */
+  var SVG = 'http://www.w3.org/2000/svg';
+  function hash(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng(seed) { var a = hash(seed); return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function layer(id, tag) {
+    var el = $(id); if (el) return el;
+    el = document.createElementNS(SVG, tag || 'svg'); el.setAttribute('id', id);
+    if (!tag) { el.setAttribute('viewBox', '0 0 ' + W + ' ' + H); el.setAttribute('width', W); el.setAttribute('height', H); }
+    cam.appendChild(el); return el;
+  }
+  function fmt(n) { return Math.round(n * 10) / 10; }
+  function pathOf(pts, close) { var d = 'M' + fmt(pts[0][0]) + ' ' + fmt(pts[0][1]); for (var i = 1; i < pts.length; i++) d += ' L' + fmt(pts[i][0]) + ' ' + fmt(pts[i][1]); return close ? d + ' Z' : d; }
+  function wobble(r, amount) { return (r() - 0.5) * 2 * amount; }
+
+  /* the four strokes. Each returns a list of point lists (one path each), in stage pixels. */
+  var STROKES = {
+    circle: function (b, r, o) {
+      var pad = o.pad != null ? o.pad : 18, cx = b.x, cy = b.y, rx = b.w / 2 + pad + 10, ry = b.h / 2 + pad;
+      var start = r() * Math.PI * 2, turns = 1.08 + r() * 0.08, n = 56, pts = [];
+      for (var i = 0; i <= n; i++) {
+        var a = start + (i / n) * Math.PI * 2 * turns, k = 1 + wobble(r, 0.012) + (i / n) * 0.03;
+        pts.push([cx + Math.cos(a) * rx * k + wobble(r, 1.2), cy + Math.sin(a) * ry * k + wobble(r, 1.2)]);
+      }
+      return [pts];
+    },
+    frame: function (b, r, o) {
+      var pad = o.pad != null ? o.pad : 12, l = b.l - pad, t = b.t - pad, rt = b.l + b.w + pad, bt = b.t + b.h + pad, pts = [], corners = [[l, t], [rt, t], [rt, bt], [l, bt], [l, t]];
+      for (var c = 0; c < 4; c++) {
+        var a = corners[c], z = corners[c + 1], n = 10;
+        for (var i = 0; i <= n; i++) { var u = i / n; pts.push([a[0] + (z[0] - a[0]) * u + wobble(r, 1.6), a[1] + (z[1] - a[1]) * u + wobble(r, 1.6)]); }
+      }
+      pts.push([l + 6 + wobble(r, 2), t + wobble(r, 2)]);   /* the overshoot a hand leaves */
+      return [pts];
+    },
+    underline: function (b, r, o) {
+      var pad = o.pad != null ? o.pad : 8, y = b.t + b.h + pad, n = 14, pts = [];
+      for (var i = 0; i <= n; i++) { var u = i / n; pts.push([b.l - 4 + (b.w + 8) * u, y + Math.sin(u * Math.PI) * 2.5 + wobble(r, 1.2)]); }
+      return [pts];
+    },
+    arrow: function (b, r, o) {
+      var dx = o.dx != null ? o.dx : -160, dy = o.dy != null ? o.dy : 120;          /* the tail, relative to the box centre */
+      var from = [b.x + dx, b.y + dy];
+      var tx = Math.min(Math.max(b.x, b.l - 6), b.l + b.w + 6), ty = dy > 0 ? b.t + b.h + 10 : b.t - 10;     /* the head meets the box edge */
+      if (Math.abs(dx) > Math.abs(dy)) { tx = dx > 0 ? b.l + b.w + 10 : b.l - 10; ty = b.y; }
+      var to = [tx, ty], mid = [(from[0] + to[0]) / 2 + (to[1] - from[1]) * 0.12, (from[1] + to[1]) / 2 - (to[0] - from[0]) * 0.12], n = 16, shaft = [];
+      for (var i = 0; i <= n; i++) { var u = i / n, v = 1 - u; shaft.push([v * v * from[0] + 2 * v * u * mid[0] + u * u * to[0] + wobble(r, 1), v * v * from[1] + 2 * v * u * mid[1] + u * u * to[1] + wobble(r, 1)]); }
+      var ang = Math.atan2(to[1] - mid[1], to[0] - mid[0]), hl = 22;
+      var head = [[to[0] - Math.cos(ang - 0.5) * hl, to[1] - Math.sin(ang - 0.5) * hl], to, [to[0] - Math.cos(ang + 0.5) * hl, to[1] - Math.sin(ang + 0.5) * hl]];
+      return [shaft, head];
+    }
+  };
+  /* ink(kind, id, opts): draw a stroke around or to element `id`, drawn on over --stroke-draw. opts:
+     pad, dx, dy (arrow tail), seed (to vary a repeat), keep (do not clear earlier strokes). ink(null) clears. */
+  function ink(kind, id, opts) {
+    var svg = layer('ink');
+    if (!kind) { while (svg.firstChild) svg.removeChild(svg.firstChild); return; }
+    var el = $(id); if (!el || !STROKES[kind]) return;
+    opts = opts || {};
+    if (!opts.keep) while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var paths = STROKES[kind](pos(el), rng(kind + ':' + id + ':' + (opts.seed || '')), opts), made = [];
+    for (var i = 0; i < paths.length; i++) {
+      var p = document.createElementNS(SVG, 'path');
+      p.setAttribute('d', pathOf(paths[i], false));
+      p.setAttribute('data-stroke', kind + ' ' + id);
+      svg.appendChild(p);
+      var L = Math.ceil(p.getTotalLength()) + 2;
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      made.push(p);
+    }
+    for (var k = 0; k < made.length; k++) void getComputedStyle(made[k]).strokeDashoffset;   /* the start state exists before the change, so it transitions */
+    for (var m = 0; m < made.length; m++) made[m].classList.add('on');
+  }
+
+  /* the pointer: one cursor that glides to an element over --pointer-glide; click() rings where it is */
+  var pointAt = null;
+  function instant(el, fn) { el.style.setProperty('transition-property', 'none'); fn(); void getComputedStyle(el).transform; el.style.removeProperty('transition-property'); }   /* a change with no transition */
+  function pointerEl() {
+    var p = $('pointer'); if (p) return p;
+    p = document.createElement('div'); p.id = 'pointer';
+    p.innerHTML = '<svg viewBox="0 0 24 32" width="30" height="40"><path d="M3 2 L3 26 L9.5 20.5 L13.5 30 L17 28.5 L13 19 L21 19 Z"/></svg>';
+    cam.appendChild(p);
+    var ring = document.createElement('div'); ring.id = 'ring'; cam.appendChild(ring);
+    return p;
+  }
+  function pointer(id, dx, dy, opts) {
+    var p = pointerEl();
+    if (!id) { p.classList.remove('on'); return; }
+    var el = $(id); if (!el) return;
+    var b = pos(el); pointAt = [b.x + (dx || 0), b.y + (dy || 0)];
+    var move = function () { p.style.transform = 'translate(' + fmt(pointAt[0]) + 'px,' + fmt(pointAt[1]) + 'px)'; };
+    if (opts && opts.jump) instant(p, move); else move();
+    p.classList.add('on');
+  }
+  function click() {
+    var ring = $('ring'); if (!ring || !pointAt) return;
+    instant(ring, function () { ring.classList.remove('on'); ring.style.opacity = '.9'; ring.style.left = fmt(pointAt[0]) + 'px'; ring.style.top = fmt(pointAt[1]) + 'px'; });
+    ring.style.removeProperty('opacity'); ring.classList.add('on');          /* bright and small, then grows and fades */
+  }
+  /* type(t, id, text, cps): one beat per character from t, each setting the field's text to the
+     prefix; no animation, so it is seek-correct by construction. The first beat is a real beat
+     (a still is sampled there), the rest are minor. Returns the time the last character lands. */
+  function type(t, id, text, cps) {
+    cps = cps || 12;
+    for (var i = 1; i <= text.length; i++) {
+      (function (n) { at(t + (n - 1) / cps, function () { var el = $(id); if (!el) return; el.textContent = text.slice(0, n); el.classList.add('typing'); }, n > 1); })(i);
+    }
+    var end = t + (text.length - 1) / cps;
+    at(end + 0.6, function () { var el = $(id); if (el) el.classList.remove('typing'); }, true);
+    return end;   /* the field is looked up at beat time: in an app-backed video it exists only once its state is on */
+  }
+
+  /* the cast: seeded figures beside an element. who(name, pose, nearId, side); who(null) hides.
+     Poses: point, think, wave. Two figures by name (any name; the seed is the name). The
+     mechanism is here; the drawing style belongs to a look (roadmap step 7). */
+  function who(name, pose, nearId, side) {
+    var svg = layer('cast');
+    if (!name) { svg.classList.remove('on'); return; }
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var r = rng('who:' + name), el = nearId ? $(nearId) : null, b = el ? pos(el) : { l: W / 2 - 100, t: H / 2 - 150, w: 200, h: 300, x: W / 2, y: H / 2 };
+    var hgt = 300 + r() * 60, x = side === 'left' ? b.l - 160 : b.l + b.w + 160, y = b.t + b.h / 2 + hgt * 0.1;
+    x = Math.min(Math.max(x, 140), W - 140);
+    var head = 30 + r() * 6, g = document.createElementNS(SVG, 'g'); g.setAttribute('data-who', name + ' ' + pose);
+    var add = function (pts, cls) { var p = document.createElementNS(SVG, 'path'); p.setAttribute('d', pathOf(pts, false)); if (cls) p.setAttribute('class', cls); g.appendChild(p); };
+    var top = y - hgt / 2, neck = top + head * 2 + 6, hip = neck + hgt * 0.38, foot = y + hgt / 2;
+    var ring = []; for (var i = 0; i <= 40; i++) { var a = (i / 40) * Math.PI * 2.05; ring.push([x + Math.cos(a) * head + wobble(r, 1), top + head + Math.sin(a) * head * 1.08 + wobble(r, 1)]); }
+    add(ring, 'head');
+    add([[x + wobble(r, 2), neck], [x + wobble(r, 3), hip]]);                              /* spine */
+    add([[x, hip], [x - 22 + wobble(r, 3), foot]]); add([[x, hip], [x + 22 + wobble(r, 3), foot]]);   /* legs */
+    var sh = neck + 14, dir = side === 'left' ? 1 : -1;                                      /* arms face the element */
+    if (pose === 'point') { add([[x, sh], [x - dir * 20, sh + 50]]); add([[x, sh], [x + dir * 62, sh - 26], [x + dir * 86, sh - 34]]); }
+    else if (pose === 'wave') { add([[x, sh], [x - dir * 18, sh + 54]]); add([[x, sh], [x + dir * 40, sh - 40], [x + dir * 44, sh - 80]]); }
+    else { add([[x, sh], [x - dir * 18, sh + 54]]); add([[x, sh], [x + dir * 30, sh + 30], [x + dir * 12, top + head * 1.7]]); }   /* think: hand to chin */
+    var hair = 3 + Math.floor(r() * 4); for (var h = 0; h < hair; h++) { var hx = x - head * 0.6 + (head * 1.2) * (h / Math.max(1, hair - 1)); add([[hx, top + 2 + wobble(r, 2)], [hx + wobble(r, 6), top - 10 - r() * 12]]); }
+    svg.appendChild(g);
+    void getComputedStyle(svg).opacity;
+    svg.classList.add('on');
+  }
+
   /* ---------- reset, play, seek ---------- */
   var resetHooks = [];
   function onReset(fn) { resetHooks.push(fn); }
@@ -138,6 +283,10 @@
     for (var j = 0; j < baked.length; j++) baked[j][0].style.removeProperty(baked[j][1]);
     baked = [];
     var mk = $('mock'); if (mk && (screenState !== null || mk.innerHTML !== mockHome)) { mk.innerHTML = mockHome; screenState = null; }
+    var inkL = $('ink'); if (inkL) while (inkL.firstChild) inkL.removeChild(inkL.firstChild);
+    var castL = $('cast'); if (castL) while (castL.firstChild) castL.removeChild(castL.firstChild);
+    var ptr = $('pointer'); if (ptr) { ptr.style.transform = 'translate(' + (W - 80) + 'px,' + (H - 80) + 'px)'; pointAt = null; }   /* home: bottom right, hidden */
+    var typed = document.querySelectorAll('.typing'); for (var ty = 0; ty < typed.length; ty++) typed[ty].classList.remove('typing');
     cardNear = null; cardSide = null;
     for (var k = 0; k < resetHooks.length; k++) resetHooks[k]();
     snapping = true; home(); snapping = false;
@@ -152,13 +301,19 @@
      browser sessions, so the same still could differ by a few levels from one run to the next;
      and cancelling a transition after an inline write without transitions off starts a new one.
      Transitions only; a keyframe animation stays held. Every value is read before any is
-     written, because writing one element's value cancels its other transitions. */
+     written, because writing one element's value cancels its other transitions. A transition
+     already past its end is cancelled instead: its class value is the value, and a baked inline
+     copy would shadow a later beat that changes the same class. Known limit: two changes to the
+     same property on one element inside its transition time (under a second apart) seek as the
+     first held, because the second's class change cannot show through the bake. */
   var baked = [];
   function holdAll(anims, msOf) {
     var i, a, el, prop, items = [];
     for (i = 0; i < anims.length; i++) {
       a = anims[i]; a.pause();
-      try { a.currentTime = msOf(a); } catch (e) { continue; }   /* a finished animation is gone already */
+      var ms = msOf(a), end = a.effect ? a.effect.getComputedTiming().endTime : 0;
+      if (ms >= end) { a.cancel(); continue; }   /* already over: the class value is the value; baking it would shadow a later class change */
+      try { a.currentTime = ms; } catch (e) { continue; }
       el = a.effect && a.effect.target; prop = a.transitionProperty;
       if (el && prop) items.push({ a: a, el: el, prop: prop, v: getComputedStyle(el).getPropertyValue(prop), tp: el.style.getPropertyValue('transition-property') });
     }
@@ -244,7 +399,14 @@
         if (!b.done && b.t <= clock) {
           var before = document.getAnimations ? document.getAnimations() : [];
           b.fn(); b.done = true; void stage.offsetHeight;
-          if (document.getAnimations) { var after = document.getAnimations(); for (var k = 0; k < after.length; k++) if (before.indexOf(after[k]) < 0) live.push([after[k], b.t]); }
+          /* a beat fires on the first frame at or after its time, so up to a frame late, and Chrome
+             starts a new transition either on this frame or the next (33 ms after a dropped frame).
+             Every animation a beat starts gets its start time set to the beat's nominal time on the
+             document timeline, so it runs exactly as if it had started on time whatever the frame
+             clock did; playback then means what a seek means and the proof compares like with
+             like. The shift is under two frames and never seen. */
+          var startAt = now - (clock - b.t) * 1000;
+          if (document.getAnimations) { var after = document.getAnimations(); for (var k = 0; k < after.length; k++) if (before.indexOf(after[k]) < 0) { try { after[k].startTime = startAt; } catch (e) { /* finished already */ } live.push([after[k], b.t]); } }
         }
       }
       if (clock >= TOTAL + 3) playing = false;
@@ -267,6 +429,7 @@
     TOTAL = P(window.PARTS.length);
     if (typeof window.copy === 'function') window.copy();
     var mk = $('mock'); if (mk) mockHome = mk.innerHTML;         /* after copy(), so COPY strings are part of home */
+    layer('ink'); layer('cast'); pointerEl();                      /* the layers exist from the start */
     addEventListener('resize', fit); fit();
     addEventListener('keydown', keys);
     var btn = $('start'); if (btn) btn.addEventListener('click', start);
@@ -279,12 +442,13 @@
   }
 
   window.VK = {
-    version: '0.2.0',
+    version: '0.3.0',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
-    beats: function () { return beats.map(function (b) { return b.t; }); },
+    beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
     scene: scene, show: show, state: state, fade: fadeTo, card: card,
+    ink: ink, pointer: pointer, click: click, type: type, who: who, rng: rng,
     focus: focus, focusEl: focusEl, travel: travel, ease: ease, home: home, camTo: camTo, pos: pos,
     W: W, H: H
   };
@@ -292,4 +456,5 @@
   window.at = at; window.P = P;
   window.scene = scene; window.show = show; window.state = state; window.fade = fadeTo; window.card = card;
   window.focusAt = focus; window.focusEl = focusEl; window.travel = travel; window.ease = ease; window.home = home; window.pos = pos;
+  window.ink = ink; window.pointer = pointer; window.click = click; window.type = type; window.who = who;
 })();
