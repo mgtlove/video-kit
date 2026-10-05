@@ -7,7 +7,7 @@ Install from a clone of `video-kit`:
 ```
 /plugin marketplace add ./video-kit/packages/plugin       Claude Code, from the folder holding video-kit
 /plugin install vkit@vkit-local                            then install the plugin from that marketplace
-cd packages/plugin && zip -r ../../vkit.plugin . -x '*__pycache__*' -x '*.DS_Store' -x '_suggested-trash/*'     the desktop app: open vkit.plugin
+cd packages/plugin && zip -r ../../vkit.plugin . -x '*__pycache__*' -x '*.DS_Store'     the desktop app: open vkit.plugin
 ```
 
 | Skill | When |
@@ -24,4 +24,3 @@ The hook (`hooks/hooks.json`, `hooks/scripts/guard.py`, 21 cases in `test_guard.
 
 Long `vkit` commands print a progress line: a bar that rewrites in place on a terminal, plain lines every few seconds in a pipe or a log, so a skill reading the output sees the step, the count and the time left. `VKIT_QUIET=1` turns it off.
 
-`_suggested-trash/menu-items.md` is the typed list of menu items from the first draft, superseded by `vkit menu --explain`, kept until its removal is agreed.

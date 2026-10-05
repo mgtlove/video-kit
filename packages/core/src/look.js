@@ -90,7 +90,7 @@ function tokensFor(look) {
     '--look-paper': look.paper || null, '--look-paper-ink': paperInk ? toHex(paperInk) : null, '--look-paper-dim': paperDim ? toHex(paperDim) : null,
     '--look-accent-1': look.accents[0] || null, '--look-accent-2': look.accents[1] || look.accents[0] || null, '--look-accent-3': look.accents[2] || look.accents[0] || null,
     '--look-kind-a': toHex(kinds[0]), '--look-kind-b': toHex(kinds[1]), '--look-kind-c': toHex(kinds[2]),
-    '--look-panel': toHex(panel) + 'ee', '--look-panel-ink': toHex(panelInk), '--look-panel-kick': toHex(kick),
+    '--look-panel': toHex(panel),   /* opaque: the card sits over the screen and its text is read against the card, not through it (F1) */ '--look-panel-ink': toHex(panelInk), '--look-panel-kick': toHex(kick),
     '--look-head': fm.head, '--look-weight': String(fm.weight || look.type.weight || 700),
     '--look-size-title': look.type.title + 'px', '--look-size-label': look.type.label + 'px', '--look-size-body': look.type.body + 'px',
     '--look-stroke': stroke ? toHex(stroke) : null, '--look-stroke-width': look.strokes.width + 'px', '--look-stroke-rough': String(Math.round(look.strokes.roughness * 1.6 * 100) / 100), '--look-stroke-glow': (look.strokes.glow || 0) + 'px', '--look-stroke-cap': look.strokes.cap === 'butt' ? 'butt' : look.strokes.cap === 'square' ? 'square' : 'round',

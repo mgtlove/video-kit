@@ -23,7 +23,7 @@
   --card-fill:var(--look-paper,#ffffff08);
   --paper-ink:var(--look-paper-ink,var(--ink));
   --paper-dim:var(--look-paper-dim,var(--dim));
-  --panel:var(--look-panel,#101211ee);
+  --panel:var(--look-panel,#101211);   /* opaque: a see-through card let the screen's text show under its own (docs/FINDINGS.md F1) */
   --panel-ink:var(--look-panel-ink,var(--ink));
   --panel-kick:var(--look-panel-kick,var(--accent));
   --panel-bd:#ffffff22;

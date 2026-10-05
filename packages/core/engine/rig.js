@@ -136,27 +136,56 @@
     var p = pos(el), c = camState;
     return { l: (p.l - c.x) * c.s, t: (p.t - c.y) * c.s, w: p.w * c.s, h: p.h * c.s };
   }
+  /* placeCard: the card sits beside the element it names, on the side with the most room, and
+     clear of that element's neighbours: the elements beside it that a viewer is reading (its
+     siblings, and every leaf element with an id in the recreated screen). A side that would land
+     on a neighbour is passed over; when every side of the element does, the card goes beside the
+     group the element belongs to (below the last sibling, say); when even that fails, the side
+     that covers the least. A side the author names wins over all of this. (Engine 0.4.1: the
+     first placement only kept clear of the named element and landed on the fields under it.) */
   function placeCard() {
     var c = $('card'), w = c.offsetWidth, h = c.offsetHeight, x, y;
     var cx = function (v) { return Math.min(Math.max(v, SAFE.l), SAFE.r - w); };
     var cy = function (v) { return Math.min(Math.max(v, SAFE.t), SAFE.b - h); };
     var el = cardNear ? $(cardNear) : null, b = el ? frameBox(el) : null;
     if (b) {
-      var room = [
-        { side: 'right', n: SAFE.r - (b.l + b.w) - GAP, need: w },
-        { side: 'left',  n: b.l - SAFE.l - GAP,         need: w },
-        { side: 'below', n: SAFE.b - (b.t + b.h) - GAP, need: h },
-        { side: 'above', n: b.t - SAFE.t - GAP,         need: h }
-      ].filter(function (o) { return o.n >= o.need || o.side === cardSide; })
-       .sort(function (a, z) { return (z.side === cardSide) - (a.side === cardSide) || (z.n - z.need) - (a.n - a.need); });
-      var pick = room.length ? room[0].side : null;
-      if (pick === 'right') { x = cx(b.l + b.w + GAP); y = cy(b.t + b.h / 2 - h / 2); }
-      else if (pick === 'left') { x = cx(b.l - GAP - w); y = cy(b.t + b.h / 2 - h / 2); }
-      else if (pick === 'below') { y = cy(b.t + b.h + GAP); x = cx(b.l + b.w / 2 - w / 2); }
-      else if (pick === 'above') { y = cy(b.t - GAP - h); x = cx(b.l + b.w / 2 - w / 2); }
+      var others = neighbours(el).map(frameBox);
+      var group = others.reduce(function (g, o) { return { l: Math.min(g.l, o.l), t: Math.min(g.t, o.t), r: Math.max(g.r, o.l + o.w), b: Math.max(g.b, o.t + o.h) }; }, { l: b.l, t: b.t, r: b.l + b.w, b: b.t + b.h });
+      var G = { l: group.l, t: group.t, w: group.r - group.l, h: group.b - group.t };
+      var at = function (side, box) {
+        if (side === 'right') return { x: cx(box.l + box.w + GAP), y: cy(box.t + box.h / 2 - h / 2), n: SAFE.r - (box.l + box.w) - GAP, need: w };
+        if (side === 'left') return { x: cx(box.l - GAP - w), y: cy(box.t + box.h / 2 - h / 2), n: box.l - SAFE.l - GAP, need: w };
+        if (side === 'below') return { x: cx(box.l + box.w / 2 - w / 2), y: cy(box.t + box.h + GAP), n: SAFE.b - (box.t + box.h) - GAP, need: h };
+        return { x: cx(box.l + box.w / 2 - w / 2), y: cy(box.t - GAP - h), n: box.t - SAFE.t - GAP, need: h };
+      };
+      var covered = function (o) { var a = 0; for (var i = 0; i < others.length; i++) { var q = others[i]; a += Math.max(0, Math.min(o.x + w, q.l + q.w) - Math.max(o.x, q.l)) * Math.max(0, Math.min(o.y + h, q.t + q.h) - Math.max(o.y, q.t)); } return a; };
+      var sides = ['right', 'left', 'below', 'above'], options = [];
+      sides.forEach(function (sd) { var o = at(sd, b); o.side = sd; o.tier = 0; o.cover = covered(o); options.push(o); });
+      sides.forEach(function (sd) { var o = at(sd, G); o.side = sd; o.tier = 1; o.cover = covered(o); options.push(o); });
+      var fits = options.filter(function (o) { return o.n >= o.need; });
+      var pick = null;
+      if (cardSide) pick = at(cardSide, b);                                                     /* the author's call */
+      else if (fits.length) {
+        var clear = fits.filter(function (o) { return o.cover === 0; });
+        var pool = clear.length ? clear : fits;
+        pool.sort(function (a, z) { return a.tier - z.tier || (clear.length ? (z.n - z.need) - (a.n - a.need) : a.cover - z.cover); });
+        pick = pool[0];
+      }
+      if (pick) { x = pick.x; y = pick.y; }
     }
     if (x === undefined) { x = SAFE.r - w; y = SAFE.b - h; }   /* bottom right, inside title safe */
     c.style.left = Math.round(x) + 'px'; c.style.top = Math.round(y) + 'px';
+  }
+  /* the elements a card must keep clear of: the named element's siblings, and every visible leaf
+     element with an id inside the recreated screen (a field, a button, a row), never its own
+     ancestors or descendants */
+  function neighbours(el) {
+    var out = [], seen = {};
+    var add = function (n) { if (!n || n === el || seen[n.id || ''] && n.id || el.contains(n) || n.contains(el)) return; if (!n.offsetWidth || !n.offsetHeight) return; if (n.id) seen[n.id] = true; out.push(n); };
+    if (el.parentElement) for (var s = el.parentElement.firstElementChild; s; s = s.nextElementSibling) add(s);
+    var mk = $('mock');
+    if (mk && mk.classList.contains('on')) { var ids = mk.querySelectorAll('[id]'); for (var i = 0; i < ids.length; i++) if (!ids[i].querySelector('[id]')) add(ids[i]); }
+    return out;
   }
 
   /* ---------- seeded strokes, the pointer, the cast (step 4) ----------
@@ -479,7 +508,7 @@
   }
 
   window.VK = {
-    version: '0.4.0',
+    version: '0.4.1',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; },

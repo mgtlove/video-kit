@@ -1,10 +1,12 @@
 // Proof for roadmap step 6: vkit check tells footage from not-footage and
 // well made from not, by rule id, and fidelity is a measurement.
 //   1. the starter passes a full check (seek-correct and flashing included)
-//   2. a copy with four deliberate breaks fails on exactly those rules:
+//   2. a copy with five deliberate breaks fails on exactly those rules:
 //      a 40 px heading (C-TYPE-3), a kicker pushed outside title safe
-//      (C-COMP-1), an https:// url in the theme (offline), and part 3's
-//      beats removed so the opener holds 17.8 s (C-PACE-7)
+//      (C-COMP-1), an https:// url in the theme (offline), part 3's beats
+//      removed so the opener holds 17.8 s (C-PACE-7), and the explanation
+//      card made 93 percent translucent over the screen (surface-opaque,
+//      docs/FINDINGS.md F1)
 //   3. an app state checked against a capture of itself scores 1.000; against
 //      the same capture shifted 12 px and blurred it scores lower; the
 //      side-by-side image exists
@@ -34,7 +36,7 @@ test('the starter passes a full check', async () => {
   assert.ok(fs.existsSync(report.file));
 });
 
-test('four deliberate breaks are caught by rule id', async () => {
+test('five deliberate breaks are caught by rule id', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-check-'));
   const r = core.newVideo('broken', { cwd: tmp });
   const opts = require('./opts')({ quick: true });
@@ -43,11 +45,12 @@ test('four deliberate breaks are caught by rule id', async () => {
   page = page.replace('</style>', '.big{font-size:40px !important}\n.kick{margin-left:-140px}\n</style>');            /* a heading under the floor; a kicker outside title safe */
   page = page.split('\n').filter((l) => !/t3 \+ 6\.0|t3 \+ 11\.0/.test(l)).join('\n');                               /* part 3 holds 17.8 s */
   fs.writeFileSync(html, page);
-  fs.appendFileSync(theme, '\n.never-used{background-image:url(https://example.invalid/a.png)}\n');                   /* an online reference (never fetched) */
+  fs.appendFileSync(theme, '\n.never-used{background-image:url(https://example.invalid/a.png)}\n:root{--panel:#101211ee}\n');   /* an online reference (never fetched); a see-through card */
   const report = await core.check(r.dir, opts);
   const failing = rowsOf(report).filter((x) => x.result === 'fail').map((x) => x.id).sort();
   console.log('broken copy fails: ' + failing.join(', '));
-  assert.deepStrictEqual(failing, ['offline', 'still-run', 'text-floor', 'title-safe']);
+  assert.deepStrictEqual(failing, ['offline', 'still-run', 'surface-opaque', 'text-floor', 'title-safe']);
+  assert.ok(/#card at 93 percent over the recreated screen/.test(rowById(report, 'surface-opaque').measured), rowById(report, 'surface-opaque').measured);
   assert.ok(rowById(report, 'text-floor').rules.includes('C-TYPE-3') && /40 px/.test(rowById(report, 'text-floor').measured));
   assert.ok(rowById(report, 'title-safe').rules.includes('C-COMP-1') && /#k1|#k2/.test(rowById(report, 'title-safe').measured));
   assert.ok(rowById(report, 'still-run').rules.includes('C-PACE-7') && /17\.8/.test(rowById(report, 'still-run').measured));

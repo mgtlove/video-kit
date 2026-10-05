@@ -57,6 +57,24 @@ function measureInPage(t) {
     return bg;
   }
   function opacityOf(el) { var o = 1, n = el; while (n && n !== stage) { o *= parseFloat(getComputedStyle(n).opacity); n = n.parentElement; } return o; }
+  /* the surface a text sits on: the nearest ancestor (or the element) that paints a background. A
+     translucent surface lets whatever is behind it show under the words, so the alpha is reported
+     with whether content sits behind: the recreated screen while it is up, or any other text box
+     outside the surface that the surface overlaps. */
+  var mockEl = document.getElementById('mock'), mockOn = mockEl && mockEl.classList.contains('on') ? mockEl.getBoundingClientRect() : null;
+  function overlaps(a, b) { return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom; }
+  function surfaceOf(el) {
+    var n = el;
+    while (n && n !== stage) { var c = rgb(getComputedStyle(n).backgroundColor); if (c && c[3] > 0) break; n = n.parentElement; }
+    if (!n || n === stage) return { alpha: 1, behind: '' };
+    var c2 = rgb(getComputedStyle(n).backgroundColor), r = n.getBoundingClientRect(), behind = [];
+    if (c2[3] < 0.98) {
+      if (mockOn && overlaps(r, mockOn)) behind.push('the recreated screen');
+      var others = stage.querySelectorAll('*');
+      for (var i = 0; i < others.length && behind.length < 3; i++) { var o = others[i]; if (n.contains(o) || o.contains(n) || o.closest('#ink, #cast, #pointer, #ring, #hud, #ui, #fade')) continue; var has = false; for (var k = 0; k < o.childNodes.length; k++) if (o.childNodes[k].nodeType === 3 && o.childNodes[k].textContent.trim()) has = true; if (!has) continue; var orr = o.getBoundingClientRect(); if (orr.width && orr.height && overlaps(r, orr) && opacityOf(o) > 0.02) behind.push((o.id ? '#' + o.id : o.tagName.toLowerCase()) + ' "' + o.textContent.trim().slice(0, 20) + '"'); }
+    }
+    return { id: n.id || n.tagName.toLowerCase(), alpha: c2[3], behind: behind.join(', ') };
+  }
   var tokens = {}; ['--accent', '--hi', '--stroke', '--kind-a', '--kind-b', '--kind-c', '--ink', '--stage', '--muted', '--dim'].forEach(function (k) { tokens[k] = cs.getPropertyValue(k).trim(); });
   var texts = [];
   var all = stage.querySelectorAll('*');
@@ -78,7 +96,7 @@ function measureInPage(t) {
       fontPx: Math.round(fontPx * 10) / 10, weight: parseInt(st.fontWeight, 10) || 400, lineHeightRatio: Math.round(lh / parseFloat(st.fontSize) * 100) / 100,
       lines: lineTops.length || 1, longestLine: longest, transform: st.textTransform, letterSpacing: st.letterSpacing,
       box: { l: r.left - sr.left, t: r.top - sr.top, r: r.right - sr.left, b: r.bottom - sr.top },
-      color: rgb(st.color), bg: background(el), opacity: Math.round(op * 100) / 100,
+      color: rgb(st.color), bg: background(el), opacity: Math.round(op * 100) / 100, surface: surfaceOf(el),
       narration: !!el.closest('[data-narration]'), decor: !!el.closest('[data-decor]') });
   }
   var strokes = []; var paths = document.querySelectorAll('#ink path.on');
@@ -203,7 +221,7 @@ async function check(videoDir, opts) {
 
   // ---- craft and contrast from the measured stills ----
   const T = rules.text, S = rules.safeArea.titleSafe, Cn = rules.contrast, Col = rules.colour, Mo = rules.motion, Pa = rules.pacing;
-  const small = [], longLines = [], outside = [], lowContrast = [], weights = [], caps = [];
+  const small = [], longLines = [], outside = [], lowContrast = [], weights = [], caps = [], seeThrough = [];
   let textCount = 0;
   for (const s of pass1) {
     for (const x of s.data.texts) {
@@ -215,6 +233,7 @@ async function check(videoDir, opts) {
       if (x.box.l < S.x - 0.5 || x.box.t < S.y - 0.5 || x.box.r > 1920 - S.x + 0.5 || x.box.b > 1080 - S.y + 0.5) outside.push(where + ': box ' + [x.box.l, x.box.t, x.box.r, x.box.b].map(Math.round).join(','));
       if (x.color && x.bg) { const large = x.fontPx >= Cn.largeTextPx || (x.fontPx >= Cn.largeTextBoldPx && x.weight >= 700); const need = large ? Cn.largeText : Cn.text; const rt = ratio(x.color, x.bg); if (rt < need) lowContrast.push(where + ': ' + rt.toFixed(2) + ':1, needs ' + need + ':1'); }
       if (!x.decor && x.weight < T.bodyWeight[0]) weights.push(where + ': weight ' + x.weight);
+      if (x.surface && x.surface.alpha < 0.98 && x.surface.behind) seeThrough.push(where + ': on #' + x.surface.id + ' at ' + Math.round(x.surface.alpha * 100) + ' percent over ' + x.surface.behind);
       if (x.transform === 'uppercase' && x.lines > 1) caps.push(where + ': all caps over ' + x.lines + ' lines');
     }
   }
@@ -224,6 +243,7 @@ async function check(videoDir, opts) {
   add('craft', row('title-safe', ['C-COMP-1', 'C-TYPE-12'], outside.length ? 'fail' : 'pass', outside.length ? uniq(outside).slice(0, 6).join('; ') : 'every text box inside ' + S.x + '/' + S.y + ' px', S.x + ' px sides, ' + S.y + ' px top and bottom', 'rig/'));
   add('craft', row('text-weight', ['C-TYPE-6'], weights.length ? 'fail' : 'pass', weights.length ? uniq(weights).slice(0, 6).join('; ') : 'no read text lighter than ' + T.bodyWeight[0], T.bodyWeight[0] + ' to ' + T.bodyWeight[1] + ' for body', 'theme.css'));
   add('craft', row('all-caps', ['C-TYPE-13'], caps.length ? 'fail' : 'pass', caps.length ? uniq(caps).join('; ') : 'all caps only on single-line labels', 'one rendered line', 'rig/'));
+  add('contrast', row('surface-opaque', ['C-COL-1', 'C-COMP-9'], seeThrough.length ? 'fail' : 'pass', seeThrough.length ? uniq(seeThrough).slice(0, 6).join('; ') : 'no read text on a translucent surface with content behind it (the contrast rule measures the surface, not what shows through)', 'alpha 0.98 or more when anything sits behind', 'theme.css --panel, --card-fill'));
   add('contrast', row('text-contrast', ['C-COL-1', 'C-COMP-9', 'C-ACC-7'], lowContrast.length ? 'fail' : 'pass', lowContrast.length ? uniq(lowContrast).slice(0, 8).join('; ') : 'every text colour against its effective background at ' + Cn.text + ':1, or ' + Cn.largeText + ':1 at ' + Cn.largeTextPx + ' px and above', Cn.text + ':1 / ' + Cn.largeText + ':1', 'theme.css'));
 
   // accent share and stroke contrast, from the pixels

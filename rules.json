@@ -133,8 +133,8 @@
   "_source": {
     "repo": "video-reference",
     "file": "craft/rules.json",
-    "commit": "",
-    "copied_on": "2026-10-02",
+    "commit": "6e82f62",
+    "copied_on": "2026-10-05",
     "note": "Copied by vkit sync-reference; edit the reference, not this file. The frame geometry rows (rail, caption band) describe the older inset layout; the kit has one full-frame layout and captions as a sidecar, so vkit check applies safe areas, contrast, text, colour, motion and pacing and marks the band and rail rows as not applicable."
   }
 }
