@@ -1,0 +1,13 @@
+{
+  "name": "vkit-local",
+  "owner": {
+    "name": "Matthew Truelove"
+  },
+  "plugins": [
+    {
+      "name": "vkit",
+      "source": "./",
+      "description": "Skills over the vkit command line and a guardrail hook."
+    }
+  ]
+}

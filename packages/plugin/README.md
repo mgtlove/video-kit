@@ -6,6 +6,7 @@ Install from a clone of `video-kit`:
 
 ```
 /plugin marketplace add ./video-kit/packages/plugin       Claude Code, from the folder holding video-kit
+/plugin install vkit@vkit-local                            then install the plugin from that marketplace
 cd packages/plugin && zip -r ../../vkit.plugin . -x '*__pycache__*' -x '*.DS_Store' -x '_suggested-trash/*'     the desktop app: open vkit.plugin
 ```
 
