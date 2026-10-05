@@ -13,6 +13,7 @@
 // unset uses Playwright's bundled Chromium if present. Nothing here downloads
 // a browser.
 const fs = require('fs');
+const progress = require('../progress');
 const path = require('path');
 const http = require('http');
 const { PNG } = require('pngjs');
@@ -104,13 +105,15 @@ async function capture(b, file) {
 async function frames(rigDir, times, outDir, opts) {
   fs.mkdirSync(outDir, { recursive: true });
   const b = await open(rigDir, opts);
-  const out = [];
+  const out = [], report = progress.of(opts);
   try {
+    report('stills', 0, times.length, 'page open');
     for (const t of times) {
       await seek(b, t);
       const file = fileFor(outDir, t);
       await capture(b, file);
       out.push(file);
+      report('stills', out.length, times.length, 'at ' + t.toFixed(2) + ' s');
     }
   } finally { await b.close(); }
   if (b.errors.length) throw new Error('page errors: ' + b.errors.join('; '));
@@ -123,13 +126,15 @@ async function frames(rigDir, times, outDir, opts) {
 async function playbackFrames(rigDir, times, outDir, opts) {
   fs.mkdirSync(outDir, { recursive: true });
   const b = await open(rigDir, opts);
-  const out = [];
+  const out = [], report = progress.of(opts);
   try {
     for (const t of times) {
+      report('playback', out.length, times.length, 'playing to ' + t.toFixed(1) + ' s in real time');
       const reached = await b.page.evaluate(([sec, w]) => new Promise((done) => window.VK.playTo(sec, (r) => { window.__vkSetMark(w); done(r); })), [t, nextMark(b)]);
       const file = fileFor(outDir, t);
       await capture(b, file);
       out.push({ file, asked: t, reached });
+      report('playback', out.length, times.length, 'reached ' + reached.toFixed(2) + ' s');
     }
   } finally { await b.close(); }
   return out;
@@ -153,13 +158,16 @@ async function every(rigDir, fps, onFrame, opts) {
   opts = opts || {};
   const b = await open(rigDir, opts);
   let n = 0;
+  const report = progress.of(opts);
   try {
     const total = opts.until != null ? opts.until : await b.page.evaluate(() => window.VK.total());
     const count = Math.round(total * fps);
+    report('frames', 0, count, 'at ' + fps + ' fps');
     for (n = 0; n < count; n++) {
       const t = n / fps;
       await seek(b, t);
       await onFrame(await capture(b), n, t);
+      report('frames', n + 1, count, 'frame at ' + t.toFixed(2) + ' s');
     }
   } finally { await b.close(); }
   if (b.errors.length) throw new Error('page errors: ' + b.errors.join('; '));
@@ -173,13 +181,15 @@ async function every(rigDir, fps, onFrame, opts) {
 // colours, boxes, with the camera where it is at that moment.
 async function survey(rigDir, times, measureFn, opts) {
   const b = await open(rigDir, opts);
-  const out = [];
+  const out = [], report = progress.of(opts);
   try {
+    report('survey', 0, times.length, 'page open');
     for (const t of times) {
       await seek(b, t);
       const png = await capture(b);
       const data = await b.page.evaluate(measureFn, t);
       out.push({ t, png, data });
+      report('survey', out.length, times.length, 'at ' + t.toFixed(2) + ' s');
     }
   } finally { await b.close(); }
   if (b.errors.length) throw new Error('page errors: ' + b.errors.join('; '));

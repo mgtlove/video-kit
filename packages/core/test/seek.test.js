@@ -37,7 +37,7 @@ test('seek equals playback on the starter', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-'));
   const r = core.newVideo('proof', { cwd: tmp });
   const rig = path.join(r.dir, 'rig');
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const asked = [3.3, 6.3, 11.3, 28.3, 33.3, 39.4, 40.4, 41.3, 45.3];   /* the step 3 four, plus step 4: a figure fading in, a stroke drawing on, the pointer mid-glide, the click ring mid-way, typing mid-word */
   const played = await render.playbackFrames(rig, asked, path.join(rig, '_playback'), opts);
   const sought = await render.frames(rig, played.map((p) => p.reached), path.join(rig, '_seek'), opts);

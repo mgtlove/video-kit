@@ -6,7 +6,7 @@ description: >
   clip has been regenerated. It turns the clips into the rig's exact part timing without ever
   stretching anything.
 metadata:
-  version: "0.0.1"
+  version: "0.1.0"
 ---
 
 # Measure the voice clips
@@ -17,4 +17,4 @@ Then every beat inside a part is an offset from that part's start: scrub the cli
 
 A regenerated clip changes one part's length; re-run `vkit measure`, re-check that part's offsets against the new clip, and render its frames.
 
-`vkit measure` lands at roadmap step 7; until then the clip lengths are read with `ffprobe` and typed in.
+Before any clip exists, `vkit narration` estimates each part at 150 words a minute and prints an estimate `PARTS` line, so the timeline can be roughed in. After `vkit measure`, the menu items that would re-time the video (look, tone, patterns, voice) are locked; `vkit menu --show` says so.

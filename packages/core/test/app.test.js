@@ -19,7 +19,7 @@ test('an app-backed video renders the same frames as the inline one, and the rou
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-app-'));
   const apps = path.join(tmp, 'apps');
   process.env.VKIT_APPS = apps;            /* new apps go here, never into the repo; the example app is still found in examples/apps */
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
 
   const inline = core.newVideo('inline', { cwd: tmp });
   const backed = core.newVideo('backed', { cwd: tmp, app: 'example/placeholder' });

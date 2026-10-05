@@ -21,10 +21,28 @@ const COMMANDS = {
   'publish':        ['[dir]', 'hand the MP4 to a host adapter and record the URL']
 };
 
+/* progress: every slow core function reports through opts.progress; here is what that looks like.
+   On a terminal, one line that rewrites in place (a bar, the count, the time left); in a pipe or a
+   log, a plain line every few seconds and one when a step finishes. VKIT_QUIET=1 turns it off. */
+function progressSink() {
+  if (process.env.VKIT_QUIET) return undefined;
+  const tty = !!process.stdout.isTTY;
+  const P = core.progress;
+  let lineLen = 0;
+  return P.throttled((r) => {
+    if (tty) {
+      const text = P.bar(r.step, r.done, r.total, r.note, r.started, 24).slice(0, (process.stdout.columns || 100) - 1);
+      process.stdout.write('\r' + text + ' '.repeat(Math.max(0, lineLen - text.length)));
+      lineLen = r.final ? 0 : text.length;
+      if (r.final) process.stdout.write('\n');
+    } else process.stdout.write(P.line(r.step, r.done, r.total, r.note) + '\n');
+  }, tty ? 200 : 5000);
+}
+
 function help() {
   console.log('vkit <command>\n');
   for (const [name, [args, what]] of Object.entries(COMMANDS)) console.log('  ' + (name + ' ' + args).padEnd(34) + what);
-  console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames; nothing downloads a browser.');
+  console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames; nothing downloads a browser.\nLong commands show a progress line (a bar on a terminal, plain lines in a pipe); VKIT_QUIET=1 turns it off.');
 }
 
 async function main() {
@@ -71,7 +89,7 @@ async function main() {
       else if (!isNaN(Number(args[i]))) times.push(Number(args[i]));
       else dir = args[i];
     }
-    const r = await core.frames(dir, { times, every, channel });
+    const r = await core.frames(dir, { times, every, channel, progress: progressSink() });
     for (const f of r.files) console.log('wrote ' + path.relative(process.cwd(), f));
     console.log('\n' + r.files.length + ' frames. Total run ' + r.total + ' s, parts ' + JSON.stringify(r.parts) + ', engine ' + r.engine + '. Open the PNGs and look.');
     return 0;
@@ -82,9 +100,7 @@ async function main() {
       if (args[i] === '--fps') fps = Number(args[++i]);
       else dir = args[i];
     }
-    let last = -1;
-    const onFrame = (n) => { if (n % 300 === 0 && n !== last) { last = n; process.stdout.write('frame ' + n + '\n'); } };
-    const r = await core.renderVideo(dir, { fps, channel, onFrame });
+    const r = await core.renderVideo(dir, { fps, channel, progress: progressSink() });
     const rel = (f) => path.relative(process.cwd(), f);
     console.log('wrote ' + rel(r.files.mp4) + ': ' + r.frames + ' frames at ' + r.fps + ' fps, ' + r.total_seconds + ' s, parts ' + JSON.stringify(r.parts) + ', in ' + r.seconds_to_render + ' s');
     if (r.files.vtt) console.log('wrote ' + rel(r.files.vtt) + ' and ' + rel(r.files.srt) + ': ' + r.captions + ' cues from storyboard.md');
@@ -97,7 +113,7 @@ async function main() {
   if (cmd === 'check') {
     let dir = '.', quick = false;
     for (const a of args) { if (a === '--quick') quick = true; else dir = a; }
-    const r = await core.check(dir, { quick, channel });
+    const r = await core.check(dir, { quick, channel, progress: progressSink() });
     console.log(require('@video-kit/core/src/check').format(r));
     return r.failures ? 1 : 0;
   }
@@ -189,7 +205,7 @@ async function main() {
       }
     } finally { rl.close(); }
     console.log('\n' + menu.format(menu.show(dir)));
-    if (runFrames) { const r = await core.frames(dir, { channel }); console.log('\n' + r.files.length + ' frames in ' + path.relative(process.cwd(), path.dirname(r.files[0])) + '. Open them and look.'); }
+    if (runFrames) { const r = await core.frames(dir, { channel, progress: progressSink() }); console.log('\n' + r.files.length + ' frames in ' + path.relative(process.cwd(), path.dirname(r.files[0])) + '. Open them and look.'); }
     return 0;
   }
   if (cmd === 'brand') {

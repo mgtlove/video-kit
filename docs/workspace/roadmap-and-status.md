@@ -13,13 +13,25 @@ As of 2 October 2026. The canonical order is `video-kit/docs/ROADMAP.md`; this i
 | 6 | `vkit check`: offline, deterministic, seek-correct, craft rules from `rules.json`, contrast, fidelity of each state against its capture | Done. `npm test`: the starter passes a full check (24 rows, 0 failing); four deliberate breaks caught by rule id; fidelity 1.000 against a capture of the state itself, 0.52 against it shifted and blurred. `rules.json` copied from the reference by `vkit sync-reference` |
 | 7a | `vkit sync-reference` for looks and patterns, `vkit look`, `vkit narration`, `vkit measure` | Done. `npm test`: all seven looks pass the checker on the starter; the empty look layer is byte-identical and `none` restores it; clips of odd lengths measure in exactly and the page total equals their sum |
 | 7b | The brand kit (`brands/<name>/brand.json` to `rig/brand.css`, the mark and banner by when and where, engine 0.4.0, `vkit brand --check`) and `vkit menu` (ten items from the data files, `?` `0` `S` `Q`, `--set`, `--show`, `--explain`, locks after measure) | Done. `npm test`: no brand is byte-identical (22 of 22, and identical to engine 0.3.2); the example brand changes 21 of 22 stills and passes the checker; the mark and banner are up and down at the right moments, inside title safe and above the caption band; `always` hides over the screen, `watermark` stays; the menu's `look.css` and `brand.css` equal the commands' byte for byte; a piped walk sets five answers and stops at Q |
-| 8 | The plugin installed and tried on a real video | Next. Skills drafted in `video-kit/packages/plugin/`; every command they call now exists except `capture` (9) and `publish` (11) |
+| 8 | The plugin (seven skills over the commands as built, the guard hook in `npm test`) and the progress line every slow command and proof prints | Built. `npm test`: every command, flag and menu item a skill names exists; 21 hook cases pass; `frames` reports 0 to 3 of 3 and the piped CLI prints the count and percentage. Still to do, Matthew's: install the plugin into Claude Code from the clone and drive one video through the skills (menu, frames, check) |
 | 9 | `vkit capture`: the agent walks a task in a browser and writes tagged screenshots and the manifest, naming states as it goes | |
 | 10 | The sample video and the README for a reader with two minutes; the video's app is the first real one, in `video-apps-aws` (private) | Subject: an AWS console task, Matthew's call |
 | 11 | MCP server; cloud render and a voice provider as adapters; each prints a batch's cost and stops for a yes, and the hook's `--approved` rule goes then | |
 | 12 | The twin runner: the same app folder plus `flows.json`, a learner clicks through; generic runner, private content | After the app folder exists. `docs/TWIN-CARRYOVER.md` |
 
-`video-reference` holds the research in full as of 2 October 2026 (see `research-to-rewrite.md` for the inventory). Next for it, after step 7 gives `vkit sync-reference` something to read: the new research, in order: audience evidence per studied video, two more videos per creator, palettes from sampled frames, motion at frame precision, sound as design, missing genres, the listening pass.
+`video-reference` holds the research in full as of 2 October 2026 (see `research-to-rewrite.md` for the inventory); `vkit sync-reference` reads it into the kit. A second chat takes the research lane, in `video-reference` only; the build chat never writes there. The research list, in the order that pays off first:
+
+1. Two more videos per creator (14 videos), the same three instruments; each pattern marked constant or one-off across its three videos; `deep/COMPARISON.md` with ranges instead of single numbers. This is what makes the 35 patterns trustworthy.
+2. Audience evidence per studied video: the most-replayed curve and the top comments, matched to the shot log, so a move has a viewer-side number.
+3. Motion at frame precision around a hundred cuts (easing shape, duration, settle), replacing the guessed motion defaults in the look packs.
+4. Palettes clustered from sampled frames, correcting the look packs' colours, which were read by eye.
+5. Missing genres, one video each: a motion-graphic explainer, a tablet-writing lesson, a 3Blue1Brown-style maths animation, a keynote, a vertical short, and one mediocre corporate training video as the negative example.
+6. Three AWS and cloud teaching channels studied the same way: the register the Udemy courses will be compared against.
+7. Sound as design: a craft note with numbered rules, from the audio notes already taken.
+8. The listening pass: twenty flagged moments a person actually hears, because loudness is not delivery.
+9. Full Ken Burns at half-second steps, and How Money Works' built scenes as a vocabulary study.
+
+When any of these lands in the reference, `vkit sync-reference` brings the new numbers into `rules.json`, `looks/` and `patterns/index.json`, and `npm test` says whether the starter and the seven looks still pass.
 
 ## How a step lands
 

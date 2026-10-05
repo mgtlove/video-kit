@@ -42,7 +42,7 @@ test('the kit carries the example brand and the template; a broken brand is refu
 
 test('no brand is inert; the example brand holds the rules, shows at the right times and comes off clean', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-brand-'));
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const plain = core.newVideo('plain', { cwd: tmp });
   const html = path.join(plain.dir, 'rig', 'index.html');
   fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace('<link rel="stylesheet" href="brand.css">\n', ''));   /* no brand layer at all */
@@ -93,7 +93,7 @@ test('no brand is inert; the example brand holds the rules, shows at the right t
 
 test('always hides the mark over a recreated screen, watermark keeps it; a weak highlight is named', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-brand-'));
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const make = (name, when) => {
     const src = JSON.parse(fs.readFileSync(path.join(KIT, 'brands', 'example', 'brand.json'), 'utf8'));
     src.name = name; src.mark.when = when; src.mark.file = ''; src.banner.when = 'never';

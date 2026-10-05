@@ -137,7 +137,7 @@ async function renderVideo(videoDir, opts) {
       await write(buf);
       if (opts.onFrame) opts.onFrame(n, t);          /* progress */
       if (opts.tap) await opts.tap(buf, n, t);       /* the frame as ffmpeg received it; the proof reads these */
-    }, Object.assign({ stats }, opts));
+    }, Object.assign({ stats }, require('./progress').phase(opts, 'render')));
     ff.stdin.end();
   } catch (e) { ff.stdin.destroy(); ff.kill('SIGKILL'); throw e; }
   await ffDone;

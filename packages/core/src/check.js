@@ -23,6 +23,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { PNG } = require('pngjs');
 const render = require('./adapters/render');
+const progress = require('./progress');
 const { loadRules } = require('./sync');
 const { storyboardRows } = require('./render');
 const apps = require('./apps');
@@ -176,8 +177,8 @@ async function check(videoDir, opts) {
   // ---- the stills, with measurements; then the same stills again for determinism ----
   const starts = parts.map((_, k) => P(parts, k));
   const times = [...new Set([...starts, ...beats.map((t) => +(t + 0.3).toFixed(2))])].filter((t) => t <= total).sort((a, b) => a - b);
-  const pass1 = await render.survey(rig, times, measureInPage, opts);
-  const pass2 = await render.survey(rig, times, function () { return null; }, opts);
+  const pass1 = await render.survey(rig, times, measureInPage, progress.phase(opts, 'check stills'));
+  const pass2 = await render.survey(rig, times, function () { return null; }, progress.phase(opts, 'check stills again'));
   let same = 0; for (let i = 0; i < pass1.length; i++) if (pass1[i].png.equals(pass2[i].png)) same++;
   add('footage', row('deterministic', [], same === pass1.length ? 'pass' : 'fail', same + ' of ' + pass1.length + ' stills identical across two browser sessions', 'all identical', 'rig/'));
 
@@ -188,8 +189,8 @@ async function check(videoDir, opts) {
     parts.forEach((_, i) => { const s = P(parts, i), e = s + parts[i]; const b = beats.find((t) => t >= s + 0.15 && t + 0.3 < e); if (b != null) moments.push(+(b + 0.3).toFixed(2)); });
     if (!moments.length) add('seekCorrect', row('seek-equals-playback', [], 'not measured', 'no beat to sample', '', ''));
     else {
-      const played = await render.playbackFrames(rig, moments, path.join(outDir, 'check', 'playback'), opts);
-      const sought = await render.frames(rig, played.map((p) => p.reached), path.join(outDir, 'check', 'seek'), opts);
+      const played = await render.playbackFrames(rig, moments, path.join(outDir, 'check', 'playback'), progress.phase(opts, 'check seek'));
+      const sought = await render.frames(rig, played.map((p) => p.reached), path.join(outDir, 'check', 'seek'), progress.phase(opts, 'check seek'));
       const bad = [];
       for (let i = 0; i < moments.length; i++) {
         const A = decode(fs.readFileSync(played[i].file)), B = decode(fs.readFileSync(sought[i]));
@@ -250,7 +251,7 @@ async function check(videoDir, opts) {
   } else {
     const lums = [], runs = []; let prev = null, run = 0, bestRun = 0, bestAt = 0;
     const fps = Mo.sampleFps;
-    await render.every(rig, fps, (buf, n, t) => { const png = decode(buf); lums.push(meanLuminance(png)); if (prev && buf.equals(prev)) { run++; } else { if (run > bestRun) { bestRun = run; bestAt = t - run / fps; } run = 0; } prev = buf; }, opts);
+    await render.every(rig, fps, (buf, n, t) => { const png = decode(buf); lums.push(meanLuminance(png)); if (prev && buf.equals(prev)) { run++; } else { if (run > bestRun) { bestRun = run; bestAt = t - run / fps; } run = 0; } prev = buf; }, progress.phase(opts, 'check motion'));
     if (run > bestRun) { bestRun = run; bestAt = total - run / fps; }
     const stillSec = bestRun / fps;
     add('craft', row('still-run', ['C-PACE-7'], stillSec > maxStill ? 'fail' : 'pass', 'longest run of identical frames ' + stillSec.toFixed(1) + ' s from ' + bestAt.toFixed(1) + ' s, at ' + fps + ' fps', maxStill + ' s (' + tone + ')', 'rig/index.html timeline'));

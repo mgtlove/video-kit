@@ -51,7 +51,7 @@ test('vkit render: the MP4 is the run, the voice sits at the part offsets', asyn
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-render-'));
   const r = core.newVideo('proof', { cwd: tmp });
   const rig = path.join(r.dir, 'rig');
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const fps = 30;
 
   // clips: a beep at the top of each part, silence to the part's exact length

@@ -16,7 +16,7 @@ async function frames(videoDir, opts) {
     const starts = i.parts.map((_, k) => i.parts.slice(0, k).reduce((a, b) => a + b, 0));
     times = [...new Set([...starts, ...i.beats.map((t) => +(t + 0.3).toFixed(2))])].sort((a, b) => a - b);
   }
-  const files = await render.frames(rigDir, times, outDir, opts);
+  const files = await render.frames(rigDir, times, outDir, require('./progress').phase(opts, 'frames'));
   return { files, times, total: i.total, parts: i.parts, engine: i.version };
 }
 

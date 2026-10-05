@@ -14,7 +14,7 @@ const core = require('../src');
 test('two renders of the starter are identical, stroke for stroke', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-ink-'));
   const r = core.newVideo('twice', { cwd: tmp });
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const a = await core.frames(r.dir, Object.assign({ outDir: path.join(r.dir, 'rig', '_a') }, opts));
   const b = await core.frames(r.dir, Object.assign({ outDir: path.join(r.dir, 'rig', '_b') }, opts));
   assert.deepStrictEqual(b.times, a.times);

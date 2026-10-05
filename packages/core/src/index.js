@@ -15,6 +15,7 @@ const { applyLook } = require('./look');
 const { narration, measure } = require('./words');
 const brand = require('./brand');
 const menu = require('./menu');
+const progress = require('./progress');
 const voice = require('./adapters/voice');
 const render = require('./adapters/render');
 const script = require('./adapters/script');
@@ -35,5 +36,6 @@ module.exports = {
   brands: brand,                             // listBrands, loadBrand, tokensFor, formatCheck
   look: applyLook,                           // look pack -> rig/look.css tokens the theme reads; video.json.menu.look records it
   syncReference: syncReference,              // ../video-reference -> rules.json, looks/, patterns/index.json
+  progress: progress,                        // opts.progress(step, done, total, note): how every slow function reports; of, phase, line, bar, throttled
   adapters: { voice, render, script, hosting }
 };

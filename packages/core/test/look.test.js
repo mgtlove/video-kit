@@ -33,7 +33,7 @@ test('the kit carries seven looks and 35 moves from the reference', () => {
 test('every look passes the checker on the starter', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-look-'));
   const r = core.newVideo('looked', { cwd: tmp });
-  const opts = { quick: true, channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')({ quick: true });
   const results = [];
   for (const name of LOOKS) {
     const l = core.look(r.dir, name);
@@ -47,7 +47,7 @@ test('every look passes the checker on the starter', async () => {
 
 test('the look layer is inert until a look is applied, and none restores it', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-look-'));
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const plain = core.newVideo('plain', { cwd: tmp });
   const html = path.join(plain.dir, 'rig', 'index.html');
   fs.writeFileSync(html, fs.readFileSync(html, 'utf8').replace('<link rel="stylesheet" href="look.css">\n', ''));   /* no look layer at all */

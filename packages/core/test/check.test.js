@@ -25,7 +25,7 @@ const rowById = (report, id) => rowsOf(report).find((r) => r.id === id);
 test('the starter passes a full check', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-check-'));
   const r = core.newVideo('proof', { cwd: tmp });
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   const report = await core.check(r.dir, opts);
   const failing = rowsOf(report).filter((x) => x.result === 'fail').map((x) => x.id + ': ' + x.measured);
   console.log(rowsOf(report).length + ' rows: ' + ['pass', 'fail', 'info', 'not measured'].map((k) => rowsOf(report).filter((x) => x.result === k).length + ' ' + k).join(', '));
@@ -37,7 +37,7 @@ test('the starter passes a full check', async () => {
 test('four deliberate breaks are caught by rule id', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-check-'));
   const r = core.newVideo('broken', { cwd: tmp });
-  const opts = { quick: true, channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')({ quick: true });
   const html = path.join(r.dir, 'rig', 'index.html'), theme = path.join(r.dir, 'rig', 'theme.css');
   let page = fs.readFileSync(html, 'utf8');
   page = page.replace('</style>', '.big{font-size:40px !important}\n.kick{margin-left:-140px}\n</style>');            /* a heading under the floor; a kicker outside title safe */
@@ -57,7 +57,7 @@ test('four deliberate breaks are caught by rule id', async () => {
 test('fidelity scores a state against its capture and responds to a worse one', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-check-'));
   process.env.VKIT_APPS = path.join(tmp, 'apps');
-  const opts = { quick: true, channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')({ quick: true });
   const seed = core.newVideo('seed', { cwd: tmp });
   core.apps.appExtract(seed.dir, 'test/fid', 'work-item');
   const appDir = path.join(tmp, 'apps', 'test', 'fid');

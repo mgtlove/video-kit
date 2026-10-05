@@ -2,68 +2,43 @@
 name: video-menu
 description: >
   This skill should be used when the user starts a video, says "video menu", "set up the video",
-  "what are my options", "change the layout", "change the look", "where is this video", "show me
-  the choices", or wants to change any choice a video has made after the build has started. It
-  walks the person through every choice a video makes, one numbered item at a time, with context,
-  records the choices in video.json, applies them, and shows frames. It never builds a scene.
+  "what look should this be", "change the brand", "which patterns", "use the defaults", or wants to
+  see or change any choice a video has made. It walks the ten choices one at a time, with the
+  reason behind each, and writes them only through vkit menu.
 metadata:
-  version: "0.0.1"
+  version: "0.1.0"
 ---
 
 # The video menu
 
-Every choice a video makes lives in `video.json` under `menu`, and this skill is the only way those choices are set or changed. The person is walked through the items with their hand held: each item says what the question is asking, why it matters, the options with one line of context each, which is the default and why, and what picking it will change. Nothing is chosen for them. The same menu opens at the start and at any point later.
+Every choice a video makes lives in `video.json` under `menu`, and `vkit menu` is the one way those choices are set or changed. The person is walked through the items with their hand held: each item says what the question is asking, why it matters, the options with a line of context each, which is the default and why, and what picking it will change. Nothing is chosen for them.
 
-The items and their full explanations are in `references/menu-items.md`. Read it before showing the menu; it is the script. The lists it offers come from data files in the kit (`looks/`, `patterns/index.json`, `brands/`, `menu-defaults.json`), never from this file. The commands behind the skill (step 7b): `vkit menu --show` prints the ten items as the video has them; `vkit menu --explain <item>` prints an item's question, reason and options from the data files; `vkit menu --set item=value` or `--set item.field=value` (`--note "..."` beside it) writes one answer and, for a look or a brand, applies it at once; a locked item is refused with its reason. Write through these, never by editing `video.json` by hand.
+The items, their words and their fixed options live in `menu-defaults.json`; the lists that grow come from the data files (`looks/index.json`, `brands/`, `patterns/index.json`, the apps folders). Never type an option into this skill or into a message from memory: read it from the command.
 
-## How the menu looks
+## The commands
 
-Open with the header line, then the list, every time:
-
-```
-my-video
-full layout, brand none, house look, formal, 2 patterns, voice not measured
-
- 1  Job            not set
- 2  Sources        not set
- 3  Layout         full (default)
- 4  Brand          none (default)
- 5  Look           house (default)
- 6  Tone           formal (default)
- 7  Patterns       announce-do-explain, build-with-the-sentence (default)
- 8  Voice          clips per part; captions as a file; no music (default)
- 9  Characters     off (default)
-10  Fixed lines    opener and closer from COPY; card after the hook (default)
- ?  Explain an item before choosing (type ? and the number)
- 0  Something the list does not cover (type it; it is recorded on the item)
- S  Show me: a frame of each scene kind with the choices so far
- D  Done for now
-```
-
-When the person picks a number, show that item on its own: what the question is asking in two or three sentences, why it matters for this video, the numbered options with a line of context each, the default marked with its reason, what choosing will write. Then wait. After the choice, say in one line what was written and changed, and come back to the menu with the header updated.
-
-`?` and a number gives the longer explanation from the reference and, where one exists, the file behind it (a pattern note in `video-reference/styles/patterns/` if that repo is cloned beside the kit, else its link). `0` takes a typed answer, writes it as `note` on the item, and says so. `S` renders one frame per scene kind with the choices so far.
+- `vkit menu --show` prints the ten items as the video has them, each with where its answer came from (`defaults`, `chosen`, or not chosen), the date, a note, and `LOCKED` with the reason when `vkit measure` has locked it.
+- `vkit menu --explain <item>` prints the item's question, its reason, and every option with its meaning, read from the data files. Items: `job`, `sources`, `layout`, `brand`, `look`, `tone`, `patterns`, `voice`, `characters`, `fixed_lines`.
+- `vkit menu --set item=value` writes one answer; `--set item.field=value` for an item with fields (`job.kind`, `sources.app`, `voice.captions`, `patterns.concept=a,b`); `--note "..."` beside it records why. A value outside the options is refused by name. Choosing a look runs `vkit look`, choosing a brand runs `vkit brand`, at once.
+- `vkit menu` with no flags walks the items in the person's own terminal; from a chat, drive the same walk with `--show`, `--explain` and `--set`.
 
 ## Walking a new video
 
-Items 1 to 10 in order, one item per message, never two questions at once. Items 3 to 10 are pre-filled from `menu-defaults.json` and marked `from: defaults`; say so, so the person changes only what is different about this video. Items 1 and 2 are this video's own. "Just use the defaults" applies them all and names the two that still need an answer. After item 10: `S`, the header, then hand to `video-build`.
+Open with `vkit menu --show` and say in one line what is set and what is not. Then items 1 to 10 in order, one item per message, never two questions at once: run `--explain` for the item, put its question, reason and options in front of the person in plain words, mark the default and say why it is the default. Wait. Write the answer with `--set`, read what the command printed (it says what ran), and say in one line what changed. Items 3 to 10 start from `menu-defaults.json` and are marked `defaults`; say so, so the person changes only what is different about this video. Items 1 and 2 are this video's own. "Just use the defaults" keeps items 3 to 10 and asks the two that still need an answer.
 
-## Jumping around later
+`?` from the person means a longer explanation: the reason from `--explain`, and for a pattern the note in `video-reference/styles/patterns/` when that repo sits beside the kit. `0` means a value the list does not cover: for a free field (`job.length`, `job.audience`, `sources.ids`) write it; for a fixed list say what the options are and record what they said with `--note`. `S` means show me: `PW_CHANNEL=chrome vkit frames` and the `video-frames` skill.
 
-With a `menu` block present: the header, the list, wait. Changing an item re-applies it and names the frames to look at again.
+## Coming back later
+
+`vkit menu --show`, then wait for what they want to change. After a look or brand change, render frames and look; a look that fails `vkit check --quick` is a finding about the pack, raise it.
 
 ## Locks
 
-Once `parts.part_seconds` is filled, items that would move a beat lock (item 1's length, item 8's route) with the reason and the way out (new clips, then `video-measure`). Brand, look, tone, layout and patterns stay open; layout and patterns still need every frame looked at.
-
-## What gets written
-
-- `video.json.menu`: per item `value`, `chosen_on`, `note`, `from`; every change also appends to `video.json.edits` (date, item, old, new).
-- Item 3 writes the screen box in `rig/index.html` (one layout today; see the reference). Item 4 hands to `brand-apply`. Items 5 and 6 write tokens in `rig/theme.css`. Item 7 writes the `Patterns:` line in `storyboard.md`. Items 9 and 10 write `COPY`. Items 1, 2 and 8 write `video.json` only.
-- `rig/engine/` is never written.
+`vkit measure` locks look, tone, patterns and voice, because each would re-time the video; `--show` marks them and `--set` refuses a change with the reason. The way out is the person's: unlock in `video.json.menu.<item>` on purpose, then new clips and `video-measure`. Brand, layout, characters and fixed lines stay open.
 
 ## Rules
 
-- One item per message; explain before asking; never fill an item from the agent's own preference, only from the defaults file, and say so.
+- Never fill an item from the agent's own preference; only from the defaults, and say so.
+- Never edit `video.json` by hand to change a choice; `vkit menu --set` is the door.
 - Never run a build step from the menu; it writes choices and shows frames.
 - Plain language, no em dashes.

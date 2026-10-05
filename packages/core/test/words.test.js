@@ -35,7 +35,7 @@ test('narration holds the parts to the limits and writes FULL.md', () => {
 test('measure writes the exact clip lengths and locks what would re-time the video', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-words-'));
   const r = core.newVideo('m', { cwd: tmp });
-  const opts = { channel: process.env.PW_CHANNEL || undefined };
+  const opts = require('./opts')();
   assert.throws(() => core.measure(r.dir), /no voice\/ folder/);
   fs.mkdirSync(path.join(r.dir, 'voice'));
   const lengths = [23.47, 25.91, 17.62];
