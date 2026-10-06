@@ -23,4 +23,4 @@ PW_CHANNEL=chrome vkit render        # out/my-video.mp4; needs ffmpeg
 
 ## Where things stand
 
-See `claude/roadmap-and-status.md`. In one line: steps 1 to 8 are built and proven (the engine with strokes, pointer, typing and a cast; `vkit new`, `app`, `frames`, `render`, `check`, `look`, `narration`, `measure`, `brand`, `menu`, `sync-reference`), the progress line and the Claude plugin, installed and driven through one video (8); next capture (9), the sample video (10), MCP and adapters (11), the twin (12).
+See `claude/roadmap-and-status.md`. In one line: steps 1 to 8 are built and proven (the engine with strokes, pointer, typing and a cast; `vkit new`, `app`, `frames`, `render`, `check`, `look`, `narration`, `measure`, `brand`, `menu`, `sync-reference`), the progress line and the Claude plugin, installed and driven through one video (8), and `vkit capture`, which reads a walkthrough document into a checked capture set (9); next the sample video (10), MCP and adapters (11), the twin (12).

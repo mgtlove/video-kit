@@ -3,7 +3,7 @@
 // or knows which shell is calling.
 //
 // Each export is a contract; a body lands with its frame proof, in the order
-// docs/ROADMAP.md gives. Capture (step 9) and publish (step 11) arrive as adapters.
+// docs/ROADMAP.md gives. Publish (step 11) arrives as an adapter.
 
 const { newVideo } = require('./new');
 const { frames } = require('./frames');
@@ -14,6 +14,7 @@ const { syncReference } = require('./sync');
 const { applyLook } = require('./look');
 const { narration, measure } = require('./words');
 const brand = require('./brand');
+const captureMod = require('./capture');
 const menu = require('./menu');
 const progress = require('./progress');
 const voice = require('./adapters/voice');
@@ -36,6 +37,8 @@ module.exports = {
   brands: brand,                             // listBrands, loadBrand, tokensFor, formatCheck
   look: applyLook,                           // look pack -> rig/look.css tokens the theme reads; video.json.menu.look records it
   syncReference: syncReference,              // ../video-reference -> rules.json, looks/, patterns/index.json
+  capture: captureMod.capture,               // a walkthrough .docx -> captures/CAP-NNN.png in reading order, walkthrough.md, captures.csv; the shape checked (PNG, size, unique, under a step)
+  captureFormat: captureMod.format,          // the capture report as text
   progress: progress,                        // opts.progress(step, done, total, note): how every slow function reports; of, phase, line, bar, throttled
   adapters: { voice, render, script, hosting }
 };

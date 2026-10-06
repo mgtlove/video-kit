@@ -4,7 +4,7 @@ Faults seen in rendered frames that are not fixed yet. Each says where it shows,
 
 ## Open
 
-None.
+- F5 (design, not a fault): the explanation card (`card()`, a kicker, a title and a line over the recreated screen) reads as a device inherited from the earlier work rather than a natural part of the video: it interrupts, repeats what the voice says, and its kicker adds a third voice. Seen 5 October 2026 in the first MP4. To judge on the sample video (roadmap step 10), not before: drop the kicker; let the menu choose card, caption or none per video; a caption under the screen may serve better than a card over it. Nothing in the engine changes until the sample video has been looked at.
 
 ## Closed
 

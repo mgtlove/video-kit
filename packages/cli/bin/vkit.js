@@ -7,9 +7,9 @@ const core = require('@video-kit/core');
 
 const COMMANDS = {
   'new':            ['<name> [--app family/tool]', 'create a video folder from starter/, engine copied in; --app copies a recreated app in'],
-  'app':            ['new|add-state|extract ...', 'recreated apps: app new family/tool; app add-state family/tool id [--capture f]; app extract <video> family/tool id'],
+  'app':            ['new family/tool | add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t] | extract <video> family/tool <id> [--capture f]', 'recreated apps: make one, add a state that cites a capture, or lift a video\'s inline screen into one'],
   'menu':           ['[dir] [--show] [--set item[.field]=value [--note t]] [--explain item] [--walk]', 'walk through the ten choices one at a time (Enter keeps, a number picks, ? explains, 0 types your own, S saves and runs frames, Q stops); --show prints them; --set answers one from a script'],
-  'capture':        ['[dir]', 'capture a task in the browser as tagged screenshots (later)'],
+  'capture':        ['<walkthrough.docx> [--into dir]', 'read a walkthrough document (docs/CAPTURE.md) into dir/captures/: CAP-NNN.png in reading order, walkthrough.md, captures.csv; checks PNG, size, unique, under a step; exit 1 on a failing row'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
   'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
   'frames':         ['[dir] [times...|--every N]', 'a still per beat so you can look before recording anything'],
@@ -41,7 +41,7 @@ function progressSink() {
 
 function help() {
   console.log('vkit <command>\n');
-  for (const [name, [args, what]] of Object.entries(COMMANDS)) console.log('  ' + (name + ' ' + args).padEnd(34) + what);
+  for (const [name, [args, what]] of Object.entries(COMMANDS)) { const head = name + ' ' + args; console.log(head.length > 32 ? '  ' + head + '\n' + ' '.repeat(36) + what : '  ' + head.padEnd(34) + what); }
   console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames; nothing downloads a browser.\nLong commands show a progress line (a bar on a terminal, plain lines in a pipe); VKIT_QUIET=1 turns it off.');
 }
 
@@ -115,6 +115,14 @@ async function main() {
     for (const a of args) { if (a === '--quick') quick = true; else dir = a; }
     const r = await core.check(dir, { quick, channel, progress: progressSink() });
     console.log(require('@video-kit/core/src/check').format(r));
+    return r.failures ? 1 : 0;
+  }
+  if (cmd === 'capture') {
+    let file = null, into = '.';
+    for (let i = 0; i < args.length; i++) { if (args[i] === '--into') into = args[++i]; else file = args[i]; }
+    if (!file) { console.error('vkit capture <walkthrough.docx> [--into dir]   (docs/CAPTURE.md says what the document holds)'); return 2; }
+    const r = core.capture(file, { into });
+    console.log(core.captureFormat(r));
     return r.failures ? 1 : 0;
   }
   if (cmd === 'sync-reference') {

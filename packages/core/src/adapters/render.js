@@ -46,6 +46,11 @@ async function open(rigDir, opts) {
   const root = path.resolve(rigDir);
   const { srv, port } = await serve(root);
   const launch = opts && opts.channel ? { channel: opts.channel } : {};
+  if (!launch.channel) {
+    /* no channel asked for: Playwright would look for its bundled Chromium and, missing it, tell the caller to download one. Stop first, plainly. */
+    const exe = chromium.executablePath();
+    if (!exe || !fs.existsSync(exe)) { srv.close(); throw new Error('no browser: set PW_CHANNEL=chrome to use the Chrome already on this machine (nothing downloads a browser). No bundled Chromium at ' + exe); }
+  }
   const browser = await chromium.launch(launch);
   const page = await browser.newPage({ viewport: VIEW });
   const errors = [];
