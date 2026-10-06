@@ -36,7 +36,7 @@ When the tool is a web page or a browser-backed desktop app (Electron and the li
 - **Labels, exactly**: the on-screen spelling of every label, button and placeholder in the state, copied from the page rather than retyped.
 - **Controls and states**: which fields are required, what a disabled or hovered control looks like, what the dropdown holds when open.
 
-The browser's developer tools give all of this (the elements panel, the computed styles). Write down the values; **do not paste the product's HTML, CSS, JavaScript, icons or images into the document or into any repository**. The screen is recreated from measurements and words under the kit's rules, never copied; the values go into the app's `tokens.css` and `screen.css` by hand, and the picture is still what the recreated state is checked against.
+The browser's developer tools give all of this (the elements panel, the computed styles). Write down the values; **do not paste the product's HTML, CSS, JavaScript, icons, images or font files into the document or into any repository**. The pictures a recreation needs (the logo, the icons, a caret) are cropped out of your own captures afterwards (`vkit app crop`), and the typeface is traced from the page as a face of our own (`vkit face`); the captures are the only source, which is why they must show the screen whole, logos and all. `docs/RECREATE.md` is that side of the work. The screen is recreated from measurements and words under the kit's rules, never copied; the values go into the app's `tokens.css` and `screen.css` by hand, and the picture is still what the recreated state is checked against.
 
 ## What happens to it
 

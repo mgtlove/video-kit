@@ -16,6 +16,7 @@ const { narration, measure } = require('./words');
 const brand = require('./brand');
 const captureMod = require('./capture');
 const shoot = require('./shoot');
+const faceMod = require('./face');
 const menu = require('./menu');
 const progress = require('./progress');
 const voice = require('./adapters/voice');
@@ -40,6 +41,8 @@ module.exports = {
   syncReference: syncReference,              // ../video-reference -> rules.json, looks/, patterns/index.json
   capture: captureMod.capture,               // a walkthrough .docx -> captures/CAP-NNN.png in reading order, walkthrough.md, captures.csv; the shape checked (PNG, size, unique, under a step)
   captureFormat: captureMod.format,          // the capture report as text
+  face: faceMod.face,                        // a typeface of our own, traced and measured in the capture browser from the page's face: faces/<name>-<weight>.otf, .css, .md provenance, .json
+  faceFormat: faceMod.format,
   shoot: shoot,                              // the capture browser: start/stop (Chrome on the kit's profile at 1920x1080, ratio 2, CDP on localhost), status, go, shoot(step, text) -> CAP-NNN.png + .json, walkthrough.md, captures.csv; masks, text sweep
   progress: progress,                        // opts.progress(step, done, total, note): how every slow function reports; of, phase, line, bar, throttled
   adapters: { voice, render, script, hosting }

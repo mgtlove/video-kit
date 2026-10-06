@@ -95,6 +95,12 @@ function installApp(videoDir, ref) {
   fs.mkdirSync(path.join(dst, 'states'), { recursive: true });
   for (const f of ['app.json', 'tokens.css', 'screen.css', 'manifest.csv']) if (fs.existsSync(path.join(r.dir, f))) fs.copyFileSync(path.join(r.dir, f), path.join(dst, f));
   for (const s of r.states) fs.copyFileSync(path.join(r.dir, 'states', s.file || s.id + '.html'), path.join(dst, 'states', s.file || s.id + '.html'));
+  for (const folder of ['crops', 'faces']) {   /* copies of the captures' pixels and the app's own face travel with the states */
+    const from = path.join(r.dir, folder);
+    if (!fs.existsSync(from)) continue;
+    fs.mkdirSync(path.join(dst, folder), { recursive: true });
+    for (const f of fs.readdirSync(from)) if (fs.statSync(path.join(from, f)).isFile()) fs.copyFileSync(path.join(from, f), path.join(dst, folder, f));
+  }
   fs.writeFileSync(path.join(dst, 'states.js'), statesJs(r.dir, r.states));
 
   const htmlFile = path.join(rig, 'index.html');
@@ -180,4 +186,39 @@ function appExtract(videoDir, ref, id, opts) {
   return { ref, id, dir: app.dir, state: s.file, tokens: tokens.found, screen: rules.found };
 }
 
-module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, installApp, appNew, appAddState, appExtract, MARK, MANIFEST_HEAD };
+// appCrop(ref, captureId, { name, x, y, w, h }) -> { file, row }
+// A copy of a region of one of the app's own captures, for the things on a screen that are
+// pictures rather than text: the product's logo, its icons, a chevron. The capture is never
+// changed; the crop is a copy of its pixels (in the picture's own pixels, 2x for a 3840x2160
+// capture) into crops/<name>.png, with a row in crops.csv saying which capture and where. This
+// is the stop-motion way: the recording shows the logo, so the recreation shows the recording's
+// logo, and no file of the product's is ever taken.
+const CROPS_HEAD = 'name,file,capture,x,y,w,h,scale';
+function appCrop(ref, captureId, opts) {
+  const app = resolveApp(ref);
+  opts = opts || {};
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(opts.name || '')) throw new Error('a crop is named in lowercase letters, digits and hyphens: ' + opts.name);
+  const src = path.join(app.dir, 'captures', /\.png$/i.test(captureId) ? captureId : captureId + '.png');
+  if (!fs.existsSync(src)) throw new Error('no such capture: ' + path.relative(process.cwd(), src));
+  const { PNG } = require('pngjs');
+  const png = PNG.sync.read(fs.readFileSync(src));
+  const x = Number(opts.x), y = Number(opts.y), w = Number(opts.w), h = Number(opts.h);
+  if (![x, y, w, h].every((n) => Number.isInteger(n) && n >= 0) || w === 0 || h === 0 || x + w > png.width || y + h > png.height) throw new Error('the region ' + [x, y, w, h].join(',') + ' is not inside the ' + png.width + 'x' + png.height + ' picture (in the picture\'s own pixels)');
+  const out = new PNG({ width: w, height: h });
+  for (let row = 0; row < h; row++) png.data.copy(out.data, row * w * 4, ((y + row) * png.width + x) * 4, ((y + row) * png.width + x + w) * 4);
+  const dir = path.join(app.dir, 'crops');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, opts.name + '.png');
+  if (fs.existsSync(file) && !opts.replace) throw new Error(path.relative(process.cwd(), file) + ' exists; pick another name or --replace');
+  fs.writeFileSync(file, PNG.sync.write(out));
+  const csv = path.join(dir, 'crops.csv');
+  const scale = png.width / 1920;
+  const row = { name: opts.name, file: opts.name + '.png', capture: path.basename(src), x, y, w, h, scale };
+  let lines = fs.existsSync(csv) ? fs.readFileSync(csv, 'utf8').split(/\r?\n/).filter(Boolean) : [CROPS_HEAD];
+  lines = lines.filter((l, i) => i === 0 || parseCsvLine(l)[0] !== opts.name);
+  lines.push(CROPS_HEAD.split(',').map((k) => csvCell(row[k])).join(','));
+  fs.writeFileSync(csv, lines.join('\n') + '\n');
+  return { file, row, width: w, height: h, scale };
+}
+
+module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, installApp, appNew, appAddState, appExtract, appCrop, MARK, MANIFEST_HEAD, CROPS_HEAD };

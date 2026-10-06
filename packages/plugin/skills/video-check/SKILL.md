@@ -28,5 +28,6 @@ Common failures and what they mean:
 - `sentences-match` or `captions`: `storyboard.md` and `narration/part-N.md` disagree; one sentence per row, in order.
 - `seek-equals-playback`: a frame at t differs from playback at t. An engine matter, not a video one: say so and stop; `npm test` in the kit is the proof.
 - `state:<id>`: fidelity, reported, not judged; say the score and the coverage and show the side-by-side PNG in `out/fidelity/`.
+- `state:<id>:overlaps`, `state:<id>:overflow`, `faces`: judged. Text drawn over other text or over a picture (an Info, an arrow or a caret placed by a width the face did not have), a line running past the box it sits in (a wrapped line typed as one), and a face named first in the app's stack that the browser does not have (every line set in the fallback). Name each element the row names; the fix is in the state's fragment or `vkit face`, never in the capture.
 
 A rig is judged by looking at frames and by this report, never by reading its code. Never edit `rules.json` in the kit to make a row pass; it is copied from the research by `vkit sync-reference`.

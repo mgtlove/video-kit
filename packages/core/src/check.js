@@ -8,7 +8,8 @@
 //                sentence length, parts versus storyboard versus narration, captions
 //   contrast     text against its effective background; strokes against what they sit on
 //   fidelity     each app state that cites a capture, against the capture: a structural
-//                similarity on a grey 480x270 reduction and a side-by-side image
+//                similarity on a grey 480x270 reduction and a side-by-side image; text drawn
+//                over other text or over a picture; the face named first in a stack available
 // result is pass | fail | info | not measured. A measured rule that fails is a fail and
 // the exit code is 1. The numbers come from rules.json, copied from video-reference by
 // vkit sync-reference; this file never retypes a threshold. What is not measured says
@@ -104,7 +105,7 @@ function measureInPage(t) {
     var px = /drop-shadow/.test(pcs.filter || '') ? ((pcs.filter || '').replace(/rgba?\([^)]*\)/g, '').match(/-?[\d.]+px/g) || []) : [];   /* the colour stripped first; then x, y and the blur */
     strokes.push({ kind: paths[p].getAttribute('data-stroke') || '', color: rgb(pcs.stroke), width: parseFloat(pcs.strokeWidth) || 6, glow: px.length >= 3 ? parseFloat(px[2]) : 0, box: { l: pr.left - sr.left, t: pr.top - sr.top, r: pr.right - sr.left, b: pr.bottom - sr.top } }); }
   var cam = document.getElementById('cam'), m = /matrix\(([^)]+)\)/.exec(getComputedStyle(cam).transform), camScale = m ? parseFloat(m[1].split(',')[0]) : 1;
-  return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale };
+  return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale, faults: window.VK.faults ? window.VK.faults() : [] };
 }
 
 /* ---------- pixel work on a PNG buffer ---------- */
@@ -148,6 +149,80 @@ function strokeContrast(png, s) {
   let worst = Infinity;
   for (const b of buckets.values()) if (b.n >= total * 0.08) worst = Math.min(worst, ratio(col, [b.r / b.n, b.g / b.n, b.b / b.n]));
   return worst === Infinity ? null : worst;
+}
+
+/* ---------- a shown state, measured in the page: overlaps and faces ----------
+   Runs after the state's still. Two faults a side-by-side shows and a similarity score hides:
+   text drawn over other text or over a picture (a link, an Info, an arrow placed by a width the
+   face did not have), and a face named first in a stack that the browser does not have, so every
+   line is set in the fallback. The face test is by width: a sample set in the stack and in the
+   stack without its first family render the same width only when the first family is not there. */
+function stateMeasureInPage() {
+  var mock = document.getElementById('mock'); if (!mock) return { texts: 0, overlaps: [], faces: [] };
+  function shown(el) { var cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity === 0) return false; var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; }
+  function label(el) { var t = (el.textContent || '').trim().replace(/\s+/g, ' '); return (el.id ? '#' + el.id + ' ' : '') + (t ? '"' + (t.length > 32 ? t.slice(0, 29) + '...' : t) + '"' : '<' + el.tagName.toLowerCase() + (el.getAttribute('src') ? ' ' + el.getAttribute('src').split('/').pop() : '') + '>'); }
+  var boxes = [], all = mock.querySelectorAll('*'), stacks = {};
+  for (var i = 0; i < all.length; i++) {
+    var el = all[i]; if (!shown(el)) continue;
+    var cs = getComputedStyle(el);
+    if (el.tagName === 'IMG' || el.tagName === 'SVG' || el.tagName === 'CANVAS') { var rb = el.getBoundingClientRect(); boxes.push({ kind: 'picture', el: el, who: label(el), l: rb.left, t: rb.top, r: rb.right, b: rb.bottom }); continue; }
+    var hasText = false;
+    for (var c = 0; c < el.childNodes.length; c++) {
+      var n = el.childNodes[c]; if (n.nodeType !== 3 || !n.textContent.trim()) continue;
+      hasText = true;
+      var range = document.createRange(); range.selectNodeContents(n);
+      var rects = range.getClientRects();
+      for (var k = 0; k < rects.length; k++) if (rects[k].width > 0 && rects[k].height > 0) boxes.push({ kind: 'text', el: el, who: label(el), l: rects[k].left, t: rects[k].top, r: rects[k].right, b: rects[k].bottom });
+    }
+    if (hasText) { var fam = cs.fontFamily; if (!stacks[fam]) stacks[fam] = { count: 0, sample: label(el) }; stacks[fam].count++; }
+  }
+  /* two boxes meet only if both are drawn where they meet: at the meeting point, the stack of
+     elements under the pointer must hold both, with nothing opaque between them (a bar over a
+     scrolled page hides the page's text there; that is the page working, not a fault) */
+  function opaque(el) { var cs = getComputedStyle(el); var m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(cs.backgroundColor); return (m && (m[4] == null || +m[4] >= 0.98)) || (cs.backgroundImage && cs.backgroundImage !== 'none') || el.tagName === 'IMG'; }
+  function meet(A, B, x, y) {
+    var stack = document.elementsFromPoint(x, y), ia = -1, ib = -1;
+    for (var i = 0; i < stack.length; i++) { if (ia < 0 && (stack[i] === A.el || A.el.contains(stack[i]))) ia = i; if (ib < 0 && (stack[i] === B.el || B.el.contains(stack[i]))) ib = i; }
+    if (ia < 0 || ib < 0) return false;
+    for (var j = Math.min(ia, ib) + 1; j < Math.max(ia, ib); j++) if (opaque(stack[j]) && !A.el.contains(stack[j]) && !B.el.contains(stack[j])) return false;
+    return true;
+  }
+  var overlaps = [], seen = {};
+  for (var a = 0; a < boxes.length; a++) for (var b2 = a + 1; b2 < boxes.length; b2++) {
+    var A = boxes[a], B = boxes[b2]; if (A.el === B.el) continue;
+    if (A.kind === 'picture' && B.kind === 'picture') continue;                       /* two pictures may stack on purpose (a mark on a disc) */
+    if (A.el.contains(B.el) || B.el.contains(A.el)) continue;                          /* a line inside its own container */
+    var w = Math.min(A.r, B.r) - Math.max(A.l, B.l), h = Math.min(A.b, B.b) - Math.max(A.t, B.t);
+    if (!(w > 1 && h > 1 && w * h > 4)) continue;
+    if (!meet(A, B, Math.max(A.l, B.l) + w / 2, Math.max(A.t, B.t) + h / 2)) continue;
+    var key = A.who + '|' + B.who; if (!seen[key]) { seen[key] = 1; overlaps.push({ a: A.who, b: B.who, px: Math.round(w * h) }); }
+  }
+  /* a line that runs past the box it sits in: the nearest ancestor with a border or an opaque ground
+     (a card, a tile, a button) must contain it; a wrapped line in the product is one typed line here,
+     so a wider face shows as text crossing the box's edge */
+  var overflow = [], seenO = {};
+  for (var q = 0; q < boxes.length; q++) {
+    var T = boxes[q]; if (T.kind !== 'text') continue;
+    var p = T.el.parentElement, host = null;
+    while (p && p !== mock) { var pc = getComputedStyle(p); if ((parseFloat(pc.borderTopWidth) > 0 && pc.borderTopStyle !== 'none') || opaque(p)) { host = p; break; } p = p.parentElement; }
+    if (!host) continue;
+    var hr = host.getBoundingClientRect();
+    if (T.r > hr.right + 1 || T.l < hr.left - 1 || T.b > hr.bottom + 1 || T.t < hr.top - 1) { if (!seenO[T.who]) { seenO[T.who] = 1; overflow.push({ who: T.who, host: label(host), by: Math.round(Math.max(T.r - hr.right, hr.left - T.l, T.b - hr.bottom, hr.top - T.t)) }); } }
+  }
+  var faces = [];
+  var probe = document.createElement('span'); probe.textContent = 'The quick brown fox jumps over 1234567890 lazy dogs'; probe.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:40px;white-space:nowrap;visibility:hidden'; document.body.appendChild(probe);
+  Object.keys(stacks).forEach(function (fam) {
+    var parts = fam.split(',').map(function (x) { return x.trim(); }); if (parts.length < 2) return;
+    var first = parts[0].replace(/^["']|["']$/g, '');
+    if (/^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-sans-serif|ui-serif|ui-monospace|ui-rounded|emoji|math|fangsong|-apple-system|BlinkMacSystemFont)$/i.test(first)) return;
+    function width(list, weight) { probe.style.fontWeight = weight || ''; probe.style.fontFamily = list.join(', '); return probe.getBoundingClientRect().width; }
+    function present(i) { if (i >= parts.length - 1) return true; return Math.abs(width(parts.slice(i)) - width(parts.slice(i + 1))) > 0.01 || Math.abs(width(parts.slice(i), '700') - width(parts.slice(i + 1), '700')) > 0.01; }
+    if (present(0)) return;
+    var used = parts.length - 1; for (var i = 1; i < parts.length; i++) if (present(i)) { used = i; break; }
+    faces.push({ face: first, fallback: parts[used].replace(/^["']|["']$/g, ''), lines: stacks[fam].count, at: stacks[fam].sample });
+  });
+  probe.remove();
+  return { texts: boxes.filter(function (x) { return x.kind === 'text'; }).length, pictures: boxes.length - boxes.filter(function (x) { return x.kind === 'text'; }).length, overlaps: overlaps, overflow: overflow, faces: faces };
 }
 
 /* ---------- ffmpeg helpers for fidelity ---------- */
@@ -220,6 +295,9 @@ async function check(videoDir, opts) {
   const pass2 = await render.survey(rig, times, function () { return null; }, progress.phase(opts, 'check stills again'));
   let same = 0; for (let i = 0; i < pass1.length; i++) if (pass1[i].png.equals(pass2[i].png)) same++;
   add('footage', row('deterministic', [], same === pass1.length ? 'pass' : 'fail', same + ' of ' + pass1.length + ' stills identical across two browser sessions', 'all identical', 'rig/'));
+  // every beat names things on screen: the engine records a beat that names an id or a state the screen does not have (VK.faults, engine 0.4.3)
+  const faults = pass1[pass1.length - 1].data.faults || [];
+  add('footage', row('beats-on-screen', [], faults.length ? 'fail' : 'pass', faults.length ? faults.map((f) => f.fn + '(' + JSON.stringify(f.id) + ') at ' + (f.t == null ? '?' : f.t.toFixed(1)) + ' s' + (f.state ? ' with state ' + f.state + ' up' : f.fn === 'state' ? '' : ' with no state up')).join('; ') : beats.length + ' beats; every id and state a beat names is on screen', 'none missing', 'rig/index.html timeline' + (meta.app ? ', rig/app/manifest.csv' : '')));
 
   // ---- seek-correct ----
   if (opts.quick) add('seekCorrect', row('seek-equals-playback', [], 'not measured', 'skipped with --quick', '0.05 percent of pixels over 8 levels', 'npm test, or vkit check without --quick'));
@@ -342,12 +420,17 @@ async function check(videoDir, opts) {
   if (meta.app && meta.app.ref) {
     const manifest = apps.readManifest(path.join(rig, 'app'));
     const fidDir = path.join(outDir, 'fidelity'); fs.mkdirSync(fidDir, { recursive: true });
+    let facesReported = false;
     for (const st of manifest) {
       if (!st.capture) { add('fidelity', row('state:' + st.id, ['C-COMP-16'], 'info', 'no capture cited; nothing to compare against', 'a capture per state', 'manifest.csv')); continue; }
       const cap = [path.join(meta.app.source || '', 'captures', st.capture), path.join(rig, 'app', 'captures', st.capture)].find((f) => fs.existsSync(f));
       if (!cap) { add('fidelity', row('state:' + st.id, ['C-COMP-16'], 'fail', 'capture ' + st.capture + ' not found beside the app', 'the cited file exists', 'captures/')); continue; }
-      const shot = await render.shoot(rig, function (id) { var st = document.getElementById('stage'); window.VK.reset(); st.classList.add('snap'); window.fade(true); window.state(id); window.home(); void st.offsetHeight; st.classList.remove('snap'); }, st.id, opts);   /* snap after reset: reset drops the snap class when it finishes */
+      const got = await render.shoot(rig, function (id) { var st = document.getElementById('stage'); window.VK.reset(); st.classList.add('snap'); window.fade(true); window.state(id); window.home(); void st.offsetHeight; st.classList.remove('snap'); }, st.id, opts, stateMeasureInPage);   /* snap after reset: reset drops the snap class when it finishes */
+      const shot = got.png, m = got.data;
       const statePng = path.join(fidDir, st.id + '-state.png'); fs.writeFileSync(statePng, shot);
+      add('fidelity', row('state:' + st.id + ':overlaps', ['C-COMP-16', 'C-TYPE-3'], m.overlaps.length ? 'fail' : 'pass', m.overlaps.length ? m.overlaps.slice(0, 8).map((x) => x.a + ' over ' + x.b + ' (' + x.px + ' px)').join('; ') + (m.overlaps.length > 8 ? '; and ' + (m.overlaps.length - 8) + ' more' : '') : m.texts + ' lines of text and ' + m.pictures + ' pictures, none drawn over another', 'no text over text or over a picture', 'the state\'s fragment and screen.css'));
+      add('fidelity', row('state:' + st.id + ':overflow', ['C-COMP-16', 'C-TYPE-4'], m.overflow.length ? 'fail' : 'pass', m.overflow.length ? m.overflow.slice(0, 8).map((x) => x.who + ' runs ' + x.by + ' px past ' + x.host).join('; ') + (m.overflow.length > 8 ? '; and ' + (m.overflow.length - 8) + ' more' : '') : 'every line inside the box it sits in', 'no text past its box', 'the state\'s fragment: a typed line break where the product wrapped'));
+      if (!facesReported) { facesReported = true; add('fidelity', row('faces', ['C-COMP-16', 'C-TYPE-6'], m.faces.length ? 'fail' : 'pass', m.faces.length ? m.faces.map((f) => '"' + f.face + '" is named first but not available, so ' + f.lines + ' elements (' + f.at + ', ...) are set in "' + f.fallback + '"').join('; ') + '; make it with vkit face, or the recreation is not in the product\'s face' : 'every face named first in the app\'s stacks is available', 'the product\'s face, traced (vkit face)', 'rig/app/tokens.css, rig/app/faces/')); }
       const sim = ssim(grey(shot), greyFile(cap));
       const side = path.join(fidDir, st.id + '.png');
       ff(['-y', '-v', 'error', '-i', statePng, '-i', cap, '-filter_complex', '[1:v]scale=1920:1080[c];[0:v][c]hstack,scale=1920:-1', '-frames:v', '1', side]);

@@ -131,7 +131,11 @@ async function start(opts) {
   const c = await connect(port);
   let inner;
   try { inner = await calibrate(c.page); } finally { await c.close(); }
-  const session = { pid: child.pid, port, show: !!opts.show, started: new Date().toISOString(), exe, profile: dir, browser: version.Browser, viewport: inner, scale: opts.scale || 2 };
+  /* the sign-in clock: a visible start is where a person signs in, so it starts the clock; a headless start carries it on */
+  const clockFile = path.join(dir, 'clock.json');
+  if (opts.show || !fs.existsSync(clockFile)) fs.writeFileSync(clockFile, JSON.stringify({ started: new Date().toISOString(), by: opts.show ? 'a visible start, where the person signs in' : 'a headless start with no earlier visible one' }) + '\n');
+  const clock = JSON.parse(fs.readFileSync(clockFile, 'utf8'));
+  const session = { pid: child.pid, port, show: !!opts.show, started: new Date().toISOString(), clock_started: clock.started, exe, profile: dir, browser: version.Browser, viewport: inner, scale: opts.scale || 2 };
   fs.writeFileSync(sessionFile(opts), JSON.stringify(session, null, 2) + '\n');
   return session;
 }
@@ -173,7 +177,7 @@ async function status(opts) {
     out.at_sign_in = /signin|\/start\b|login|sso/i.test(out.url);
     const cfg = readShootJson(opts.into);
     if (cfg.session_hours) {
-      const mins = (Date.now() - Date.parse(s.started)) / 60000;
+      const mins = (Date.now() - Date.parse(s.clock_started || s.started)) / 60000;
       out.session_minutes = Math.round(mins);
       out.session_left_minutes = Math.round(cfg.session_hours * 60 - mins);
     }
@@ -215,6 +219,8 @@ function inPage(arg) {
       if (el.children.length && ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.includes(needle))) continue;
       if (!(el.innerText || '').includes(needle)) continue;
       const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+      /* a stable hook first: an attribute the product put there on purpose, then an id, then the class path */
+      for (const attr of ['data-testid', 'data-test-id', 'data-test', 'aria-label', 'name']) { const v = el.getAttribute(attr); if (v && document.querySelectorAll('[' + attr + '="' + v.replace(/"/g, '\\"') + '"]').length === 1) return el.tagName.toLowerCase() + '[' + attr + '="' + v + '"]'; }
       if (el.id) return el.tagName.toLowerCase() + '#' + el.id;
       const cls = [...el.classList].slice(0, 2).map((c) => '.' + c).join('');
       let p = el.parentElement, idx = 1; if (p) { idx = [...p.children].filter((c) => c.tagName === el.tagName).indexOf(el) + 1; }
@@ -225,18 +231,30 @@ function inPage(arg) {
   for (const p of patterns) { const re = new RegExp(p.re, 'g'); let m; const seen = new Set(); while ((m = re.exec(text))) { if (seen.has(m[0])) continue; seen.add(m[0]); hits.push({ kind: p.kind, where: whereIs(m[0]), length: m[0].length }); } }
   for (const k of known) if (k && text.includes(k)) hits.push({ kind: 'known', where: whereIs(k), length: k.length });
   const box = (el) => { const r = el.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) }; };
+  /* only what is rendered: a box with size, not hidden, not display none (a cookie banner's hidden buttons, a 0x0 main, an off-screen menu all drop out) */
+  const shown = (el) => { const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   const bg = (el) => { let e = el; while (e) { const c = getComputedStyle(e).backgroundColor; if (c && !/rgba\(\d+, \d+, \d+, 0\)|transparent/.test(c)) return c; e = e.parentElement; } return 'rgb(255, 255, 255)'; };
-  const styleOf = (el) => { const cs = getComputedStyle(el); return { box: box(el), background: bg(el), color: cs.color, font: cs.fontFamily, size: cs.fontSize, weight: cs.fontWeight }; };
-  const first = (sel) => document.querySelector(sel);
+  const motionOf = (cs) => { const t = cs.transition && !/^(all )?0s/.test(cs.transition) && cs.transition !== 'none' ? cs.transition : ''; const a = cs.animationName && cs.animationName !== 'none' ? cs.animationName + ' ' + cs.animationDuration + ' ' + cs.animationTimingFunction + ' ' + cs.animationIterationCount : ''; return t || a ? { transition: t, animation: a } : null; };
+  const styleOf = (el) => { const cs = getComputedStyle(el); const o = { box: box(el), background: bg(el), color: cs.color, font: cs.fontFamily, size: cs.fontSize, weight: cs.fontWeight, border: cs.borderTopWidth !== '0px' ? cs.borderTopWidth + ' ' + cs.borderTopStyle + ' ' + cs.borderTopColor : '', radius: cs.borderRadius !== '0px' ? cs.borderRadius : '', shadow: cs.boxShadow !== 'none' ? cs.boxShadow : '' }; const mo = motionOf(cs); if (mo) o.motion = mo; return o; };
+  const firstShown = (sel) => [...document.querySelectorAll(sel)].find(shown) || null;
   const regions = {};
-  for (const [name, sel] of [['body', 'body'], ['header', 'header, [role=banner]'], ['nav', 'nav, [role=navigation]'], ['main', 'main, [role=main]'], ['aside', 'aside, [role=complementary]'], ['footer', 'footer, [role=contentinfo]']]) { const el = first(sel); if (el) regions[name] = styleOf(el); }
-  if (regions.body) regions.body.box = { x: 0, y: 0, w: innerWidth, h: innerHeight };   /* the page, not the body element's own box, which absolute children leave short */
+  for (const [name, sel] of [['header', 'header, [role=banner]'], ['nav', 'nav, [role=navigation]'], ['main', 'main, [role=main]'], ['aside', 'aside, [role=complementary]'], ['footer', 'footer, [role=contentinfo]']]) { const el = firstShown(sel); if (el) regions[name] = styleOf(el); }
+  /* the page's face and ground: the font family most of the visible text is set in, and the body's own ground */
+  const faceCount = new Map(); let textEls = 0;
+  for (const el of document.body.querySelectorAll('*')) { if (textEls > 3000) break; if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue; if (!shown(el)) continue; textEls++; const f = getComputedStyle(el).fontFamily; faceCount.set(f, (faceCount.get(f) || 0) + 1); }
+  const faces = [...faceCount.entries()].sort((a, b) => b[1] - a[1]).map(([f, n]) => ({ family: f, elements: n }));
+  regions.body = Object.assign(styleOf(document.body), { box: { x: 0, y: 0, w: innerWidth, h: innerHeight }, font: faces.length ? faces[0].family : getComputedStyle(document.body).fontFamily });
   const short = (s) => (s || '').trim().replace(/\s+/g, ' ').slice(0, 60);
-  const buttons = [...document.querySelectorAll('button, [role=button], input[type=submit], a.btn')].filter((b) => getComputedStyle(b).visibility !== 'hidden').slice(0, 40).map((b) => Object.assign({ text: short(b.innerText || b.value) }, styleOf(b)));
-  const headings = [...document.querySelectorAll('h1, h2, h3')].slice(0, 20).map((h) => ({ level: h.tagName.toLowerCase(), text: short(h.innerText), size: getComputedStyle(h).fontSize, weight: getComputedStyle(h).fontWeight, color: getComputedStyle(h).color }));
-  const labels = [...document.querySelectorAll('label, th, [role=columnheader], [role=tab]')].slice(0, 60).map((l) => short(l.innerText)).filter(Boolean);
-  const inputs = [...document.querySelectorAll('input, select, textarea')].filter((i) => !/hidden|submit|button/.test(i.type)).slice(0, 40).map((i) => ({ type: i.type || i.tagName.toLowerCase(), placeholder: short(i.placeholder), required: !!i.required, disabled: !!i.disabled, box: box(i) }));
-  return { masked, hits, title: document.title, url: location.href, regions, buttons, headings, labels, inputs, viewport: { w: innerWidth, h: innerHeight, dpr: devicePixelRatio } };
+  const buttons = [...document.querySelectorAll('button, [role=button], input[type=submit], a.btn')].filter(shown).slice(0, 40).map((b) => Object.assign({ text: short(b.innerText || b.value || b.getAttribute('aria-label')) }, styleOf(b)));
+  const links = [...document.querySelectorAll('a[href]')].filter(shown).slice(0, 40).map((a) => Object.assign({ text: short(a.innerText) }, styleOf(a))).filter((a) => a.text);
+  const headings = [...document.querySelectorAll('h1, h2, h3')].filter(shown).slice(0, 20).map((h) => ({ level: h.tagName.toLowerCase(), text: short(h.innerText), size: getComputedStyle(h).fontSize, weight: getComputedStyle(h).fontWeight, color: getComputedStyle(h).color, font: getComputedStyle(h).fontFamily }));
+  const labels = [...document.querySelectorAll('label, th, [role=columnheader], [role=tab]')].filter(shown).slice(0, 60).map((l) => short(l.innerText)).filter(Boolean);
+  const inputs = [...document.querySelectorAll('input, select, textarea')].filter((i) => !/hidden|submit|button/.test(i.type) && shown(i)).slice(0, 40).map((i) => Object.assign({ type: i.type || i.tagName.toLowerCase(), placeholder: short(i.placeholder), required: !!i.required, disabled: !!i.disabled, value: i.type === 'password' ? '' : short(i.value) }, styleOf(i)));
+  /* what moves: every shown element with a transition or an animation, by its own selector, so the recreation can move the same way */
+  const motion = [];
+  for (const el of document.body.querySelectorAll('*')) { if (motion.length >= 60) break; if (!shown(el)) continue; const mo = motionOf(getComputedStyle(el)); if (mo) motion.push(Object.assign({ where: (el.id ? el.tagName.toLowerCase() + '#' + el.id : el.tagName.toLowerCase() + [...el.classList].slice(0, 2).map((c) => '.' + c).join('')) }, mo)); }
+  const loadedFaces = document.fonts ? [...new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/"/g, '') + ' ' + f.weight + ' ' + f.style))].sort() : [];
+  return { masked, hits, title: document.title, url: location.href, regions, faces, loadedFaces, buttons, links, headings, labels, inputs, motion, viewport: { w: innerWidth, h: innerHeight, dpr: devicePixelRatio } };
 }
 
 async function shoot(step, text, opts) {
@@ -255,7 +273,7 @@ async function shoot(step, text, opts) {
     if (v.w !== VIEW.width || v.h !== VIEW.height) { v = await calibrate(page); await page.waitForTimeout(250); }
     if (v.w !== VIEW.width || v.h !== VIEW.height) throw new Error('the page\'s viewport is ' + v.w + 'x' + v.h + ' and would not size to 1920x1080 (a visible window may be too small for the screen; the headless one is sized by the kit). vkit shoot stop, then vkit shoot start.');
     if (v.dpr !== (s.scale || 2)) throw new Error('the page\'s device pixel ratio is ' + v.dpr + ', not ' + (s.scale || 2) + '; the browser was not started by vkit shoot start.');
-    if (/signin|\/start\b|login|sso/i.test(page.url())) throw new Error('the page is a sign-in page (' + page.url().slice(0, 80) + '). ' + (cfg.session_hours ? 'The session is ' + Math.round((Date.now() - Date.parse(s.started)) / 60000) + ' minutes old against a ' + cfg.session_hours + ' hour limit that starts at sign-in; if it ran out, vkit shoot stop, start --show, sign in again, stop, start.' : 'Sign in with vkit shoot start --show first.'));
+    if (/signin|\/start\b|login|sso/i.test(page.url())) throw new Error('the page is a sign-in page (' + page.url().slice(0, 80) + '). ' + (cfg.session_hours ? 'The session is ' + Math.round((Date.now() - Date.parse(s.clock_started || s.started)) / 60000) + ' minutes old against a ' + cfg.session_hours + ' hour limit that starts at sign-in; if it ran out, vkit shoot stop, start --show, sign in again, stop, start.' : 'Sign in with vkit shoot start --show first.'));
     await page.waitForLoadState('load').catch(() => {});
     await page.evaluate(() => (document.fonts ? document.fonts.ready : null)).catch(() => {});
     await page.waitForTimeout(opts.settleMs == null ? 400 : opts.settleMs);
@@ -274,7 +292,7 @@ async function shoot(step, text, opts) {
     const n = existing.length ? Number(existing[existing.length - 1].slice(4, 7)) + 1 : 1;
     const id = 'CAP-' + String(n).padStart(3, '0');
     fs.writeFileSync(path.join(dir, id + '.png'), png);
-    const values = { id, step, text, url: read.url, title: read.title, shot_on: new Date().toISOString(), viewport: read.viewport, picture: { width: w, height: h, scale: w / VIEW.width }, masked: read.masked, hits_allowed: read.hits, regions: read.regions, buttons: read.buttons, headings: read.headings, labels: read.labels, inputs: read.inputs };
+    const values = { id, step, text, url: read.url, title: read.title, shot_on: new Date().toISOString(), viewport: read.viewport, picture: { width: w, height: h, scale: w / VIEW.width }, masked: read.masked, hits_allowed: read.hits, faces: read.faces, loaded_faces: read.loadedFaces, regions: read.regions, buttons: read.buttons, links: read.links, headings: read.headings, labels: read.labels, inputs: read.inputs, motion: read.motion };
     fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(values, null, 2) + '\n');
     /* walkthrough.md: a heading when the step changes, the line, the picture, the measured block */
     const md = path.join(dir, 'walkthrough.md');
@@ -286,12 +304,14 @@ async function shoot(step, text, opts) {
     const measured = ['body', 'header', 'nav', 'main'].map(line).filter(Boolean);
     const btn = read.buttons.find((b) => b.text);
     if (btn) measured.push('button "' + btn.text + '" ' + hex(btn.background) + ' on ' + hex(btn.color) + ', ' + btn.size + ' ' + btn.weight);
+    if (read.loadedFaces.length) measured.push('faces loaded: ' + read.loadedFaces.slice(0, 6).join(', '));
+    if (read.motion.length) measured.push(read.motion.length + ' elements with motion (' + read.motion.slice(0, 2).map((m) => m.where + ' ' + (m.transition || m.animation)).join('; ') + (read.motion.length > 2 ? '; ...' : '') + ')');
     body += '\n' + text + '\n\n![' + id + '](' + id + '.png)\n\n' + (measured.length ? 'Measured (' + id + '.json has all of it): ' + measured.join('; ') + '.\n' : '');
     fs.writeFileSync(md, body);
     const csv = path.join(dir, 'captures.csv');
     if (!fs.existsSync(csv)) fs.writeFileSync(csv, 'id,file,step,text,width,height,scale,captured_on,source\n');
     fs.appendFileSync(csv, [id, id + '.png', step, text, w, h, w / VIEW.width, new Date().toISOString().slice(0, 10), 'vkit shoot ' + (() => { try { return new URL(read.url).host; } catch (e) { return read.url.slice(0, 40); } })()].map(csvCell).join(',') + '\n');
-    return { id, file: path.join(dir, id + '.png'), width: w, height: h, scale: w / VIEW.width, masked: read.masked, unmatched, hits: read.hits, url: read.url, title: read.title, regions: Object.keys(read.regions), buttons: read.buttons.length, headings: read.headings.length, dir };
+    return { id, file: path.join(dir, id + '.png'), width: w, height: h, scale: w / VIEW.width, masked: read.masked, unmatched, hits: read.hits, url: read.url, title: read.title, regions: Object.keys(read.regions), buttons: read.buttons.length, headings: read.headings.length, motion: read.motion.length, faces: read.loadedFaces.length, dir };
   } finally { await c.close(); }
 }
 
@@ -302,7 +322,7 @@ function formatStatus(st) {
   out.push('page: ' + (st.title || '(no title)') + '  ' + st.url);
   out.push('viewport ' + st.viewport.w + 'x' + st.viewport.h + ' at ' + st.viewport.dpr + 'x' + (st.viewport.w === 1920 && st.viewport.h === 1080 ? '' : '  NOT 1920x1080'));
   if (st.at_sign_in) out.push('at a sign-in page: sign in here (--show), or the session has ended');
-  if (st.session_minutes != null) out.push('session ' + st.session_minutes + ' min old, about ' + st.session_left_minutes + ' min left of the ' + 'limit that started at sign-in');
+  if (st.session_minutes != null) out.push('session ' + st.session_minutes + ' min old (counted from the last visible start, where the person signed in), about ' + st.session_left_minutes + ' min left of the limit');
   return out.join('\n');
 }
 
@@ -311,7 +331,7 @@ function formatShot(r) {
   if (r.masked.length) out.push('  masked: ' + r.masked.map((m) => m.selector + ' (' + (m.matched < 0 ? 'bad selector' : m.matched + ' element' + (m.matched === 1 ? '' : 's')) + ')').join(', '));
   if (r.unmatched.length) out.push('  WARNING: ' + r.unmatched.length + ' mask' + (r.unmatched.length === 1 ? '' : 's') + ' matched nothing on this page: ' + r.unmatched.map((m) => m.selector).join(', '));
   if (r.hits.length) out.push('  WRITTEN WITH ' + r.hits.length + ' HIT' + (r.hits.length === 1 ? '' : 'S') + ' ALLOWED: ' + r.hits.map((h) => h.kind + ' in ' + h.where).join('; '));
-  out.push('  measured: ' + r.regions.join(', ') + '; ' + r.buttons + ' buttons, ' + r.headings + ' headings (' + r.id + '.json)');
+  out.push('  measured: ' + r.regions.join(', ') + '; ' + r.buttons + ' buttons, ' + r.headings + ' headings, ' + r.motion + ' moving elements, ' + r.faces + ' faces loaded (' + r.id + '.json)');
   return out.join('\n');
 }
 

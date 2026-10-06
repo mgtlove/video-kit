@@ -33,6 +33,23 @@
   /* at(t, fn, minor): a beat. A minor beat (one character of typing) is not a moment vkit frames
      samples; VK.beats() leaves them out. */
   function at(t, fn, minor) { beats.push({ t: t, fn: fn, done: false, minor: !!minor }); }
+  /* fire(b): a beat runs here, so anything it names that is not on screen is recorded against its time */
+  var firing = null;
+  function fire(b) { firing = b; try { b.fn(); } finally { firing = null; } b.done = true; }
+
+  /* ---------- faults: a beat names an id or a state the screen does not have ----------
+     The engine never throws for one and never guesses (the camera holds, the card stays away,
+     the stroke is not drawn); it records the miss once per name, with the beat's time and the
+     state on screen, in VK.faults, and vkit check reports them (engine 0.4.3). Before this a
+     missing camera target was a TypeError deep in pos() and a missing ink target was silent. */
+  var faults = [];
+  function miss(fn, id) {
+    var key = fn + ':' + id;
+    for (var i = 0; i < faults.length; i++) if (faults[i].key === key) return null;
+    faults.push({ key: key, fn: fn, id: String(id), t: firing ? firing.t : null, state: screenState });
+    return null;
+  }
+  function want(id, fn) { var el = $(id); return el ? el : miss(fn, id); }
 
   /* ---------- fit the stage to the window (recording is 1:1 only at 1920x1080) ---------- */
   function fit() {
@@ -62,7 +79,7 @@
     if (cardNear !== null) placeCard();
   }
   function focus(cx, cy, s) { camTo(cx - (W / 2) / s, cy - (H / 2) / s, s); }
-  function focusEl(id, s, dx, dy) { var p = pos($(id)); focus(p.x + (dx || 0), p.y + (dy || 0), s || 1.3); }
+  function focusEl(id, s, dx, dy) { var el = want(id, 'focusEl'); if (!el) return; var p = pos(el); focus(p.x + (dx || 0), p.y + (dy || 0), s || 1.3); }
   function travel(id, s, dx, dy) { var e = camNextSec || 3.2; ease(e); focusEl(id, s, dx, dy); }
   function home() { focus(W / 2, H / 2, 1); }
 
@@ -71,7 +88,7 @@
     var all = document.querySelectorAll('.scene');
     for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i].id === id);
   }
-  function show(id, off) { $(id).classList.toggle('on', !off); }
+  function show(id, off) { var el = want(id, 'show'); if (el) el.classList.toggle('on', !off); }
   function fadeTo(clear) { fade.classList.toggle('clear', !!clear); }
 
   /* state(id): the recreated screen. With states present (window.STATES, written by vkit new
@@ -85,7 +102,8 @@
     var m = $('mock'); if (!m) return;
     stage.classList.toggle('screen', !!id);             /* a brand mark set to `always` hides while a screen is up (rig.css) */
     if (!id) { m.classList.remove('on'); return; }
-    if (window.STATES && window.STATES[id] !== undefined) {
+    if (window.STATES) {
+      if (window.STATES[id] === undefined) { miss('state', id); return; }   /* an app-backed video with no such state: nothing is shown */
       if (screenState !== id) { m.innerHTML = window.STATES[id]; screenState = id; }
     }
     m.classList.add('on');
@@ -128,6 +146,7 @@
     var k = c.querySelector('.kick'), b = c.querySelector('.body');
     if (b) b.textContent = text;
     if (k && window.COPY && window.COPY.cardKicker) k.textContent = window.COPY.cardKicker;
+    if (nearId) want(nearId, 'card');
     cardNear = nearId || ''; cardSide = side || null;
     placeCard();
     c.classList.add('on');
@@ -251,7 +270,7 @@
   function ink(kind, id, opts) {
     var svg = layer('ink');
     if (!kind) { while (svg.firstChild) svg.removeChild(svg.firstChild); return; }
-    var el = $(id); if (!el || !STROKES[kind]) return;
+    var el = want(id, 'ink'); if (!el || !STROKES[kind]) return;
     opts = opts || {};
     if (!opts.keep) while (svg.firstChild) svg.removeChild(svg.firstChild);
     rough = tokenNumber('--stroke-rough', 1);
@@ -289,7 +308,7 @@
   function pointer(id, dx, dy, opts) {
     var p = pointerEl();
     if (!id) { p.classList.remove('on'); return; }
-    var el = $(id); if (!el) return;
+    var el = want(id, 'pointer'); if (!el) return;
     var b = pos(el); pointAt = [b.x + (dx || 0), b.y + (dy || 0)];
     var move = function () { p.style.transform = 'translate(' + fmt(pointAt[0]) + 'px,' + fmt(pointAt[1]) + 'px)'; };
     if (opts && opts.jump) instant(p, move); else move();
@@ -306,7 +325,7 @@
   function type(t, id, text, cps) {
     cps = cps || 12;
     for (var i = 1; i <= text.length; i++) {
-      (function (n) { at(t + (n - 1) / cps, function () { var el = $(id); if (!el) return; el.textContent = text.slice(0, n); el.classList.add('typing'); }, n > 1); })(i);
+      (function (n) { at(t + (n - 1) / cps, function () { var el = want(id, 'type'); if (!el) return; el.textContent = text.slice(0, n); el.classList.add('typing'); }, n > 1); })(i);
     }
     var end = t + (text.length - 1) / cps;
     at(end + 0.6, function () { var el = $(id); if (el) el.classList.remove('typing'); }, true);
@@ -321,7 +340,7 @@
     if (!name) { svg.classList.remove('on'); return; }
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     rough = tokenNumber('--stroke-rough', 1);
-    var r = rng('who:' + name), el = nearId ? $(nearId) : null, b = el ? pos(el) : { l: W / 2 - 100, t: H / 2 - 150, w: 200, h: 300, x: W / 2, y: H / 2 };
+    var r = rng('who:' + name), el = nearId ? want(nearId, 'who') : null, b = el ? pos(el) : { l: W / 2 - 100, t: H / 2 - 150, w: 200, h: 300, x: W / 2, y: H / 2 };
     var hgt = 300 + r() * 60, x = side === 'left' ? b.l - 160 : b.l + b.w + 160, y = b.t + b.h / 2 + hgt * 0.1;
     x = Math.min(Math.max(x, 140), W - 140);
     var head = 30 + r() * 6, g = document.createElementNS(SVG, 'g'); g.setAttribute('data-who', name + ' ' + pose);
@@ -400,13 +419,13 @@
     }
   }
   function fireSnapped(b) {
-    stage.classList.add('snap'); b.fn(); b.done = true;
+    stage.classList.add('snap'); fire(b);
     void stage.offsetHeight;                          /* flush the style with transitions off */
     stage.classList.remove('snap');
   }
   function fireLive(b, holdSec) {
     var before = document.getAnimations ? document.getAnimations() : [];
-    b.fn(); b.done = true;
+    fire(b);
     void stage.offsetHeight;                          /* start the transitions now */
     if (!document.getAnimations) return;
     var after = document.getAnimations(), fresh = [];
@@ -467,7 +486,7 @@
         var b = beats[i];
         if (!b.done && b.t <= clock) {
           var before = document.getAnimations ? document.getAnimations() : [];
-          b.fn(); b.done = true; void stage.offsetHeight;
+          fire(b); void stage.offsetHeight;
           /* a beat fires on the first frame at or after its time, so up to a frame late, and Chrome
              starts a new transition either on this frame or the next (33 ms after a dropped frame).
              Every animation a beat starts gets its start time set to the beat's nominal time on the
@@ -512,10 +531,10 @@
   }
 
   window.VK = {
-    version: '0.4.2',
+    version: '0.4.3',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
-    ready: function () { return ready; },
+    ready: function () { return ready; }, faults: function () { return faults.slice(); },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
     scene: scene, show: show, state: state, fade: fadeTo, card: card,
     ink: ink, pointer: pointer, click: click, type: type, who: who, rng: rng,

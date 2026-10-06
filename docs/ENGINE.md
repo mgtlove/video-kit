@@ -33,6 +33,8 @@
 | `home()` | the whole frame at 1:1 |
 | `pos(el)` | an element's box on the stage through the offset chain, unaffected by the camera |
 
+A beat that names an id the screen does not have (`focusEl`, `show`, `card`, `ink`, `pointer`, `type`, `who`), or a state the app does not have, is a recorded miss, never a throw and never a silent skip (engine 0.4.3): the camera holds, the card stays away, the stroke is not drawn, nothing is shown for the state, and `VK.faults()` carries `{fn, id, t, state}` once per name, with the beat's time and the state that was up. `vkit check` reports them in its `beats-on-screen` row. Before this a missing camera target was a `TypeError` deep in `pos()` that stopped every render, and a missing stroke target was silent; a video made with `vkit new --app` for a real app, whose starter timeline still names the starter's own ids, now says which beats to rewrite instead of crashing. Proof in `packages/core/test/faults.test.js`.
+
 ## Marks for the checker
 
 `vkit check` measures the teaching layer, never the recreated screen. Three attributes tell it what is what: `data-narration` on text the voice depends on (held to the 54 px floor, 72 px the target, 7:1 contrast the target), `data-decor` on text the voice never depends on (no size floor; still inside title safe and still at 4.5:1), and `data-craft="ignore"` on anything that is not footage. Unmarked text is treated as read text. The explanation card's body is 54 px and 620 px wide for the same reason.
@@ -51,7 +53,7 @@ Tokens and what reads them: `--stage`, `--ink`, `--muted`, `--dim` (the stage an
 
 ## What the tools call
 
-`VK.ready()`, `VK.total()`, `VK.parts()`, `VK.beats()`, `VK.seekTo(t)`, `VK.playTo(t, done)`, `VK.recording(true)`, `VK.version`.
+`VK.ready()`, `VK.total()`, `VK.parts()`, `VK.beats()`, `VK.seekTo(t)`, `VK.playTo(t, done)`, `VK.recording(true)`, `VK.faults()`, `VK.version`.
 
 The render adapter opens the page at 1920 by 1082: `#fit` centres the stage at rows 1 to 1080 and row 0 carries a 1 px marker strip the adapter adds, whose width it sets in the same task as a seek. A capture waits until a screenshot of row 0 shows that width, which proves the compositor has drawn the seek's commit, then takes rows 1 to 1080. A screenshot taken straight after a seek can be the frame before it.
 

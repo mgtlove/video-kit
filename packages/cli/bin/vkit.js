@@ -7,9 +7,10 @@ const core = require('@video-kit/core');
 
 const COMMANDS = {
   'new':            ['<name> [--app family/tool]', 'create a video folder from starter/, engine copied in; --app copies a recreated app in'],
-  'app':            ['new family/tool | add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t] | extract <video> family/tool <id> [--capture f]', 'recreated apps: make one, add a state that cites a capture, or lift a video\'s inline screen into one'],
+  'app':            ['new family/tool | add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t] | extract <video> family/tool <id> [--capture f] | crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]', 'recreated apps: make one, add a state that cites a capture, lift a video\'s inline screen into one, or copy a region of a capture (a logo, an icon) into crops/ for the recreation'],
   'menu':           ['[dir] [--show] [--set item[.field]=value [--note t]] [--explain item] [--walk]', 'walk through the ten choices one at a time (Enter keeps, a number picks, ? explains, 0 types your own, S saves and runs frames, Q stops); --show prints them; --set answers one from a script'],
   'shoot':          ['start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop', 'the capture browser: Chrome on the kit\'s own profile at 1920x1080, ratio 2, headless (--show for signing in); shoot takes the page-only picture into dir/captures/ after hiding the masks in dir/shoot.json and sweeping the text; status says where the page is and how old the session is'],
+  'face':           ['<name> --family "<css family>" [--weights 400,700] [--into dir] [--sample text]', 'a typeface of our own from the page open in the capture browser: each glyph drawn at 1000 px and traced, widths and kerning measured, into dir/faces/; the sample line set in both faces and the differing pixels counted'],
   'capture':        ['<walkthrough.docx> [--into dir]', 'read a walkthrough document (docs/CAPTURE.md) into dir/captures/: CAP-NNN.png in reading order, walkthrough.md, captures.csv; checks PNG, size, unique, under a step; exit 1 on a failing row'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
   'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
@@ -62,7 +63,7 @@ async function main() {
   }
   if (cmd === 'app') {
     const sub = args[0], rest = args.slice(1), flags = {}, pos = [];
-    for (let i = 0; i < rest.length; i++) { if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]; else pos.push(rest[i]); }
+    for (let i = 0; i < rest.length; i++) { if (rest[i].startsWith('--')) { if (rest[i] === '--replace') flags.replace = true; else flags[rest[i].slice(2)] = rest[++i]; } else pos.push(rest[i]); }
     if (sub === 'new') {
       if (!pos[0]) { console.error('vkit app new family/tool [--title "Shown name"] [--extends family/other]'); return 2; }
       const r = core.apps.appNew(pos[0], { title: flags.title, extends: flags.extends });
@@ -81,7 +82,14 @@ async function main() {
       console.log('lifted ' + pos[0] + '\'s inline screen into ' + r.dir + ' as state ' + r.id + (r.tokens ? ', with its palette' : ', no palette block found') + (r.screen ? ' and its rules' : ', no rules block found') + '. A starting point: check it against the capture.');
       return 0;
     }
-    console.error('vkit app new|add-state|extract'); return 2;
+    if (sub === 'crop') {
+      if (!pos[0] || !pos[1] || !pos[2] || !flags.at) { console.error('vkit app crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]   (in the picture\'s own pixels)'); return 2; }
+      const [x, y, w, h] = flags.at.split(',').map(Number);
+      const r = core.apps.appCrop(pos[0], pos[1], { name: pos[2], x, y, w, h, replace: 'replace' in flags });
+      console.log('cropped ' + r.width + 'x' + r.height + ' from ' + r.row.capture + ' at ' + [x, y].join(',') + ' into ' + path.relative(process.cwd(), r.file) + ' (' + r.scale + 'x); crops.csv has the row. The capture is unchanged.');
+      return 0;
+    }
+    console.error('vkit app new|add-state|extract|crop'); return 2;
   }
   if (cmd === 'frames') {
     let dir = '.', times = [], every = null;
@@ -123,13 +131,20 @@ async function main() {
     const sub = args[0];
     const flags = {}, pos = [];
     for (let i = 1; i < args.length; i++) { if (args[i] === '--into') flags.into = args[++i]; else if (args[i] === '--show') flags.show = true; else if (args[i] === '--allow-hits') flags.allowHits = true; else if (args[i] === '--port') flags.port = args[++i]; else pos.push(args[i]); }
-    if (sub === 'start') { const r = await S.start({ show: flags.show, channel, port: flags.port }); console.log('capture browser ' + (r.show ? 'visible' : 'headless') + ', pid ' + r.pid + ', port ' + r.port + ', ' + r.browser + ', viewport ' + r.viewport.w + 'x' + r.viewport.h + ' at ' + r.viewport.dpr + 'x, profile ' + r.profile + (r.show ? '\nSign in in that window, then vkit shoot stop and vkit shoot start to carry the session on headless.' : '\nMCP: npx @playwright/mcp --cdp-endpoint http://127.0.0.1:' + r.port + '  (the agent\'s eyes and hands); vkit shoot "<step>" "<what was done>" --into <app or video folder> at each screen.')); return 0; }
+    if (sub === 'start') { const r = await S.start({ show: flags.show, channel, port: flags.port }); console.log('capture browser ' + (r.show ? 'visible' : 'headless') + ', pid ' + r.pid + ', port ' + r.port + ', ' + r.browser + ', viewport ' + r.viewport.w + 'x' + r.viewport.h + ' at ' + r.viewport.dpr + 'x, profile ' + r.profile + (r.show ? '\nSign in in that window, then vkit shoot stop and vkit shoot start to carry the session on headless.' : '\nThe Playwright MCP server registered for this folder connects to port ' + r.port + ' (the agent\'s eyes and hands); vkit shoot "<step>" "<what was done>" --into <app or video folder> at each screen.')); return 0; }
     if (sub === 'stop') { const r = await S.stop(); console.log(r.stopped ? 'stopped pid ' + r.pid : r.reason); return 0; }
     if (sub === 'status') { const r = await S.status({ into: flags.into }); console.log(S.formatStatus(r)); return r.running ? 0 : 1; }
     if (sub === 'go') { if (!pos[0]) { console.error('vkit shoot go <url>'); return 2; } const r = await S.go(pos[0]); console.log('at ' + r.url + (r.title ? '  (' + r.title + ')' : '')); return 0; }
     if (!sub || sub.startsWith('--')) { console.error('vkit shoot start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop'); return 2; }
     try { const r = await S.shoot(sub, pos[0], { into: flags.into, allowHits: flags.allowHits, port: flags.port }); console.log(S.formatShot(r)); return 0; }
     catch (e) { console.error(e.message); return e.hits ? 3 : 1; }
+  }
+  if (cmd === 'face') {
+    let name = null, family = null, weights = null, into = '.', sample = null;
+    for (let i = 0; i < args.length; i++) { if (args[i] === '--family') family = args[++i]; else if (args[i] === '--weights') weights = args[++i].split(',').map(Number); else if (args[i] === '--into') into = args[++i]; else if (args[i] === '--sample') sample = args[++i]; else name = args[i]; }
+    const r = await core.face(name, { family, weights, into, sample });
+    console.log(core.faceFormat(r));
+    return 0;
   }
   if (cmd === 'capture') {
     let file = null, into = '.';

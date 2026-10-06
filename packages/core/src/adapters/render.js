@@ -201,13 +201,17 @@ async function survey(rigDir, times, measureFn, opts) {
   return out;
 }
 
-// shoot(rigDir, poseFn, arg, opts): one still of the page after poseFn(arg) has
-// run in it (a state shown alone, say), captured once its commit is on screen.
-async function shoot(rigDir, poseFn, arg, opts) {
+// shoot(rigDir, poseFn, arg, opts, measureFn): one still of the page after poseFn(arg) has
+// run in it (a state shown alone, say), captured once its commit is on screen. With measureFn
+// the page is also measured after the still and { png, data } comes back instead of the buffer.
+async function shoot(rigDir, poseFn, arg, opts, measureFn) {
   const b = await open(rigDir, opts);
   try {
     await b.page.evaluate(([fnSource, a, w]) => { (new Function('return (' + fnSource + ')')())(a); window.__vkSetMark(w); }, [poseFn.toString(), arg, nextMark(b)]);
-    return await capture(b);
+    const png = await capture(b);
+    if (!measureFn) return png;
+    const data = await b.page.evaluate(measureFn);
+    return { png, data };
   } finally { await b.close(); }
 }
 
