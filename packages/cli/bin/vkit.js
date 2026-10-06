@@ -9,6 +9,7 @@ const COMMANDS = {
   'new':            ['<name> [--app family/tool]', 'create a video folder from starter/, engine copied in; --app copies a recreated app in'],
   'app':            ['new family/tool | add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t] | extract <video> family/tool <id> [--capture f]', 'recreated apps: make one, add a state that cites a capture, or lift a video\'s inline screen into one'],
   'menu':           ['[dir] [--show] [--set item[.field]=value [--note t]] [--explain item] [--walk]', 'walk through the ten choices one at a time (Enter keeps, a number picks, ? explains, 0 types your own, S saves and runs frames, Q stops); --show prints them; --set answers one from a script'],
+  'shoot':          ['start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop', 'the capture browser: Chrome on the kit\'s own profile at 1920x1080, ratio 2, headless (--show for signing in); shoot takes the page-only picture into dir/captures/ after hiding the masks in dir/shoot.json and sweeping the text; status says where the page is and how old the session is'],
   'capture':        ['<walkthrough.docx> [--into dir]', 'read a walkthrough document (docs/CAPTURE.md) into dir/captures/: CAP-NNN.png in reading order, walkthrough.md, captures.csv; checks PNG, size, unique, under a step; exit 1 on a failing row'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
   'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
@@ -116,6 +117,19 @@ async function main() {
     const r = await core.check(dir, { quick, channel, progress: progressSink() });
     console.log(require('@video-kit/core/src/check').format(r));
     return r.failures ? 1 : 0;
+  }
+  if (cmd === 'shoot') {
+    const S = core.shoot;
+    const sub = args[0];
+    const flags = {}, pos = [];
+    for (let i = 1; i < args.length; i++) { if (args[i] === '--into') flags.into = args[++i]; else if (args[i] === '--show') flags.show = true; else if (args[i] === '--allow-hits') flags.allowHits = true; else if (args[i] === '--port') flags.port = args[++i]; else pos.push(args[i]); }
+    if (sub === 'start') { const r = await S.start({ show: flags.show, channel, port: flags.port }); console.log('capture browser ' + (r.show ? 'visible' : 'headless') + ', pid ' + r.pid + ', port ' + r.port + ', ' + r.browser + ', viewport ' + r.viewport.w + 'x' + r.viewport.h + ' at ' + r.viewport.dpr + 'x, profile ' + r.profile + (r.show ? '\nSign in in that window, then vkit shoot stop and vkit shoot start to carry the session on headless.' : '\nMCP: npx @playwright/mcp --cdp-endpoint http://127.0.0.1:' + r.port + '  (the agent\'s eyes and hands); vkit shoot "<step>" "<what was done>" --into <app or video folder> at each screen.')); return 0; }
+    if (sub === 'stop') { const r = await S.stop(); console.log(r.stopped ? 'stopped pid ' + r.pid : r.reason); return 0; }
+    if (sub === 'status') { const r = await S.status({ into: flags.into }); console.log(S.formatStatus(r)); return r.running ? 0 : 1; }
+    if (sub === 'go') { if (!pos[0]) { console.error('vkit shoot go <url>'); return 2; } const r = await S.go(pos[0]); console.log('at ' + r.url + (r.title ? '  (' + r.title + ')' : '')); return 0; }
+    if (!sub || sub.startsWith('--')) { console.error('vkit shoot start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop'); return 2; }
+    try { const r = await S.shoot(sub, pos[0], { into: flags.into, allowHits: flags.allowHits, port: flags.port }); console.log(S.formatShot(r)); return 0; }
+    catch (e) { console.error(e.message); return e.hits ? 3 : 1; }
   }
   if (cmd === 'capture') {
     let file = null, into = '.';

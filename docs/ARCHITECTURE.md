@@ -4,12 +4,13 @@ One library, thin shells, four adapters.
 
 ```
 INPUTS (adapters)                         CORE                                  OUTPUTS
-screens: a walkthrough document           capture -> CAP ids, text, gaps
-         (a heading per step, a line,         frames (a PNG per beat)
-         the screenshot, a note) from     menu    -> the ten choices            MP4 with the voice muxed
-         whoever has the tool, or a       script  -> parts, measured clips      captions file
+screens: the kit's capture browser        shoot   -> CAP ids, values, text swept
+         (an agent driving it; the        capture -> CAP ids, text, gaps
+         person signs in once), or a          frames (a PNG per beat)
+         walkthrough document from        menu    -> the ten choices            MP4 with the voice muxed
+         whoever has the screen, or a     script  -> parts, measured clips      captions file
          state of a recreated app         rig     -> screen, beats, patterns    a scene set per part for a host
-words:   the same document, or            render  -> every frame from the seek  a URL for a course
+words:   the walkthrough document, or     render  -> every frame from the seek  a URL for a course
          screenshots + a transcript       check   -> rig, craft, brand          the walkthrough document,
 voice:   generated clips, or a recording  publish -> host adapter               storyboard and QA report
 identity: brand, look, menu defaults      (tokens, never edits)
@@ -19,7 +20,7 @@ Rules the whole thing rests on:
 
 - **Everything is a function in `packages/core`.** The CLI, the plugin, the MCP server and an app only call those functions. Nothing lives in a shell that another shell would need. A slow function reports through `opts.progress(step, done, total, note)` and never prints; the shell decides what that looks like (the CLI: a bar on a terminal, plain lines in a pipe), and the MCP server and the cloud renderer (step 11) will read the same calls.
 - **A video is a folder, not a repo.** `vkit new` copies `starter/`; the engine is installed by version.
-- **A recreated app is a folder beside the videos, never in the kit and never in one video.** `apps/<family>/<tool>/` holds the tool's palette (`tokens.css`), its structure (`screen.css`), one fragment per captured state and the one list of them (`manifest.csv`). `vkit new --app` copies the app into the video like the engine, so the video opens from disk and never changes when the app moves on. The kit finds apps in `$VKIT_APPS`, `../apps` beside itself, then its own `examples/apps`; it never knows which repo a folder came from. Three kinds of video, and the engine does not care which: no screen, a one-off screen inline, an app's states. Every state cites a capture; nothing is invented. Captures arrive as one walkthrough document (`docs/CAPTURE.md`): `vkit capture` reads it in order into `captures/CAP-NNN.png`, `walkthrough.md` and `captures.csv` and checks their shape, never their content; the pictures are read by a reader, every one, before a state is written.
+- **A recreated app is a folder beside the videos, never in the kit and never in one video.** `apps/<family>/<tool>/` holds the tool's palette (`tokens.css`), its structure (`screen.css`), one fragment per captured state and the one list of them (`manifest.csv`). `vkit new --app` copies the app into the video like the engine, so the video opens from disk and never changes when the app moves on. The kit finds apps in `$VKIT_APPS`, `../apps` beside itself, then its own `examples/apps`; it never knows which repo a folder came from. Three kinds of video, and the engine does not care which: no screen, a one-off screen inline, an app's states. Every state cites a capture; nothing is invented. Captures arrive two ways into one folder (`docs/CAPTURE.md`): the kit's own capture browser (`vkit shoot`: the Chrome already on this machine on a profile of its own at exactly 1920x1080, an agent driving it through the Playwright MCP, the person signing in once; masks hidden before the shot, the page's text swept and the shot refused while private shapes remain, the page's own values written beside each picture), or a walkthrough document that `vkit capture` reads in order and checks for shape, never content. Either way the pictures are read by a reader, every one, before a state is written. The capture browser's profile lives outside every repo and is never committed; credentials stay in Chrome's own store on this machine.
 - **The clips are the clock.** Every beat is timed to a measured voice file; nothing is stretched; part lengths are exact.
 - **A frame at t equals playback at t.** Seek-correctness is the contract every primitive meets, and `vkit check` measures it.
 - **Tokens, never literals.** Colours, faces and brand come through `theme.css`, `look.css` and `brand.css`; the recreated product screen keeps its own measured palette and is never restyled. A brand is one folder (`brands/<name>/`: five colours, two faces, a mark and a banner placed by when, where, size and opacity); `vkit brand` copies it into the video and writes `--brand-*` tokens that the theme reads first; the engine builds the mark and the banner from those tokens at boot and gives them beats, so no brand means no elements and an identical render. The mark's corners and the banner's edges are fixed by the safe-area rules, not by the brand, and `always` hides over a recreated screen so the product is never covered.

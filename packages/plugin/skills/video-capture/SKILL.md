@@ -5,14 +5,15 @@ description: >
   screenshots for this video", "here's the walkthrough", "read the captures", "turn this document
   into captures", or hands over a Word document of a task. It sends the capture brief to whoever
   will capture, runs vkit capture on what comes back, and reads every picture before any screen is
-  recreated.
+  recreated. When the tool is reachable in a browser on this machine, capture-walkthrough shoots
+  instead.
 metadata:
   version: "0.1.0"
 ---
 
 # Captures from a walkthrough document
 
-The evidence for a recreated screen is one Word document: a heading per step, a line saying what was done, the screenshot under it, a note for what a still cannot carry. `docs/CAPTURE.md` in the kit is the brief that asks for it, and the same brief serves a one-off screen built inline in a video and a tool recreated as an app. The agent never captures a screen itself and never invents one; a screen with no capture is a concept scene.
+The evidence for a recreated screen arrives one of two ways, and both land in the same `captures/` folder. When the tool can be reached in a browser on this machine, the `capture-walkthrough` skill drives the kit's own capture browser and `vkit shoot` writes the set; that is the first choice. When only another person or chat has the screen, they send one Word document (a heading per step, a line saying what was done, the screenshot under it, a note for what a still cannot carry) and this skill reads it in with `vkit capture`. `docs/CAPTURE.md` in the kit is the brief that asks for the document, the same for a one-off screen built inline in a video and a tool recreated as an app. Nobody invents a screen; a screen with no capture is a concept scene.
 
 ## Asking for captures
 
@@ -32,7 +33,7 @@ Nothing is recreated from memory of the product. Where the document carries meas
 
 ## Rules
 
-- Never capture or screenshot a product screen from this skill; the brief goes out, the document comes back.
+- This skill never screenshots a product screen itself; the brief goes out and the document comes back, or the `capture-walkthrough` skill shoots with the kit's browser.
 - Never type a screen detail that no picture shows. No capture, no chrome.
 - Never edit `captures.csv` or rename a `CAP-NNN.png`; `vkit capture` writes them and `manifest.csv` cites them.
 - The command's green run is the shape, not the content; the pictures are read by a reader, every one.

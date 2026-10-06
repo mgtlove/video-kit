@@ -40,7 +40,7 @@ test('every skill names its folder, and every command, flag and item it names ex
   for (const m of cli.matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
   const items = core.menu.items().map((i) => i.key);
   const dirs = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepStrictEqual(dirs, ['brand-apply', 'video-build', 'video-capture', 'video-check', 'video-frames', 'video-measure', 'video-menu', 'vkit-start']);
+  assert.deepStrictEqual(dirs, ['brand-apply', 'capture-walkthrough', 'video-build', 'video-capture', 'video-check', 'video-frames', 'video-measure', 'video-menu', 'vkit-start']);
   const named = new Set();
   for (const d of dirs) {
     const file = path.join(PLUGIN, 'skills', d, 'SKILL.md');
@@ -63,7 +63,7 @@ test('every skill names its folder, and every command, flag and item it names ex
   }
   assert.ok(!fs.existsSync(path.join(PLUGIN, 'skills', 'video-menu', 'references', 'menu-items.md')), 'the typed list of items is out of the skill');
   const notBuilt = Object.keys(table).filter((c) => /\(later\)|not built|step 1[01]/.test(table[c]) || ['publish'].includes(c));
-  assert.ok(named.has('capture') && !notBuilt.includes('capture'), 'vkit capture is built and a skill names it');
+  assert.ok(named.has('capture') && named.has('shoot') && !notBuilt.includes('capture'), 'vkit capture and vkit shoot are built and a skill names each');
   console.log(dirs.length + ' skills; commands named: ' + [...named].sort().join(', ') + '; not built and named so: ' + notBuilt.join(', '));
 });
 
