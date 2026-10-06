@@ -100,7 +100,9 @@ function measureInPage(t) {
       narration: !!el.closest('[data-narration]'), decor: !!el.closest('[data-decor]') });
   }
   var strokes = []; var paths = document.querySelectorAll('#ink path.on');
-  for (var p = 0; p < paths.length; p++) { var pr = paths[p].getBoundingClientRect(); strokes.push({ kind: paths[p].getAttribute('data-stroke') || '', color: rgb(getComputedStyle(paths[p]).stroke), box: { l: pr.left - sr.left, t: pr.top - sr.top, r: pr.right - sr.left, b: pr.bottom - sr.top } }); }
+  for (var p = 0; p < paths.length; p++) { var pr = paths[p].getBoundingClientRect(), pcs = getComputedStyle(paths[p]);
+    var px = /drop-shadow/.test(pcs.filter || '') ? ((pcs.filter || '').replace(/rgba?\([^)]*\)/g, '').match(/-?[\d.]+px/g) || []) : [];   /* the colour stripped first; then x, y and the blur */
+    strokes.push({ kind: paths[p].getAttribute('data-stroke') || '', color: rgb(pcs.stroke), width: parseFloat(pcs.strokeWidth) || 6, glow: px.length >= 3 ? parseFloat(px[2]) : 0, box: { l: pr.left - sr.left, t: pr.top - sr.top, r: pr.right - sr.left, b: pr.bottom - sr.top } }); }
   var cam = document.getElementById('cam'), m = /matrix\(([^)]+)\)/.exec(getComputedStyle(cam).transform), camScale = m ? parseFloat(m[1].split(',')[0]) : 1;
   return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale };
 }
@@ -117,16 +119,35 @@ function accentShare(png, accents, dist) {
 }
 function meanLuminance(png) { let s = 0; const n = png.width * png.height; for (let i = 0; i < png.data.length; i += 4) s += 0.2126 * png.data[i] + 0.7152 * png.data[i + 1] + 0.0722 * png.data[i + 2]; return s / n / 255; }
 // strokeContrast: the stroke colour against the pixels in its box that are not the stroke (what it sits on)
+/* strokeContrast(png, s): the stroke's colour against what it actually sits on. The surface is
+   read from the pixels beside each drawn stroke pixel (a ring past the stroke's width and glow, so
+   the stroke's own edge and halo are skipped), bucketed by colour, and the ratio is taken against each surface
+   that carries at least 8 percent of those pixels; the worst one is the answer. Averaging the
+   whole box into one colour mixed a paper card and a dark ground into a grey the stroke never
+   touched and read 2.93:1 for a stroke that held 3.5:1 on the paper and 4.5:1 on the ground
+   (clippings, seen 5 October 2026 once strokes drew). A half-drawn stroke is measured where it is. */
 function strokeContrast(png, s) {
   const box = s.box, col = s.color; if (!col) return null;
-  let r = 0, g = 0, b = 0, n = 0;
-  const x0 = Math.max(0, Math.floor(box.l)), x1 = Math.min(png.width - 1, Math.ceil(box.r)), y0 = Math.max(0, Math.floor(box.t)), y1 = Math.min(png.height - 1, Math.ceil(box.b));
+  const W = png.width, H = png.height;
+  const x0 = Math.max(0, Math.floor(box.l) - 16), x1 = Math.min(W - 1, Math.ceil(box.r) + 16), y0 = Math.max(0, Math.floor(box.t) - 16), y1 = Math.min(H - 1, Math.ceil(box.b) + 16);
+  const isStroke = (x, y) => { const i = (y * W + x) * 4, dr = png.data[i] - col[0], dg = png.data[i + 1] - col[1], db = png.data[i + 2] - col[2]; return dr * dr + dg * dg + db * db <= 60 * 60; };
+  const buckets = new Map(); let total = 0;
+  /* the ring starts past the stroke's own width and glow (a drop-shadow spreads about twice its blur), so a glowing stroke's halo is not read as a surface */
+  const inner = Math.ceil((s.width || 6) / 2 + 2 * (s.glow || 0) + 6), outer = inner + 6, d = Math.round(inner * 0.75);
+  const ring = [[0, -inner], [0, inner], [-inner, 0], [inner, 0], [0, -outer], [0, outer], [-outer, 0], [outer, 0], [d, d], [-d, -d], [d, -d], [-d, d]];
   for (let y = y0; y <= y1; y += 2) for (let x = x0; x <= x1; x += 2) {
-    const i = (y * png.width + x) * 4, dr = png.data[i] - col[0], dg = png.data[i + 1] - col[1], db = png.data[i + 2] - col[2];
-    if (dr * dr + dg * dg + db * db > 60 * 60) { r += png.data[i]; g += png.data[i + 1]; b += png.data[i + 2]; n++; }
+    if (!isStroke(x, y)) continue;
+    for (const [dx, dy] of ring) {
+      const px = x + dx, py = y + dy; if (px < 0 || py < 0 || px >= W || py >= H || isStroke(px, py)) continue;
+      const i = (py * W + px) * 4, R = png.data[i], G = png.data[i + 1], B = png.data[i + 2];
+      const key = ((R >> 4) << 8) | ((G >> 4) << 4) | (B >> 4);   /* 16 levels a channel: one bucket per surface, anti-aliasing folded in */
+      const b = buckets.get(key) || { r: 0, g: 0, b: 0, n: 0 }; b.r += R; b.g += G; b.b += B; b.n++; buckets.set(key, b); total++;
+    }
   }
-  if (!n) return null;
-  return ratio(col, [r / n, g / n, b / n]);
+  if (!total) return null;
+  let worst = Infinity;
+  for (const b of buckets.values()) if (b.n >= total * 0.08) worst = Math.min(worst, ratio(col, [b.r / b.n, b.g / b.n, b.b / b.n]));
+  return worst === Infinity ? null : worst;
 }
 
 /* ---------- ffmpeg helpers for fidelity ---------- */
@@ -354,4 +375,4 @@ function format(report) {
   return lines.join('\n');
 }
 
-module.exports = { check, format, ssim, measureInPage, accentShare, meanLuminance, ratio };
+module.exports = { check, format, ssim, measureInPage, accentShare, meanLuminance, ratio, strokeContrast };

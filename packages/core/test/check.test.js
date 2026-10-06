@@ -90,3 +90,25 @@ test('fidelity scores a state against its capture and responds to a worse one', 
   console.log('fidelity against a shifted, blurred capture: ' + row2.score);
   assert.ok(row2.score < row1.score - 0.1, 'a worse capture scores clearly lower: ' + row2.score + ' vs ' + row1.score);
 });
+
+test('a stroke is measured against each surface it sits on, worst surface first', () => {
+  /* Found 5 October 2026 when strokes began to draw: the old measure averaged every pixel in the
+     stroke's box into one colour, so a frame round a paper card on a dark ground was judged against
+     a grey it never touched (2.93:1) while it held 3.5:1 on the paper and 4.5:1 on the ground. */
+  const { PNG } = require('pngjs');
+  const checkMod = require('../src/check');
+  const png = new PNG({ width: 400, height: 120 });
+  const fill = (x0, x1, y0, y1, c) => { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = (y * 400 + x) * 4; png.data[i] = c[0]; png.data[i + 1] = c[1]; png.data[i + 2] = c[2]; png.data[i + 3] = 255; } };
+  const dark = [16, 21, 18], paper = [243, 241, 234], orange = [212, 86, 30], grey = [137, 142, 153];
+  fill(0, 200, 0, 120, dark); fill(200, 400, 0, 120, paper); fill(20, 380, 56, 64, orange);   /* one stroke across both surfaces */
+  const both = checkMod.strokeContrast(png, { color: orange, box: { l: 20, t: 56, r: 380, b: 64 } });
+  assert.ok(Math.abs(both - checkMod.ratio(orange, paper)) < 0.05, 'the worst surface is the paper: ' + both + ' vs ' + checkMod.ratio(orange, paper));
+  assert.ok(both >= 3, 'and it holds 3:1: ' + both);
+  fill(0, 400, 0, 120, grey); fill(20, 380, 56, 64, orange);   /* the same stroke on a mid grey */
+  const onGrey = checkMod.strokeContrast(png, { color: orange, box: { l: 20, t: 56, r: 380, b: 64 } });
+  assert.ok(onGrey < 3 && Math.abs(onGrey - checkMod.ratio(orange, grey)) < 0.05, 'on a grey it fails by the grey\'s own ratio: ' + onGrey);
+  fill(0, 200, 0, 120, dark); fill(200, 400, 0, 120, paper); fill(20, 200, 56, 64, orange);   /* half drawn: only the dark half carries stroke */
+  const half = checkMod.strokeContrast(png, { color: orange, box: { l: 20, t: 56, r: 380, b: 64 } });
+  assert.ok(Math.abs(half - checkMod.ratio(orange, dark)) < 0.05, 'a half-drawn stroke is measured where it is: ' + half + ' vs ' + checkMod.ratio(orange, dark));
+  console.log('stroke on dark and paper: ' + both.toFixed(2) + ' (the paper); on grey: ' + onGrey.toFixed(2) + '; half drawn on the dark: ' + half.toFixed(2));
+});

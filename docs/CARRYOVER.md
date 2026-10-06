@@ -47,3 +47,4 @@ The kit is rebuilt clean, not copied. This file lists what the rebuild has to ho
 - Docs change in the same commit as the code; a change that only lives in code has not landed.
 - A person judges the rig by looking at rendered frames, never by reading code.
 - Verification before the next step: byte-compare frames before and after a change that should not change them.
+- A proof that compares two outputs passes when both are wrong the same way: the seek proof matched playback at 0 pixels for four steps while no stroke drew in any rendered frame. Watching the finished video is a proof the suite cannot replace, and it goes on every step's landing.

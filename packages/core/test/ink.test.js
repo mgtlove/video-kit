@@ -27,3 +27,22 @@ test('two renders of the starter are identical, stroke for stroke', async () => 
   }
   console.log(same + ' of ' + a.files.length + ' stills identical across two browser sessions (engine ' + a.engine + ')');
 });
+
+test('a stroke draws itself over --stroke-draw, in rendered frames', async () => {
+  /* Found 5 October 2026 by a person watching the MP4: the circle appeared whole. Two causes in the
+     engine: the start state was written as a transition (0 to L) and the change to 0 reversed it at
+     once; and the seek's bake wrote an inline value that lost to the drawn rule's !important. Both
+     fixed in 0.4.2. This counts the stroke's pixels at the beat, mid-draw and after. */
+  const { PNG } = require('pngjs');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-ink-'));
+  const r = core.newVideo('drawn', { cwd: tmp });
+  const opts = require('./opts')();
+  const beat = 24 + 9;   /* the circle round Category: t2 + 9.0 in the starter's timeline */
+  const f = await core.frames(r.dir, Object.assign({ times: [beat, beat + 0.3, beat + 0.9] }, opts));
+  const strokePixels = (file) => { const png = PNG.sync.read(fs.readFileSync(file)); let n = 0; for (let i = 0; i < png.data.length; i += 4) { const R = png.data[i], G = png.data[i + 1], B = png.data[i + 2]; if (R > 160 && G > 50 && G < 130 && B < 90) n++; } return n; };   /* the burnt orange highlight, #d4561e, and nothing else on that screen */
+  const [at0, mid, done] = f.files.map(strokePixels);
+  assert.ok(at0 < done * 0.05, 'at the beat the stroke has barely begun: ' + at0 + ' px against ' + done + ' when drawn');
+  assert.ok(mid > done * 0.2 && mid < done * 0.8, 'at 0.3 s of 0.6 the stroke is part way: ' + mid + ' of ' + done);
+  assert.ok(done > 2000, 'the drawn circle has substance: ' + done + ' px');
+  console.log('circle pixels: ' + at0 + ' at the beat, ' + mid + ' mid-draw, ' + done + ' drawn');
+});

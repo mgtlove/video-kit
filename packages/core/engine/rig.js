@@ -264,11 +264,15 @@
       if (glow > 0) p.style.filter = 'drop-shadow(0 0 ' + glow + 'px var(--stroke, var(--hi)))';   /* a lightboard glow; set only when asked, so no look is pixel-identical */
       svg.appendChild(p);
       var L = Math.ceil(p.getTotalLength()) + 2;
-      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      /* The start state is written with transitions off. Measuring the path gave it a computed
+         dash offset of 0 already, so writing L here would itself be a transition (0 to L), and the
+         change to 0 that follows would reverse a transition just begun, which finishes at once:
+         the stroke appeared whole instead of drawing (engine 0.4.2; seen by a person watching
+         the MP4, not by the proofs, which compared a seek with a playback that were wrong alike). */
+      instant(p, function () { p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
       made.push(p);
     }
-    for (var k = 0; k < made.length; k++) void getComputedStyle(made[k]).strokeDashoffset;   /* the start state exists before the change, so it transitions */
-    for (var m = 0; m < made.length; m++) made[m].classList.add('on');
+    for (var m = 0; m < made.length; m++) made[m].classList.add('on');   /* L to 0 over --stroke-draw: the stroke draws */
   }
 
   /* the pointer: one cursor that glides to an element over --pointer-glide; click() rings where it is */
@@ -385,7 +389,7 @@
     for (i = 0; i < items.length; i++) {
       el = items[i].el;
       el.style.setProperty('transition-property', 'none');
-      el.style.setProperty(items[i].prop, items[i].v);
+      el.style.setProperty(items[i].prop, items[i].v, 'important');   /* important: a class rule marked !important (the drawn stroke) would otherwise beat the baked value and the frame would show the end state (engine 0.4.2) */
       items[i].a.cancel();
       baked.push([el, items[i].prop]);
     }
@@ -508,7 +512,7 @@
   }
 
   window.VK = {
-    version: '0.4.1',
+    version: '0.4.2',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; },

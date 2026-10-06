@@ -25,6 +25,7 @@
 | `state(id)` / `state(null)` | the recreated screen: shows state `id` of the app in `#mock` (or the inline `#mock` when there is no app); `null` hides it. Not named `screen`: `window.screen` is the browser's display object |
 | `fade(true)` / `fade(false)` | clears the black or brings it back |
 | `card(text, nearId, side)` / `card(null)` | the explanation card, placed beside the named element on the side with most room and clear of its neighbours (its siblings, and every leaf element with an id in the recreated screen): the four sides of the element, then the four sides of the group they form, then the side that covers least; inside title safe; `side` forces `right`, `left`, `below` or `above`; re-placed on every camera move (engine 0.4.1) |
+| `ink(kind, id, opts)` draws | a stroke is a path whose dash offset runs from its length to 0 over `--stroke-draw`; the start state is written with transitions off (a measured path already holds an offset of 0, and writing the length would itself be a transition that the change to 0 reverses at once), and a seek bakes the mid-draw value with priority so it beats the drawn rule's `!important` (engine 0.4.2) |
 | `focusAt(cx, cy, scale)` | centre the camera on a stage point; scale never under 1; clamped to the frame |
 | `focusEl(id, scale, dx, dy)` | centre on an element, with an offset |
 | `travel(id, scale, dx, dy)` | the same with a long, even ease (reads as a scroll) |
