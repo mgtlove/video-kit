@@ -40,7 +40,11 @@ function findClips(videoDir, parts) {
 // rows of storyboard.md: Part | Sentence | Start (s) | ... Start is seconds
 // into the part. A cue ends where the next sentence in its part starts, or at
 // the part's end.
-function storyboardRows(videoDir, parts) {
+// storyboardRows(videoDir, parts, opts): the rows of storyboard.md. By default only rows in a part the
+// rig has (parts.length); opts.all keeps every row, for checks that read the expert's storyboard
+// before the parts exist (a row in part 4 of a three-part rig was dropped unseen, 8 October 2026).
+function storyboardRows(videoDir, parts, opts) {
+  const all = opts && opts.all;
   const file = path.join(videoDir, 'storyboard.md');
   if (!fs.existsSync(file)) return [];
   const rows = [];
@@ -48,7 +52,7 @@ function storyboardRows(videoDir, parts) {
     if (!line.trim().startsWith('|')) continue;
     const cells = line.trim().slice(1, -1).split('|').map((c) => c.trim());
     const part = Number(cells[0]), start = Number(cells[2]);
-    if (!Number.isInteger(part) || part < 1 || part > parts.length || !cells[1] || isNaN(start)) continue;
+    if (!Number.isInteger(part) || part < 1 || (!all && part > parts.length) || !cells[1] || isNaN(start)) continue;
     rows.push({ part, text: cells[1], start, on: cells[3] || '' });
   }
   return rows;

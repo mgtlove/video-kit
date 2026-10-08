@@ -9,7 +9,7 @@ metadata:
 
 The idea for a video starts in this chat: a gap in what is out there, a topic the person teaches, a question learners keep asking. The video folder is the handoff from the first minute. Nothing is pasted: this skill writes files into the video's folder, the director's chat reads them there, and `vkit handoffs` says which video or app is waiting and for whom. The person's part is the ideation (who it is for, what matters, what to leave out); the finding, the folder and the format are this skill's.
 
-The videos live in the `videos/` folder beside `video-kit` (on Matthew's Mac, `~/Developer/video/videos/`); the recreated apps live in `apps/<family>/<tool>/` beside them. Run `vkit handoffs ~/Developer/video/videos` first; each line is one video or one app, who it waits for, and the skill. Without `vkit`, the rule is the files, below.
+The videos live in the `videos/` folder beside `video-kit` (on Matthew's Mac, `~/Developer/video/videos/`); the recreated apps live in `apps/<family>/<tool>/` beside them. Run `vkit handoffs ~/Developer/video/videos` first; each line is one video or one app, who it waits for, and the skill. A shell that has the folder but not the command runs the same thing as `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js handoffs ~/Developer/video/videos`. Without either, the rule is the files, below.
 
 ## A. The idea first (no folder, or a folder with no `brief-request.md`)
 

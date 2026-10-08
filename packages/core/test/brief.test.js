@@ -38,7 +38,8 @@ test('vkit brief writes the ask with the states in it, and check covers the stor
   // the coverage row: two rows that name the app's state, one that names a state it lacks, one scene
   const sb = path.join(backed.dir, 'storyboard.md');
   const head = fs.readFileSync(sb, 'utf8').split('\n').filter((l) => !/^\|\s*\d/.test(l)).join('\n');
-  const rows = (bad) => '\n| 1 | Every task starts somewhere. | 0.0 | scene opener | rest | | |\n| 2 | Here is where you set it. | 0.0 | state work-item, the form | rest | | |\n| 2 | The category field is where it starts. | 4.1 | state ' + (bad ? 'work-itm' : 'work-item') + ', the Category field | push on r1 | | |\n';
+  // the fourth row sits in part 4, which the starter's three-part rig does not have: coverage still reads it (8 October 2026)
+  const rows = (bad) => '\n| 1 | Every task starts somewhere. | 0.0 | scene opener | rest | | |\n| 2 | Here is where you set it. | 0.0 | state work-item, the form | rest | | |\n| 2 | The category field is where it starts. | 4.1 | state ' + (bad ? 'work-itm' : 'work-item') + ', the Category field | push on r1 | | |\n| 4 | And it is saved. | | state work-item, the Save button | rest | | |\n';
   fs.writeFileSync(sb, head + rows(true));
   const opts = require('./opts')({ quick: true });
   let report = await core.check(backed.dir, opts);
@@ -47,7 +48,9 @@ test('vkit brief writes the ask with the states in it, and check covers the stor
   fs.writeFileSync(sb, head + rows(false));
   report = await core.check(backed.dir, opts);
   row = report.groups.craft.find((x) => x.id === 'storyboard-covered');
-  assert.ok(row && row.result === 'pass' && /2 rows name a state the app has/.test(row.measured) && !/neither/.test(row.measured), JSON.stringify(row));
+  assert.ok(row && row.result === 'pass' && /3 rows name a state the app has/.test(row.measured) && !/neither/.test(row.measured), JSON.stringify(row));
+  const sm = report.groups.craft.find((x) => x.id === 'sentences-match');
+  assert.ok(sm && /1 storyboard row in part 4, which the rig does not have \(PARTS has 3\)/.test(sm.measured), JSON.stringify(sm));
   console.log('brief: ' + r.states + ' state listed; covered: ' + row.measured);
 });
 

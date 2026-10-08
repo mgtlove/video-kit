@@ -11,7 +11,7 @@ The narration is the director's wording of the storyboard the expert wrote. The 
 
 ## 1. Find the narration
 
-Run `vkit handoffs ~/Developer/video/videos` (the videos live beside `video-kit`); take the video the person named, or the one marked `subject expert (video-fact-check)`. Without `vkit`, the rule is the files: a video is waiting when its `narration/FULL.md` is newer than its `fact-check.md` or there is no `fact-check.md`. Read `narration/FULL.md` (one sentence per line, in parts), `storyboard.md` (the rows the sentences came from) and `brief.md` (the outline, for the pitfalls that must be said).
+Run `vkit handoffs ~/Developer/video/videos` (the videos live beside `video-kit`; a shell without the command runs `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js handoffs ...`); take the video the person named, or the one marked `subject expert (video-fact-check)`. Without `vkit`, the rule is the files: a video is waiting when its `narration/FULL.md` is newer than its `fact-check.md` or there is no `fact-check.md`. Read `narration/FULL.md` (one sentence per line, in parts), `storyboard.md` (the rows the sentences came from) and `brief.md` (the outline, for the pitfalls that must be said).
 
 ## 2. Write `fact-check.md`
 
