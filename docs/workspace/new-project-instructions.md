@@ -8,6 +8,12 @@ This project is Matthew Truelove's own video product, `video`, at `~/Developer/v
 
 Connect the folder `~/Developer/video`. Read `claude/START-HERE.md` and the files it names, run the starter once as it says, and tell me in five lines where the roadmap stands and what you would do next. Do not change anything until I say which step we are on.
 
+## The subject expert's project (the AWS chat): one standing line
+
+Add to that project's instructions, once:
+
+> Matthew's training videos live in `~/Developer/video/videos/<video>/`, one folder per video, and the recreated apps in `~/Developer/video/apps/<family>/<tool>/`. Ideas start here: the `video-brief` skill writes the idea and the screens it needs into the folder; `capture-walkthrough` captures the screens with Matthew signed in; `video-fact-check` checks a finished narration. When he has an idea, says a video is ready for you, or asks what is waiting, run `vkit handoffs ~/Developer/video/videos` (or look at the files by the rule in the skill) and write your work into that video's or app's folder. Nothing is pasted between chats; talk about the teaching.
+
 ## What carries over from the earlier chats
 
 The decisions (`claude/decisions.md`), the carryover of lessons (`video-kit/docs/CARRYOVER.md`), the research inventory (`claude/research-to-rewrite.md`), and Matthew's working preferences: tight documentation, plan the whole sequence before acting, state failure modes before anything irreversible, verify after every step, no padding after a mistake, the fewest tools and layers, copy-paste `gh` commands for GitHub, plain English folder names, personal code under `~/Developer`.

@@ -12,6 +12,8 @@ metadata:
 
 # Capture a walkthrough with the kit's browser
 
+Who runs this: the subject expert's chat, the one that knows where to click, with the person signed in; the director's chat recreates from what lands in `captures/` (`video-recreate`). The request is `capture-request.md` in the app folder (the whole coverage of a tool, written by `video-brief` before any video exists) or in a video folder (the pickups a storyboard needs). `vkit handoffs` shows an app whose request is newer than its captures as waiting for this skill.
+
 The kit runs the Chrome already on this machine on a profile folder of its own (`~/Developer/video/chrome-profile/`, outside every repo), headless, at an exact 1920x1080 viewport with a device pixel ratio of 2, with a debugging port on localhost. The agent's eyes and hands are the Playwright MCP server pointed at that port; `vkit shoot` takes each picture. The result is the same `captures/` set the document path makes (`docs/CAPTURE.md`): `CAP-NNN.png`, `CAP-NNN.json` with the page's own colours, faces, region sizes and labels, `walkthrough.md`, `captures.csv`.
 
 ## Before the first capture on this machine

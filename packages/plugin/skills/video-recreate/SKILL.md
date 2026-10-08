@@ -11,6 +11,8 @@ metadata:
   version: "0.1.0"
 ---
 
+Who runs this: the director's chat (this project). The captures come from the subject expert's chat, which runs `capture-walkthrough` against the app's `capture-request.md` with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.
+
 # Recreating a screen from its captures
 
 The method is `docs/RECREATE.md` in the kit; this is the order of work. The rule throughout: every value is read from a capture and cited, every picture is a copy of the capture's own pixels, nothing is restyled, and what could not be read is written down. A screen with no capture is a concept scene, not a recreation.

@@ -6,12 +6,14 @@ Status: October 2026, roadmap steps 1 to 9 of 12 done and step 10 in progress (t
 
 ```
 vkit new my-video        a video is a folder; --app family/tool puts a recreated app's screens in it
-vkit app new|add-state|extract   a recreated app: one folder per tool, built from your own captures
+vkit app new|use|add-state|extract   a recreated app: one folder per tool, built from your own captures; use puts it into a video that exists, or brings the video's copy up to date
 vkit capture walkthrough.docx    the screenshots and their steps out of a Word walkthrough into captures/, the shape checked (docs/CAPTURE.md is the brief)
 vkit shoot start|"step" "did"|stop   the capture browser: Chrome on the kit's own profile at 1920x1080, headless; each shot masked, swept for private text, measured, into captures/
 vkit menu                the ten choices, one at a time, with context; --set answers one from a script
 vkit brand <name>        a brand as tokens: five colours, two faces, a mark and a banner by when and where; --check measures it
 vkit look <name>         a look pack as tokens: lightboard, code-report, studio-walkthrough, clippings, doodle, lecture-slides, archive-camera
+vkit brief               brief-request.md for the subject expert: the app's states and the storyboard table in it
+vkit handoffs            what is waiting and for whom, per video and per app; the folder is the handoff, nothing is pasted between chats
 vkit narration           the script parts against their limits, FULL.md, estimates
 vkit measure             exact clip lengths from the voice files into PARTS; the clips are the clock
 vkit frames              a still per beat: look before you record

@@ -89,9 +89,9 @@ function stripBlock(text, marks, replacement) {
 }
 
 // installApp(videoDir, ref): copy the app into the video and point the page at it
-function installApp(videoDir, ref) {
-  const r = resolveApp(ref);
-  const rig = path.join(videoDir, 'rig'), dst = path.join(rig, 'app');
+// copyAppFiles(r, dst): the app's files into a video's rig/app/. Nothing is removed: a state the
+// app no longer has stays on disk (never delete), but states.js lists only the manifest's.
+function copyAppFiles(r, dst) {
   fs.mkdirSync(path.join(dst, 'states'), { recursive: true });
   for (const f of ['app.json', 'tokens.css', 'screen.css', 'manifest.csv']) if (fs.existsSync(path.join(r.dir, f))) fs.copyFileSync(path.join(r.dir, f), path.join(dst, f));
   for (const s of r.states) fs.copyFileSync(path.join(r.dir, 'states', s.file || s.id + '.html'), path.join(dst, 'states', s.file || s.id + '.html'));
@@ -102,6 +102,18 @@ function installApp(videoDir, ref) {
     for (const f of fs.readdirSync(from)) if (fs.statSync(path.join(from, f)).isFile()) fs.copyFileSync(path.join(from, f), path.join(dst, folder, f));
   }
   fs.writeFileSync(path.join(dst, 'states.js'), statesJs(r.dir, r.states));
+}
+function writeAppMeta(videoDir, ref, r) {
+  const vj = path.join(videoDir, 'video.json');
+  const meta = JSON.parse(fs.readFileSync(vj, 'utf8'));
+  meta.app = { ref, version: r.app.version || '', source: r.dir, installed_on: new Date().toISOString().slice(0, 10), states: r.states.map((s) => s.id) };
+  if (meta.menu && meta.menu.sources) { meta.menu.sources.kind = 'app'; meta.menu.sources.app = ref; }
+  fs.writeFileSync(vj, JSON.stringify(meta, null, 2) + '\n');
+}
+function installApp(videoDir, ref) {
+  const r = resolveApp(ref);
+  const rig = path.join(videoDir, 'rig'), dst = path.join(rig, 'app');
+  copyAppFiles(r, dst);
 
   const htmlFile = path.join(rig, 'index.html');
   let html = fs.readFileSync(htmlFile, 'utf8');
@@ -117,12 +129,29 @@ function installApp(videoDir, ref) {
   const themeFile = path.join(rig, 'theme.css');
   if (fs.existsSync(themeFile)) fs.writeFileSync(themeFile, stripBlock(fs.readFileSync(themeFile, 'utf8'), MARK.css, '/* the recreated screen\'s palette comes from app/tokens.css */').text);
 
-  const vj = path.join(videoDir, 'video.json');
-  const meta = JSON.parse(fs.readFileSync(vj, 'utf8'));
-  meta.app = { ref, version: r.app.version || '', source: r.dir, installed_on: new Date().toISOString().slice(0, 10), states: r.states.map((s) => s.id) };
-  if (meta.menu && meta.menu.sources) { meta.menu.sources.kind = 'app'; meta.menu.sources.app = ref; }
-  fs.writeFileSync(vj, JSON.stringify(meta, null, 2) + '\n');
+  writeAppMeta(videoDir, ref, r);
   return r;
+}
+
+// appUse(videoDir, ref): the app into a video that already exists (the idea came before the
+// app), or the video's copy brought up to the app's current version (the app was re-captured).
+// A video holds one app; a different ref is refused by name.
+function appUse(videoDir, ref) {
+  const dir = path.resolve(videoDir || '.');
+  const vj = path.join(dir, 'video.json');
+  if (!fs.existsSync(vj)) throw new Error('no video.json in ' + dir + ' (run inside a video folder made by vkit new)');
+  const meta = JSON.parse(fs.readFileSync(vj, 'utf8'));
+  if (!meta.app || !meta.app.ref) {
+    const r = installApp(dir, ref);
+    return { action: 'installed', ref, version: r.app.version || '', states: r.states.map((s) => s.id), added: r.states.map((s) => s.id), gone: [] };
+  }
+  if (meta.app.ref !== ref) throw new Error('this video is made on ' + meta.app.ref + ', not ' + ref + '; a video holds one app, so make another video for another app');
+  const r = resolveApp(ref);
+  const before = meta.app.states || [];
+  copyAppFiles(r, path.join(dir, 'rig', 'app'));
+  const now = r.states.map((s) => s.id);
+  writeAppMeta(dir, ref, r);
+  return { action: 'updated', ref, from: meta.app.version || '', version: r.app.version || '', states: now, added: now.filter((id) => before.indexOf(id) < 0), gone: before.filter((id) => now.indexOf(id) < 0) };
 }
 
 // ---- making and growing an app ----
@@ -221,4 +250,4 @@ function appCrop(ref, captureId, opts) {
   return { file, row, width: w, height: h, scale };
 }
 
-module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, installApp, appNew, appAddState, appExtract, appCrop, MARK, MANIFEST_HEAD, CROPS_HEAD };
+module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, installApp, appUse, appNew, appAddState, appExtract, appCrop, MARK, MANIFEST_HEAD, CROPS_HEAD };
