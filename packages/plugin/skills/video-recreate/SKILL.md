@@ -4,14 +4,14 @@ description: >
   This skill should be used when the user asks "recreate the screen", "build the states from the
   captures", "make the app from these screenshots", "how close is the recreation", "crop the logo",
   "make the font", or has a captures/ folder and wants the app folder's states written. It turns a
-  capture set into measured states in apps/<family>/<tool>/, with the pictures copied from the
+  capture set into measured states in the app folder (apps/family/tool/), with the pictures copied from the
   captures, the face traced from the page, and a fidelity ledger of what is true, substituted,
   invented or missing.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
-Who runs this: the director's chat (this project). The captures come from the subject expert's chat, which runs `capture-walkthrough` against the app's `capture-request.md` with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.
+Who runs this: the director's chat (this project). The captures come from `capture-walkthrough`, run in a Claude Code session on the machine with the browser against the app's `capture-request.md` (the expert's coverage) with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.
 
 # Recreating a screen from its captures
 

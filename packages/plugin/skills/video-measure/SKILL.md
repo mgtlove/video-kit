@@ -6,7 +6,7 @@ description: >
   clip has been regenerated. It turns the clips into the rig's exact part timing without ever
   stretching anything.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Measure the voice clips

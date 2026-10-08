@@ -6,7 +6,7 @@ description: >
   or when video-menu item 4 needs a brand the video does not carry. It sets up or changes the brand
   by asking, showing what it will write, writing rig/brand/, running vkit brand and showing frames.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Apply a brand

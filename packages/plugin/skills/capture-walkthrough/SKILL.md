@@ -7,12 +7,12 @@ description: >
   own capture browser through the task and vkit shoot writes the capture set; nothing is pasted,
   nothing is redacted after the fact, and sign-in is the person's.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Capture a walkthrough with the kit's browser
 
-Who runs this: the subject expert's chat, the one that knows where to click, with the person signed in; the director's chat recreates from what lands in `captures/` (`video-recreate`). The request is `capture-request.md` in the app folder (the whole coverage of a tool, written by `video-brief` before any video exists) or in a video folder (the pickups a storyboard needs). `vkit handoffs` shows an app whose request is newer than its captures as waiting for this skill. Every `vkit` here can be spelled `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js` from a shell that has the folder but not the command.
+Who runs this: a Claude Code session on the machine that has the browser (the director's side), with the person signed in. The subject expert writes the request and knows where to click, but a cloud chat cannot run the capture browser (the rule below), so the request is the expert's and the session is the director's; the director's chat recreates from what lands in `captures/` (`video-recreate`). The request is `capture-request.md` in the app folder (the whole coverage of a tool, written by `video-brief` before any video exists) or in a video folder (the pickups a storyboard needs). `vkit handoffs` shows an app whose request is newer than its captures as waiting for this skill. Every `vkit` here can be spelled `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js` from a shell that has the folder but not the command.
 
 The kit runs the Chrome already on this machine on a profile folder of its own (`~/Developer/video/chrome-profile/`, outside every repo), headless, at an exact 1920x1080 viewport with a device pixel ratio of 2, with a debugging port on localhost. The agent's eyes and hands are the Playwright MCP server pointed at that port; `vkit shoot` takes each picture. The result is the same `captures/` set the document path makes (`docs/CAPTURE.md`): `CAP-NNN.png`, `CAP-NNN.json` with the page's own colours, faces, region sizes and labels, `walkthrough.md`, `captures.csv`.
 

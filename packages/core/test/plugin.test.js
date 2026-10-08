@@ -13,6 +13,9 @@ const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+// The plugin's version, carried by every skill; bump all together when the skills change, because
+// claude.ai keeps the uploaded copy and a re-upload is how the chats get the change (8 October 2026).
+const PLUGIN_VERSION = '0.1.1';
 const { spawnSync } = require('child_process');
 const core = require('../src');
 const { KIT } = require('../src/new');
@@ -49,7 +52,8 @@ test('every skill names its folder, and every command, flag and item it names ex
     assert.ok(fm, d + ' has no frontmatter');
     assert.strictEqual(fm.name, d, d + ' names itself ' + fm.name);
     assert.ok(fm.description && fm.description.length > 40, d + ' needs a description');
-    assert.strictEqual(fm.version, '0.1.0', d + ' version');
+    assert.ok(!/<[^>]*>/.test(fm.description), d + ": the description must not hold anything shaped like a tag (claude.ai's plugin upload refuses 'apps/<family>/<tool>' as XML, 8 October 2026)");
+    assert.strictEqual(fm.version, PLUGIN_VERSION, d + ' version: every skill carries the plugin version');
     assert.ok(!/—/.test(md), d + ' has an em dash');
     for (const m of md.matchAll(/`(?:PW_CHANNEL=chrome )?vkit ([a-z-]+)((?:[^`]*))`/g)) {
       const cmd = m[1];
@@ -75,7 +79,7 @@ test('the guard hook passes its own cases', () => {
   const hooks = JSON.parse(fs.readFileSync(path.join(PLUGIN, 'hooks', 'hooks.json'), 'utf8'));
   assert.ok(hooks.hooks.PreToolUse[0].hooks[0].command.includes('guard.py'));
   const plugin = JSON.parse(fs.readFileSync(path.join(PLUGIN, '.claude-plugin', 'plugin.json'), 'utf8'));
-  assert.strictEqual(plugin.version, '0.1.0');
+  assert.strictEqual(plugin.version, PLUGIN_VERSION);
   console.log(m[1] + ' hook cases pass; plugin ' + plugin.name + ' ' + plugin.version);
 });
 

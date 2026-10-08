@@ -2,7 +2,7 @@
 name: video-brief
 description: Use in the subject expert's chat when the user has an idea for a video, says a video is ready for them, asks what is waiting, or asks to outline or storyboard a video or which screens are missing. Starts the video folder with brief.md and the screens it needs, and later answers the kit's brief-request.md with the storyboard rows and capture-request.md, all as files in the video folder.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # The idea, and the brief request
@@ -17,7 +17,7 @@ The videos live in the `videos/` folder beside `video-kit` (on Matthew's Mac, `~
 2. Write `brief.md` (section 2 below).
 3. Write the screens the teaching needs, in the order the tool presents them, with what each picture must show. Where they go depends on the app:
    - the app exists (`apps/<family>/<tool>/manifest.csv` has states): write `capture-request.md` in the video folder with only the screens the app lacks;
-   - no app yet: `vkit app new <family>/<tool>` once, then write `apps/<family>/<tool>/capture-request.md`, the whole coverage of the tool for this video. That file is the walkthrough the `capture-walkthrough` skill runs, in this chat, with the person signed in. The director's chat recreates from the captures.
+   - no app yet: `vkit app new <family>/<tool>` once, then write `apps/<family>/<tool>/capture-request.md`, the whole coverage of the tool for this video. That file is the walkthrough the `capture-walkthrough` skill runs in a Claude Code session on the person's machine (a cloud chat cannot run the capture browser), with the person signed in. The director's chat recreates from the captures.
 4. Say what was written. `vkit handoffs` now shows the app waiting for its captures, or the video waiting for the director to bring the app in (`vkit app use`) and write `brief-request.md`. The storyboard rows wait for that file, because they name states by id and the ids do not exist before the recreation.
 
 ## B. The brief request (the kit wrote `brief-request.md`)

@@ -2,7 +2,7 @@
 name: video-fact-check
 description: Use in the subject expert's chat when the user says a narration is ready to check, asks what is waiting, or asks to fact check or review a video's script. Finds the video's narration/FULL.md and storyboard.md, writes fact-check.md beside them with a verdict per sentence.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Fact-checking a narration
@@ -11,7 +11,7 @@ The narration is the director's wording of the storyboard the expert wrote. The 
 
 ## 1. Find the narration
 
-Run `vkit handoffs ~/Developer/video/videos` (the videos live beside `video-kit`; a shell without the command runs `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js handoffs ...`); take the video the person named, or the one marked `subject expert (video-fact-check)`. Without `vkit`, the rule is the files: a video is waiting when its `narration/FULL.md` is newer than its `fact-check.md` or there is no `fact-check.md`. Read `narration/FULL.md` (one sentence per line, in parts), `storyboard.md` (the rows the sentences came from) and `brief.md` (the outline, for the pitfalls that must be said).
+Run `vkit handoffs ~/Developer/video/videos` (the videos live beside `video-kit`; a shell without the command runs `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js handoffs ...`); take the video the person named, or the one marked `subject expert (video-fact-check)`. Without `vkit`, the rule is the files: a video is waiting when its `narration/FULL.md` is newer than its `fact-check.md` or there is no `fact-check.md`. Read `narration/FULL.md` (one sentence per line, in parts), `storyboard.md` (the rows the sentences came from) and `brief.md` (the outline, for the pitfalls that must be said). Then open the captures the rows cite (`rig/app/captures/` is not in the video; the pictures are in the app folder, `apps/family/tool/captures/CAP-NNN.png`) and judge each sentence against the picture, not against the manifest's note or the row's words: a count, a label, a state of a control. The first real check found "all four boxes checked" copied through four files when the picture showed one control and four it governs.
 
 ## 2. Write `fact-check.md`
 
@@ -34,4 +34,4 @@ One line: the video's name, the counts. `vkit handoffs` now shows the video wait
 - The console's own labels are the spelling: `Block all public access`, not "block public access toggle".
 - Do not rewrite sentences. A correction is the fact, not a replacement line; the director rewrites to the craft rules.
 - If a sentence refers to a screen moment no state has, say so: that is a pickup, not a fact.
-- Do not touch `narration/`, `storyboard.md` or `brief.md`; the verdicts are the only file this skill writes.
+- Do not touch `narration/` or `brief.md`. The one exception on `storyboard.md`: a `drift` whose cause is the expert's own row (the order, a wrong state, a screen the console never shows at that point) is fixed in the rows in the same pass, said so in the notes, and `vkit handoffs` then sends the director back to the words; the director never reorders rows, and the expert never rewords sentences.

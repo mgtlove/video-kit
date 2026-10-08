@@ -5,7 +5,7 @@ description: >
   the rig", "does the video look right", or after any change to a video's rig, theme, timeline or
   to the engine. A rig is judged by looking at rendered frames, never by reading code.
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Render and judge frames

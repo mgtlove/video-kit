@@ -66,13 +66,24 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   const one = () => core.handoffs(v.dir)[0];
   const step = (who, skill, re) => { const h = one(); assert.strictEqual(h.who + ' / ' + h.skill, who + ' / ' + skill, JSON.stringify(h)); assert.ok(re.test(h.what), h.what); };
   step('director', 'vkit brief', /app example\/placeholder is in; no brief-request/);
+  touch('storyboard.md', fs.readFileSync(path.join(v.dir, 'storyboard.md'), 'utf8'));   /* the starter's rows, dated before everything that follows */
   core.briefRequest(v.dir); touch('brief-request.md', fs.readFileSync(path.join(v.dir, 'brief-request.md'), 'utf8'));
   step('subject expert', 'video-brief', /waits for brief\.md/);
   touch('brief.md', '# Outline'); touch('capture-request.md', 'No pickups.');
   step('director', 'video-script', /expert answered \(capture-request\.md listed; pickups first\)/);
   touch('narration/FULL.md', 'One line.');
   step('subject expert', 'video-fact-check', /FULL\.md waits for fact-check/);
-  touch('fact-check.md', '| 1 | One line. | true | |');
+  // the verdicts are read, not the file's presence: open verdicts send it back to the director, then all true to the producer
+  touch('fact-check.md', '| Part | Sentence | Verdict | Note |\n|---|---|---|---|\n| 1 | One line. | wrong | says the wrong thing |\n| 1 | Two. | caveat | add a clause |\n| 1 | Three. | true | |\n\ntrue 3, wrong 0 (the counts line lies; the rows are read)');
+  step('director', 'video-script, step 5', /1 wrong, 1 caveat to apply/);
+  touch('narration/FULL.md', 'One line, fixed.');
+  step('subject expert', 'video-fact-check', /waits for fact-check/);
+  touch('fact-check.md', '| 1 | One line, fixed. | true | |');
+  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  // rows changed after the words: the sentences follow the rows
+  touch('storyboard.md', fs.readFileSync(path.join(v.dir, 'storyboard.md'), 'utf8'));
+  step('director', 'video-script, step 3', /storyboard\.md is newer than the narration/);
+  touch('narration/FULL.md', 'One line, following the rows.'); touch('fact-check.md', '| 1 | One line, following the rows. | true | |');
   step('producer', 'video-script, step 6', /checked; the words want a yes/);
   touch('voice/part-1.m4a', 'x'); touch('voice/part-2.m4a', 'x');
   step('director', 'video-measure', /2 clips in voice/);
@@ -118,7 +129,7 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   assert.deepStrictEqual(core.handoffs(tmp).filter((h) => h.name === 'app aws/demo'), [], 'a quiet app is not listed');
   touchAt(path.join(a.dir, 'capture-request.md'), 'Buckets list; Create bucket form', 10);
   let ah = core.handoffs(tmp).find((h) => h.name === 'app aws/demo');
-  assert.ok(ah && ah.who === 'subject expert' && ah.skill === 'capture-walkthrough', JSON.stringify(ah));
+  assert.ok(ah && ah.who === 'director' && ah.skill === 'capture-walkthrough', JSON.stringify(ah));
   touchAt(path.join(a.dir, 'captures', 'CAP-001.png'), 'png', 20);
   ah = core.handoffs(tmp).find((h) => h.name === 'app aws/demo');
   assert.ok(ah && ah.who === 'director' && ah.skill === 'video-recreate', JSON.stringify(ah));

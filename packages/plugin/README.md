@@ -7,15 +7,17 @@ Install from a clone of `video-kit`:
 ```
 /plugin marketplace add ./video-kit/packages/plugin       Claude Code, from the folder holding video-kit
 /plugin install vkit@vkit-local                            then install the plugin from that marketplace
-cd packages/plugin && zip -r ../../vkit.plugin . -x '*__pycache__*' -x '*.DS_Store'     the desktop app: open vkit.plugin
+cd packages && zip -r ~/Desktop/vkit-plugin.zip plugin -x '*/node_modules/*' -x '*.DS_Store'     claude.ai: Customize, Plugins, Upload a plugin
 ```
+
+The claude.ai upload puts the plugin on the account, so every chat (the director's project and the subject expert's) has all the skills, and a kit change is one re-upload with a higher `version` in `.claude-plugin/plugin.json` (the test pins every skill to the plugin's version). The upload validates each skill: a description must not hold anything shaped like a tag (`apps/<family>/<tool>` was refused as XML on 8 October 2026; `npm test` now refuses it first).
 
 | Skill | When |
 |---|---|
 | `vkit-start` | the start of a session in the `video` folder: checks the install and the repos, prints where a video stands (`vkit menu --show`, engine version, locks, brand) |
 | `video-menu` | the ten choices a video makes, one item at a time, with the reason; writes only through `vkit menu --set`; options read with `vkit menu --explain` |
 | `video-build` | making a video end to end, in order, with the rules that decide whether the footage is right |
-| `capture-walkthrough` | the subject expert's chat captures, with the person signed in: the kit's own Chrome on its own profile at exactly 1920x1080, driven through the Playwright MCP server, `vkit shoot` at each screen with masks and a text sweep; the person signs in once in a visible window |
+| `capture-walkthrough` | a Claude Code session on the machine with the browser captures, against the expert's request, with the person signed in: the kit's own Chrome on its own profile at exactly 1920x1080, driven through the Playwright MCP server, `vkit shoot` at each screen with masks and a text sweep; the person signs in once in a visible window |
 | `video-recreate` | from a capture set to measured states in the app folder: tokens with sources, pictures cropped out of the captures (`vkit app crop`), the face traced from the page (`vkit face`), states placed by scan, `vkit check`'s fidelity rows looked at side by side, and `fidelity.md`, the ledger of what is true, substituted, invented or missing |
 | `video-brief` | for the subject expert's chat, where ideas start: writes `brief.md` and the screens the teaching needs (the app's coverage when no app exists yet); later finds the video waiting for it (`vkit handoffs`), reads its `brief-request.md` (written by `vkit brief` with the app's states in it) and writes the storyboard rows and `capture-request.md` into the folder; never the final narration, never an invented screen |
 | `video-script` | the director: reads the expert's three files, checks `storyboard-covered`, writes `narration/part-N.md` under the craft rules and the narrator's voice, gates it with `vkit narration`, leaves `FULL.md` for the fact check; recording and the timeline come after |
