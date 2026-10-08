@@ -40,7 +40,7 @@ test('every skill names its folder, and every command, flag and item it names ex
   for (const m of cli.matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
   const items = core.menu.items().map((i) => i.key);
   const dirs = fs.readdirSync(path.join(PLUGIN, 'skills'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepStrictEqual(dirs, ['brand-apply', 'capture-walkthrough', 'video-build', 'video-capture', 'video-check', 'video-frames', 'video-measure', 'video-menu', 'video-recreate', 'vkit-start']);
+  assert.deepStrictEqual(dirs, ['brand-apply', 'capture-walkthrough', 'video-brief', 'video-build', 'video-capture', 'video-check', 'video-fact-check', 'video-frames', 'video-measure', 'video-menu', 'video-recreate', 'video-script', 'vkit-start']);
   const named = new Set();
   for (const d of dirs) {
     const file = path.join(PLUGIN, 'skills', d, 'SKILL.md');

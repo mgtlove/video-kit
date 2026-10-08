@@ -395,6 +395,15 @@ async function check(videoDir, opts) {
   add('craft', row('sentence-length', ['C-PACE-3', 'C-ACC-16'], narration.every((n) => n === null) ? 'not measured' : (longSentences.length ? 'fail' : 'pass'), narration.every((n) => n === null) ? 'no narration/part-N.md' : (longSentences.length ? longSentences.join('; ') : 'no sentence over ' + Pa.maxWordsPerSentence + ' words'), Pa.maxWordsPerSentence + ' words', 'narration/'));
   const mismatch = []; parts.forEach((_, i) => { const sb = rows.filter((r) => r.part === i + 1).length, na = narration[i] ? narration[i].length : null; if (na !== null && sb !== na) mismatch.push('part ' + (i + 1) + ': ' + sb + ' storyboard rows, ' + na + ' narration sentences'); });
   add('craft', row('sentences-match', ['C-PACE-5', 'C-ACC-2'], narration.every((n) => n === null) ? 'not measured' : (mismatch.length ? 'fail' : 'pass'), mismatch.length ? mismatch.join('; ') : rows.length + ' storyboard rows match the narration sentences part by part', 'one row per sentence', 'storyboard.md, narration/'));
+
+  // ---- the storyboard names screens the app has: a row's On screen begins "state <id>" (or "scene <name>" for a concept scene) ----
+  if (meta.app && meta.app.ref) {
+    const ids = new Set(apps.readManifest(path.join(rig, 'app')).map((s) => s.id));
+    const named = rows.map((r) => { const m = /^\s*state\s+`?([a-z0-9][a-z0-9-]*)`?/i.exec(r.on || ''); return m ? m[1] : null; });
+    const unknown = rows.filter((r, i) => named[i] && !ids.has(named[i])).map((r, i2, arr) => 'part ' + r.part + ' "' + r.text.slice(0, 32) + (r.text.length > 32 ? '...' : '') + '" names state ' + /^\s*state\s+`?([a-z0-9][a-z0-9-]*)`?/i.exec(r.on)[1] + ', which the app does not have');
+    const unnamed = rows.filter((r, i) => !named[i] && !/^\s*scene\b/i.test(r.on || '')).length;
+    add('craft', row('storyboard-covered', ['C-COMP-16'], unknown.length ? 'fail' : (rows.length ? 'pass' : 'not measured'), unknown.length ? unknown.slice(0, 6).join('; ') : (rows.length ? named.filter(Boolean).length + ' rows name a state the app has' + (unnamed ? '; ' + unnamed + ' name neither a state nor a scene (a concept scene says "scene <name>")' : '') : 'no storyboard rows yet'), 'every state a row names exists in rig/app/manifest.csv', 'storyboard.md, rig/app/manifest.csv'));
+  }
   const measured = meta.parts && meta.parts.measured_on;
   if (!measured) add('craft', row('narration-rate', ['C-PACE-1', 'C-PACE-2'], 'not measured', 'PARTS are estimates until vkit measure writes the clip lengths', Pa.wordsPerMinute.join(' to ') + ' wpm, floor ' + Pa.wordsPerMinuteFloor, 'vkit measure (step 7)'));
   else { const slow = []; parts.forEach((sec, i) => { if (!narration[i]) return; const w = narration[i].reduce((a, l) => a + words(l), 0), wpm = w / (sec / 60); if (wpm < Pa.wordsPerMinuteFloor || wpm > Pa.wordsPerMinute[1]) slow.push('part ' + (i + 1) + ': ' + Math.round(wpm) + ' wpm'); }); add('craft', row('narration-rate', ['C-PACE-1', 'C-PACE-2'], slow.length ? 'fail' : 'pass', slow.length ? slow.join('; ') : 'every part within range', Pa.wordsPerMinute.join(' to ') + ' wpm', 'narration/, voice/')); }

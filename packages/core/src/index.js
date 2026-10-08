@@ -13,6 +13,7 @@ const { check } = require('./check');
 const { syncReference } = require('./sync');
 const { applyLook } = require('./look');
 const { narration, measure } = require('./words');
+const { briefRequest } = require('./brief');
 const brand = require('./brand');
 const captureMod = require('./capture');
 const shoot = require('./shoot');
@@ -30,6 +31,7 @@ module.exports = {
   apps: apps,                                // recreated apps: resolveApp, installApp, appNew, appAddState, appExtract
   menu: menu,                                // the ten choices: items, show, set, explain, format; options from looks/, brands/, patterns/, apps
   narration: narration,                      // parts -> FULL.md, limits, estimates, a PARTS line
+  briefRequest: briefRequest,                // the ask to the subject expert, with the app's states and the storyboard template in it
   measure: measure,                          // clip files -> exact PARTS in the page and video.json; re-timing items lock
   frames: frames,                            // rig -> a PNG per beat (seek-correct)
   renderVideo: renderVideo,                  // rig -> every frame at 30 fps -> mux with clips -> MP4, captions sidecar

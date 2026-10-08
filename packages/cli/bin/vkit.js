@@ -12,6 +12,7 @@ const COMMANDS = {
   'shoot':          ['start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop', 'the capture browser: Chrome on the kit\'s own profile at 1920x1080, ratio 2, headless (--show for signing in); shoot takes the page-only picture into dir/captures/ after hiding the masks in dir/shoot.json and sweeping the text; status says where the page is and how old the session is'],
   'face':           ['<name> --family "<css family>" [--weights 400,700] [--into dir] [--sample text]', 'a typeface of our own from the page open in the capture browser: each glyph drawn at 1000 px and traced, widths and kerning measured, into dir/faces/; the sample line set in both faces and the differing pixels counted'],
   'capture':        ['<walkthrough.docx> [--into dir]', 'read a walkthrough document (docs/CAPTURE.md) into dir/captures/: CAP-NNN.png in reading order, walkthrough.md, captures.csv; checks PNG, size, unique, under a step; exit 1 on a failing row'],
+  'brief':          ['[dir]', 'write brief-request.md: the ask to the subject expert, with the app\'s states and the storyboard template already in it (the video-brief skill answers it)'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
   'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
   'frames':         ['[dir] [times...|--every N]', 'a still per beat so you can look before recording anything'],
@@ -44,7 +45,7 @@ function progressSink() {
 function help() {
   console.log('vkit <command>\n');
   for (const [name, [args, what]] of Object.entries(COMMANDS)) { const head = name + ' ' + args; console.log(head.length > 32 ? '  ' + head + '\n' + ' '.repeat(36) + what : '  ' + head.padEnd(34) + what); }
-  console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames; nothing downloads a browser.\nLong commands show a progress line (a bar on a terminal, plain lines in a pipe); VKIT_QUIET=1 turns it off.');
+  console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames, render and check; shoot and face use it without being told; nothing downloads a browser.\nLong commands show a progress line (a bar on a terminal, plain lines in a pipe); VKIT_QUIET=1 turns it off.');
 }
 
 async function main() {
@@ -52,6 +53,7 @@ async function main() {
   if (!cmd || cmd === '--help' || cmd === '-h') { help(); return 0; }
   if (!COMMANDS[cmd]) { console.error('unknown command: ' + cmd + '. Try vkit --help'); return 2; }
   const channel = process.env.PW_CHANNEL || undefined;
+  const captureChannel = process.env.PW_CHANNEL || 'chrome';   /* the capture browser only ever means the Chrome already here */
 
   if (cmd === 'new') {
     let name = null, app = null;
@@ -131,7 +133,7 @@ async function main() {
     const sub = args[0];
     const flags = {}, pos = [];
     for (let i = 1; i < args.length; i++) { if (args[i] === '--into') flags.into = args[++i]; else if (args[i] === '--show') flags.show = true; else if (args[i] === '--allow-hits') flags.allowHits = true; else if (args[i] === '--port') flags.port = args[++i]; else pos.push(args[i]); }
-    if (sub === 'start') { const r = await S.start({ show: flags.show, channel, port: flags.port }); console.log('capture browser ' + (r.show ? 'visible' : 'headless') + ', pid ' + r.pid + ', port ' + r.port + ', ' + r.browser + ', viewport ' + r.viewport.w + 'x' + r.viewport.h + ' at ' + r.viewport.dpr + 'x, profile ' + r.profile + (r.show ? '\nSign in in that window, then vkit shoot stop and vkit shoot start to carry the session on headless.' : '\nThe Playwright MCP server registered for this folder connects to port ' + r.port + ' (the agent\'s eyes and hands); vkit shoot "<step>" "<what was done>" --into <app or video folder> at each screen.')); return 0; }
+    if (sub === 'start') { const r = await S.start({ show: flags.show, channel: captureChannel, port: flags.port }); console.log('capture browser ' + (r.show ? 'visible' : 'headless') + ', pid ' + r.pid + ', port ' + r.port + ', ' + r.browser + ', viewport ' + r.viewport.w + 'x' + r.viewport.h + ' at ' + r.viewport.dpr + 'x, profile ' + r.profile + (r.show ? '\nSign in in that window, then vkit shoot stop and vkit shoot start to carry the session on headless.' : '\nThe Playwright MCP server registered for this folder connects to port ' + r.port + ' (the agent\'s eyes and hands); vkit shoot "<step>" "<what was done>" --into <app or video folder> at each screen.')); return 0; }
     if (sub === 'stop') { const r = await S.stop(); console.log(r.stopped ? 'stopped pid ' + r.pid : r.reason); return 0; }
     if (sub === 'status') { const r = await S.status({ into: flags.into }); console.log(S.formatStatus(r)); return r.running ? 0 : 1; }
     if (sub === 'go') { if (!pos[0]) { console.error('vkit shoot go <url>'); return 2; } const r = await S.go(pos[0]); console.log('at ' + r.url + (r.title ? '  (' + r.title + ')' : '')); return 0; }
@@ -142,7 +144,7 @@ async function main() {
   if (cmd === 'face') {
     let name = null, family = null, weights = null, into = '.', sample = null;
     for (let i = 0; i < args.length; i++) { if (args[i] === '--family') family = args[++i]; else if (args[i] === '--weights') weights = args[++i].split(',').map(Number); else if (args[i] === '--into') into = args[++i]; else if (args[i] === '--sample') sample = args[++i]; else name = args[i]; }
-    const r = await core.face(name, { family, weights, into, sample });
+    const r = await core.face(name, { family, weights, into, sample, channel: captureChannel });
     console.log(core.faceFormat(r));
     return 0;
   }
@@ -162,6 +164,11 @@ async function main() {
     if (r.done.looks) console.log(r.done.looks.count + ' looks into looks/ from ' + r.done.looks.source);
     if (r.done.patterns) console.log(r.done.patterns.count + ' moves into patterns/index.json from ' + r.done.patterns.source);
     console.log('reference ' + r.reference + (r.done.rules && r.done.rules.commit ? ' at ' + r.done.rules.commit : ' (no commit recorded)'));
+    return 0;
+  }
+  if (cmd === 'brief') {
+    const r = core.briefRequest(pos[0] || '.');
+    console.log('wrote ' + path.relative(process.cwd(), r.file) + ' for ' + r.name + ' with ' + r.states + ' state' + (r.states === 1 ? '' : 's') + ' of the app listed. Paste it to the subject expert\'s chat; its video-brief skill answers with the outline, the storyboard rows and the pickup list.');
     return 0;
   }
   if (cmd === 'narration') {

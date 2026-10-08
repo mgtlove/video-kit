@@ -12,7 +12,7 @@ Work in CSS px on the 2x picture (a picture pixel is half a CSS px; half-pixel p
 - the ink bands of text in an x range (the top of the ink of a 14 px line is 5.5 below its 20 px box; 12 px is 4 below 16; 18 px is 3.5 below 24; 24 px is 5.5 below 30), so a text box is placed by its ink and lands where the capture's does, whatever face is in use;
 - a colour by the darkest three percent of a region's pixels for text (anti-aliasing never reaches the true colour at the edges), by one pixel in the middle of a flat area for grounds.
 
-The values file (`CAP-NNN.json`) has the computed colours, sizes and weights of what the grabber caught; the pixels have everything else. When the two disagree the computed value wins for a property the browser reports (a weight of 500 reads as bold in a picture) and the pixel for a position.
+The values file (`CAP-NNN.json`) has the computed colours, sizes and weights of what the grabber caught; the pixels have everything else. When the two disagree the computed value wins for a property the browser reports (a weight of 500 reads as bold in a picture, and a heading the file calls 20 px is 20 px even when the eye says 18) and the pixel for a position. The S3 recreation lost an evening to two sizes typed by eye against a value the file had stated; the cap height of one capital letter, divided by the face's cap-height ratio, is the two-second check that would have caught it.
 
 ## 2. Tokens first, with their sources
 

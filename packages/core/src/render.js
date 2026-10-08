@@ -49,7 +49,7 @@ function storyboardRows(videoDir, parts) {
     const cells = line.trim().slice(1, -1).split('|').map((c) => c.trim());
     const part = Number(cells[0]), start = Number(cells[2]);
     if (!Number.isInteger(part) || part < 1 || part > parts.length || !cells[1] || isNaN(start)) continue;
-    rows.push({ part, text: cells[1], start });
+    rows.push({ part, text: cells[1], start, on: cells[3] || '' });
   }
   return rows;
 }

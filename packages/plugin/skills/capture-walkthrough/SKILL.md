@@ -21,7 +21,7 @@ The kit runs the Chrome already on this machine on a profile folder of its own (
 
 ## Signing in (the person's step)
 
-Run `PW_CHANNEL=chrome vkit shoot start --show`. A visible Chrome window opens on the kit's profile. Tell the person to sign in there (for AWS: the access portal URL from the request, then the capture account and its permission set) and to say when the console is up. Then `vkit shoot stop` and `PW_CHANNEL=chrome vkit shoot start` (headless). The session carries over in Chrome's own cookie store; nothing is exported. `vkit shoot status --into <app folder>` must now show the console URL, `viewport 1920x1080 at 2x`, and the session's age. The session clock started at sign-in, not at the first picture; a one-hour session means the whole capture has to finish inside the hour, so do not start until the request is read and the screens are listed.
+Run `vkit shoot start --show` (the capture browser is the Chrome already on this machine; `PW_CHANNEL` is not needed for shoot or face). A visible Chrome window opens on the kit's profile. Tell the person to sign in there (for AWS: the access portal URL from the request, then the capture account and its permission set) and to say when the console is up. Then `vkit shoot stop` and `PW_CHANNEL=chrome vkit shoot start` (headless). The session carries over in Chrome's own cookie store; nothing is exported. `vkit shoot status --into <app folder>` must now show the console URL, `viewport 1920x1080 at 2x`, and the session's age. The session clock started at sign-in, not at the first picture; a one-hour session means the whole capture has to finish inside the hour, so do not start until the request is read and the screens are listed.
 
 A visible window cannot reach 1920x1080 on a laptop screen; it is for signing in, never for shooting. `vkit shoot` refuses a shot whose viewport is not 1920x1080 and says so.
 
@@ -42,7 +42,7 @@ When every screen is done: `vkit shoot stop` (it asks the browser to close itsel
 ## When it goes wrong
 
 - `the page is a sign-in page`: the session has ended (the clock started at sign-in) or the person has not signed in. The message says which it can tell. `vkit shoot stop`, `start --show`, sign in, `stop`, `start`. Report it as the clock running out when the session age says so, not as a browser fault.
-- `no browser: set PW_CHANNEL=chrome`: the kit was started without the Chrome channel; nothing downloads a browser.
+- `no browser: set PW_CHANNEL=chrome`: an older kit, or Chrome is not installed where the kit looks; nothing downloads a browser.
 - `the capture browser is already running`: `vkit shoot status`, then `stop` if it is stale.
 - The MCP server cannot connect: `vkit shoot start` must run before the MCP's first call; check the port in `vkit shoot status` matches the one the MCP was added with.
 
