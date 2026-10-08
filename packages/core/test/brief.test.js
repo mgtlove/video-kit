@@ -71,18 +71,33 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   step('subject expert', 'video-brief', /waits for brief\.md/);
   touch('brief.md', '# Outline'); touch('capture-request.md', 'No pickups.');
   step('director', 'video-script', /expert answered \(capture-request\.md listed; pickups first\)/);
-  touch('narration/FULL.md', 'One line.');
+  touch('narration/FULL.md', '# Part 1\nOne line.\nTwo.\nThree.');
   step('subject expert', 'video-fact-check', /FULL\.md waits for fact-check/);
   // the verdicts are read, not the file's presence: open verdicts send it back to the director, then all true to the producer
   touch('fact-check.md', '| Part | Sentence | Verdict | Note |\n|---|---|---|---|\n| 1 | One line. | wrong | says the wrong thing |\n| 1 | Two. | caveat | add a clause |\n| 1 | Three. | true | |\n\ntrue 3, wrong 0 (the counts line lies; the rows are read)');
   step('director', 'video-script, step 5', /1 wrong, 1 caveat to apply/);
-  touch('narration/FULL.md', 'One line, fixed.');
-  step('subject expert', 'video-fact-check', /waits for fact-check/);
-  touch('fact-check.md', '| 1 | One line, fixed. | true | |');
+  // a check is current by its sentences, not its date: new words with the old check on file go back to the expert
+  touch('narration/FULL.md', 'One line, fixed.\nTwo.\nThree.');
+  step('subject expert', 'video-fact-check', /waits for fact-check.*other sentences/);
+  touch('fact-check.md', '| 1 | One line, fixed. | true | |\n| 1 | Two. | true | |\n| 1 | Three. | true | |');
   step('producer', 'video-script, step 6', /checked; the words want a yes/);
-  // rows changed after the words: the sentences follow the rows
-  touch('storyboard.md', fs.readFileSync(path.join(v.dir, 'storyboard.md'), 'utf8'));
-  step('director', 'video-script, step 3', /storyboard\.md is newer than the narration/);
+  // the brief changed after the words but the check on file is of these very words (the expert checked after the change): nothing is owed
+  touch('brief.md', '# Outline, revised');
+  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  // the brief changed and the check is of other words: the director looks again before the expert does
+  touch('narration/FULL.md', 'One line, fixed again.\nTwo.\nThree.'); touch('brief.md', '# Outline, revised twice');
+  step('director', 'video-script, step 3', /brief\.md changed after the words/);
+  touch('narration/FULL.md', 'One line, fixed again.\nTwo.\nThree.');
+  step('subject expert', 'video-fact-check', /waits for fact-check/);
+  touch('fact-check.md', '| 1 | One line, fixed again. | true | |\n| 1 | Two. | true | |\n| 1 | Three. | true | |');
+  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  // rows touched after the words with the same sentences (a Card, a Camera): nothing is owed; a changed sentence is
+  const sbText = fs.readFileSync(path.join(v.dir, 'storyboard.md'), 'utf8');
+  const head = sbText.split('\n').filter((l) => !/^\|\s*\d/.test(l)).join('\n');
+  touch('storyboard.md', head + '\n| 1 | One line, fixed again. | | state work-item, the form | rest | A card | |\n| 1 | Two. | | state work-item | rest | | |\n| 1 | Three. | | state work-item | rest | | |\n');
+  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  touch('storyboard.md', head + '\n| 1 | One line, following the rows. | | state work-item, the form | rest | | |\n');
+  step('director', 'video-script, step 3', /storyboard\.md is newer than the narration and its sentences differ/);
   touch('narration/FULL.md', 'One line, following the rows.'); touch('fact-check.md', '| 1 | One line, following the rows. | true | |');
   step('producer', 'video-script, step 6', /checked; the words want a yes/);
   touch('voice/part-1.m4a', 'x'); touch('voice/part-2.m4a', 'x');

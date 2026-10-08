@@ -60,6 +60,17 @@ function handoff(dir) {
   const fact = mtime(path.join(dir, 'fact-check.md'));
   const sb = mtime(path.join(dir, 'storyboard.md'));
   const verdicts = fact ? factVerdicts(path.join(dir, 'fact-check.md')) : null;
+  // the check is current when its sentences are the narration's, in order; dates cannot tell that
+  let fullLines = [];
+  try {
+    const all = fs.readFileSync(path.join(dir, 'narration', 'FULL.md'), 'utf8').split('\n').map((l) => l.trim());
+    const first = all.findIndex((l) => /^#{1,3}\s*Part\b/i.test(l));      /* vkit narration writes a title and a note before the parts */
+    fullLines = (first < 0 ? all : all.slice(first)).filter((l) => l && !/^#/.test(l));
+  } catch (e) { fullLines = []; }
+  let sbLines = [];
+  try { sbLines = fs.readFileSync(path.join(dir, 'storyboard.md'), 'utf8').split('\n').filter((l) => /^\|\s*\d+\s*\|/.test(l)).map((l) => l.split('|')[2].trim()); } catch (e) { sbLines = []; }
+  const rowsDiffer = sb > full && !(sbLines.length === fullLines.length && sbLines.every((t, i) => t === fullLines[i]));
+  const checkCurrent = !!(verdicts && verdicts.sentences.length && verdicts.sentences.length === fullLines.length && verdicts.sentences.every((t, i) => t === fullLines[i]));
   let voice = [];
   try { voice = fs.readdirSync(path.join(dir, 'voice')).filter((f) => /^part-\d+\.(m4a|wav|mp3|aac)$/i.test(f)); } catch (e) { voice = []; }
   let meta = {}; try { meta = JSON.parse(fs.readFileSync(path.join(dir, 'video.json'), 'utf8')); } catch (e) { meta = {}; }
@@ -69,10 +80,11 @@ function handoff(dir) {
   else if (!req && brief && !app) { who = 'director'; what = 'the idea is here (brief.md' + (pickups ? ', capture-request.md' : '') + ') and no app is in the video; once the app is captured and recreated, vkit app use family/tool, then vkit brief'; skill = 'vkit app use'; }
   else if (!req) { who = 'director'; what = 'app ' + app + ' is in; no brief-request.md yet'; skill = 'vkit brief'; }
   else if (brief < req) { who = 'subject expert'; what = 'brief-request.md waits for brief.md, the storyboard rows and capture-request.md'; skill = 'video-brief'; }
-  else if (!full || full < brief) { who = 'director'; what = 'the expert answered' + (pickups >= brief ? ' (capture-request.md listed; pickups first)' : '') + '; no narration/FULL.md newer than brief.md'; skill = 'video-script'; }
-  else if (fact < full) { who = 'subject expert'; what = 'narration/FULL.md waits for fact-check.md'; skill = 'video-fact-check'; }
-  else if (sb > full) { who = 'director'; what = 'storyboard.md is newer than the narration (rows changed); the sentences follow the rows'; skill = 'video-script, step 3'; }
-  else if (verdicts && verdicts.open) { who = 'director'; what = 'fact-check.md has ' + verdicts.summary + ' to apply, then vkit narration again'; skill = 'video-script, step 5'; }
+  else if (!full) { who = 'director'; what = 'the expert answered' + (pickups >= brief ? ' (capture-request.md listed; pickups first)' : '') + '; no narration/FULL.md yet'; skill = 'video-script'; }
+  else if (rowsDiffer) { who = 'director'; what = 'storyboard.md is newer than the narration and its sentences differ; the sentences follow the rows'; skill = 'video-script, step 3'; }
+  else if (!checkCurrent && brief > full) { who = 'director'; what = 'brief.md changed after the words; the words get another look, then vkit narration'; skill = 'video-script, step 3'; }
+  else if (!checkCurrent) { who = 'subject expert'; what = 'narration/FULL.md waits for fact-check.md' + (fact ? ' (the check on file is of other sentences)' : ''); skill = 'video-fact-check'; }
+  else if (verdicts.open) { who = 'director'; what = 'fact-check.md has ' + verdicts.summary + ' to apply, then vkit narration again'; skill = 'video-script, step 5'; }
   else if (!voice.length) { who = 'producer'; what = 'the narration is checked; the words want a yes and a recording (voice/part-N.m4a)'; skill = 'video-script, step 6'; }
   else { who = 'director'; what = voice.length + ' clip' + (voice.length === 1 ? '' : 's') + ' in voice/; the clips are the clock'; skill = 'video-measure'; }
   return { name, dir, who, what, skill };
@@ -81,15 +93,16 @@ function handoff(dir) {
 // director; the file's own counts line is not trusted, the rows are read.
 function factVerdicts(file) {
   const counts = { true: 0, wrong: 0, caveat: 0, drift: 0 };
+  const sentences = [];
   for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
     if (!/^\|\s*\d+\s*\|/.test(line)) continue;
     const cells = line.split('|').map((c) => c.trim());
     const v = (cells[3] || '').toLowerCase();
-    if (v in counts) counts[v]++;
+    if (v in counts) { counts[v]++; sentences.push(cells[2] || ''); }
   }
   const open = counts.wrong + counts.caveat + counts.drift;
   const parts = ['wrong', 'caveat', 'drift'].filter((k) => counts[k]).map((k) => counts[k] + ' ' + k);
-  return { counts, open, summary: parts.join(', ') || 'nothing' };
+  return { counts, open, sentences, summary: parts.join(', ') || 'nothing' };
 }
 // An app has its own handoff, before any video: the expert's coverage (capture-request.md in
 // the app folder) waits for captures; new captures wait for states. A quiet app is not listed.
