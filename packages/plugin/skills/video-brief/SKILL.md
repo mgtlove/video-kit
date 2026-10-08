@@ -1,12 +1,6 @@
 ---
 name: video-brief
-description: >
-  This skill should be used by the subject expert's chat when the user pastes a brief request
-  (a file that begins "# Brief request:", written by vkit brief) or asks "write the storyboard
-  for this video", "what should this video teach", "outline the S3 video", "what screens are
-  missing for the video". It answers a brief request with three things in a fixed shape: the
-  teaching outline, the storyboard rows in the kit's own table, and the pickup list of screens
-  no state has. It never writes the final narration and never invents a screen.
+description: Use when a "# Brief request:" file from vkit brief is pasted, or the user asks to outline or storyboard a video or which screens are missing. Returns the outline, the storyboard rows in the kit's table, and the pickup list of screens no state has.
 metadata:
   version: "0.1.0"
 ---

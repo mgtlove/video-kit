@@ -1,5 +1,6 @@
 // Proof for the brief request and the storyboard coverage row (step 10c).
 //   1. vkit brief on an app-backed video writes brief-request.md with every state the app has,
+//      by the core call and by the command line itself (inside the folder and with a path),
 //      what to hand back, and the storyboard header; on an inline video it says there is no app
 //   2. vkit check's storyboard-covered row fails on a row that names a state the app does not
 //      have, naming the part and the sentence, and passes once every named state exists
@@ -10,6 +11,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const core = require('../src');
+const { spawnSync } = require('child_process');
+const VKIT = path.join(__dirname, '..', '..', 'cli', 'bin', 'vkit.js');
 
 test('vkit brief writes the ask with the states in it, and check covers the storyboard against them', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-brief-'));
@@ -19,6 +22,13 @@ test('vkit brief writes the ask with the states in it, and check covers the stor
   assert.strictEqual(r.states, 1);
   const text = fs.readFileSync(r.file, 'utf8');
   assert.ok(/^# Brief request: backed/m.test(text) && /\| `work-item` \|/.test(text) && /## What to hand back/.test(text) && /\| Part \| Sentence \| Start \(s\) \| On screen \| Camera \| Card \| Capture \|/.test(text) && /state work-item/.test(text), text.slice(0, 400));
+  // the command itself, from inside the folder and from outside it (the first real run died on an
+  // undefined name in the CLI that the core call above could never see, 8 October 2026)
+  const c1 = spawnSync(process.execPath, [VKIT, 'brief'], { cwd: backed.dir, encoding: 'utf8' });
+  assert.strictEqual(c1.status, 0, c1.stdout + c1.stderr);
+  assert.ok(/wrote brief-request\.md for backed with 1 state of the app listed/.test(c1.stdout), c1.stdout + c1.stderr);
+  const c2 = spawnSync(process.execPath, [VKIT, 'brief', backed.dir], { cwd: tmp, encoding: 'utf8' });
+  assert.strictEqual(c2.status, 0, c2.stdout + c2.stderr);
   const inline = core.newVideo('plain', { cwd: tmp });
   const r2 = core.briefRequest(inline.dir);
   assert.strictEqual(r2.states, 0);

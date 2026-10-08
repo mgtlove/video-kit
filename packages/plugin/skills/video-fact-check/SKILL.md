@@ -1,11 +1,6 @@
 ---
 name: video-fact-check
-description: >
-  This skill should be used by the subject expert's chat when the user pastes a finished
-  narration (narration/FULL.md, one sentence per line in parts) with its storyboard and asks
-  "fact check this", "is this narration right", "review the script", "anything wrong here". It
-  returns a verdict per sentence: true, wrong with the correction, or missing a caveat, in a
-  fixed table the director can act on line by line.
+description: Use when a video's narration (narration/FULL.md) is pasted with its storyboard and the user asks to fact check or review the script. Returns a verdict per sentence (true, wrong with the correction, or missing a caveat) in one table.
 metadata:
   version: "0.1.0"
 ---

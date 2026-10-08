@@ -167,7 +167,7 @@ async function main() {
     return 0;
   }
   if (cmd === 'brief') {
-    const r = core.briefRequest(pos[0] || '.');
+    const r = core.briefRequest(args[0] || '.');
     console.log('wrote ' + path.relative(process.cwd(), r.file) + ' for ' + r.name + ' with ' + r.states + ' state' + (r.states === 1 ? '' : 's') + ' of the app listed. Paste it to the subject expert\'s chat; its video-brief skill answers with the outline, the storyboard rows and the pickup list.');
     return 0;
   }
