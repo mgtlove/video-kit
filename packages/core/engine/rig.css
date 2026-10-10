@@ -64,7 +64,7 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 /* ---- a page change: the content goes while the fixed chrome (data-chrome) stays; the page's own ground shows (openPage, engine 0.5.1) ---- */
 #mock.loading > :not([data-chrome]){visibility:hidden}
 /* ---- a control held down: the app's own pressed look when it has one (from a capture), this darkening until then ---- */
-#mock .pressed{filter:brightness(.88)}
+#mock .pressed{filter:brightness(.8)}
 #card .body{font-size:var(--size-body,54px);font-weight:700;line-height:1.25;font-family:var(--text,var(--head))}   /* the voice depends on it: 54 px floor (rules.json text.readMinPx) */
 
 /* ---- the brand mark and banner: built by the engine from --brand-* tokens (vkit brand), shown by beats.

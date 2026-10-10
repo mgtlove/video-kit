@@ -65,7 +65,7 @@ test('a screen is one page: typeTo types the state\'s own text, a state change s
   };
   const out = await render.survey(path.join(v.dir, 'rig'), [1.0, 2.5, 4.5, 7.0, 8.9, 9.55, 10.3, 10.8], measure, opts);
   const [before, typing, typed, mid, after, pressed, loading, cut] = out.map((o) => o.data);
-  assert.strictEqual(before.version, '0.5.1');
+  assert.strictEqual(before.version, '0.5.2');
   assert.deepStrictEqual(before.screens, { empty: 'Form', typed: 'Form', scrolled: 'Form', done: 'Done' }, 'states.js carries the screen of each state');
   assert.strictEqual(before.cls, 'ph t'); assert.strictEqual(before.focus, false);
   // 1. typing: 0.5 s at 12 a second is six characters, in the typed state's own span, with the caret

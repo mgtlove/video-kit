@@ -60,8 +60,11 @@
 
   /* ---------- measurement ---------- */
   function pos(el) {
+    /* where the element will be: a scrolling element (data-scrolls) mid-move reads its inline top, the place it is
+       going, not the place it is passing, so a note, a stroke or the pointer placed during a scroll lands where the
+       element lands (the first leader drawn during a scroll pointed off the bottom of the frame, 10 October 2026) */
     var x = 0, y = 0, n = el;
-    while (n && n !== cam) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    while (n && n !== cam) { x += n.offsetLeft; y += (n.hasAttribute && n.hasAttribute('data-scrolls') && n.style.top !== '' ? parseFloat(n.style.top) : n.offsetTop); n = n.offsetParent; }
     return { l: x, t: y, w: el.offsetWidth, h: el.offsetHeight, x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 };
   }
 
@@ -158,6 +161,17 @@
     }
     for (i = have.attributes.length - 1; i >= 0; i--) if (!names[have.attributes[i].name]) have.removeAttribute(have.attributes[i].name);
     if (have.tagName !== 'IMG') morphChildren(have, w, sec);
+  }
+  /* does the segment from (x1,y1) to (x2,y2) pass through the box q (frame coordinates)? Liang-Barsky clipping */
+  function segmentMeetsBox(x1, y1, x2, y2, q) {
+    var dx = x2 - x1, dy = y2 - y1, t0 = 0, t1 = 1;
+    var p = [-dx, dx, -dy, dy], r = [x1 - q.l, q.l + q.w - x1, y1 - q.t, q.t + q.h - y1];
+    for (var i = 0; i < 4; i++) {
+      if (p[i] === 0) { if (r[i] < 0) return false; continue; }
+      var t = r[i] / p[i];
+      if (p[i] < 0) { if (t > t1) return false; if (t > t0) t0 = t; } else { if (t < t0) return false; if (t < t1) t1 = t; }
+    }
+    return true;
   }
   function topOf(style) { var m = /(?:^|;)\s*top\s*:\s*([^;]+)/.exec(style); return m ? m[1].trim() : ''; }
 
@@ -272,15 +286,26 @@
            spot anywhere inside title safe, walked on a 16 px grid, nearest to the element's centre wins (engine 0.4.4).
            Only when the frame has no clear spot the card's size does the least-covering side above stand. */
         var ex = b.l + b.w / 2, ey = b.t + b.h / 2, best = null, STEP = 16;
+        /* a note's leader runs from the spot to the element: a spot whose leader crosses text or a picture loses to one
+           whose leader runs clear, however near (the first leaders ran through three lines of the console, 10 October 2026) */
+        var crossings = function (gx, gy) {
+          if (cardKind !== 'note') return 0;
+          var tx = Math.min(Math.max(gx + w / 2, b.l), b.l + b.w), ty = Math.min(Math.max(gy + h / 2, b.t), b.t + b.h);
+          var sx = Math.min(Math.max(tx, gx), gx + w), sy = Math.min(Math.max(ty, gy), gy + h), n = 0;
+          for (var i = 0; i < others.length; i++) if (segmentMeetsBox(sx, sy, tx, ty, others[i])) n++;
+          return n;
+        };
         for (var gy = SAFE.t; gy + h <= SAFE.b; gy += STEP) for (var gx = SAFE.l; gx + w <= SAFE.r; gx += STEP) {
           var d = (gx + w / 2 - ex) * (gx + w / 2 - ex) + (gy + h / 2 - ey) * (gy + h / 2 - ey);
-          if (best && d >= best.d) continue;
+          if (best && best.cross === 0 && d >= best.d) continue;
           var onEl = gx < b.l + b.w && gx + w > b.l && gy < b.t + b.h && gy + h > b.t;              /* never on the element it explains */
-          if (!onEl && covered({ x: gx, y: gy }, GAP / 2) === 0) best = { x: gx, y: gy, d: d, side: 'nearest clear spot', cover: 0 };   /* with air: half a gap all round, so rounding never lands it on a glyph */
+          if (onEl || covered({ x: gx, y: gy }, GAP / 2) !== 0) continue;                           /* with air: half a gap all round, so rounding never lands it on a glyph */
+          var cr = crossings(gx, gy);
+          if (!best || cr < best.cross || (cr === best.cross && d < best.d)) best = { x: gx, y: gy, d: d, cross: cr, side: 'nearest clear spot', cover: 0 };
         }
         if (best) pick = best;
       }
-      if (pick) { x = pick.x; y = pick.y; cardPlaced = { kind: cardKind, near: cardNear, side: pick.side || cardSide, cover: Math.round(pick.cover === undefined ? covered(pick) : pick.cover), x: Math.round(pick.x), y: Math.round(pick.y), w: w, h: h }; }
+      if (pick) { x = pick.x; y = pick.y; cardPlaced = { kind: cardKind, near: cardNear, side: pick.side || cardSide, cover: Math.round(pick.cover === undefined ? covered(pick) : pick.cover), cross: pick.cross, x: Math.round(pick.x), y: Math.round(pick.y), w: w, h: h }; }
     }
     if (x === undefined) { x = SAFE.r - w; y = SAFE.b - h; cardPlaced = { kind: cardKind, near: cardNear, side: 'corner', cover: -1, x: Math.round(x), y: Math.round(y), w: w, h: h }; }   /* bottom right, inside title safe; cover -1: nothing to measure against */
     c.style.left = Math.round(x) + 'px'; c.style.top = Math.round(y) + 'px';
@@ -296,7 +321,8 @@
     if (Math.abs(sx - ex) < 6 && Math.abs(sy - ey) < 6) { p.setAttribute('d', ''); return; }                   /* touching: no line */
     rough = tokenNumber('--stroke-rough', 1);
     var r = rng('leader:' + cardNear + ':' + (c.textContent || '')), pts = [], n = 6;
-    for (var i = 0; i <= n; i++) { var t = i / n, px = sx + (ex - sx) * t, py = sy + (ey - sy) * t; if (i > 0 && i < n) { px += wobble(r, 2.5); py += wobble(r, 2.5); } pts.push([px - x, py - y]); }
+    var len = Math.hypot(ex - sx, ey - sy), amp = len < 80 ? 0 : 1.6;   /* a short leader is straight; a long one has a hand's wobble */
+    for (var i = 0; i <= n; i++) { var t = i / n, px = sx + (ex - sx) * t, py = sy + (ey - sy) * t; if (i > 0 && i < n) { px += wobble(r, amp); py += wobble(r, amp); } pts.push([px - x, py - y]); }
     p.setAttribute('d', pathOf(pts, false));
   }
   /* the elements a card must keep clear of: the named element's siblings, and every visible leaf
@@ -436,9 +462,12 @@
     if (pointedEl && pointedEl.isConnected) {
       var el = pointedEl;
       instant(el, function () { el.classList.add('pressed'); });
-      el.style.transition = 'filter .15s .1s, background-color .15s .1s, border-color .15s .1s, color .15s .1s, box-shadow .15s .1s';
+      el.style.transition = 'filter .2s .18s, background-color .2s .18s, border-color .2s .18s, color .2s .18s, box-shadow .2s .18s';
       el.classList.remove('pressed');
     }
+    /* over a recreated screen the press is the click; the ring is a teaching device for concept scenes, and beside
+       a real button it competed with the button's own answer (the third watch, 10 October 2026) */
+    if (stage.classList.contains('screen')) return;
     instant(ring, function () { ring.classList.remove('on'); ring.style.opacity = '.9'; ring.style.left = fmt(pointAt[0]) + 'px'; ring.style.top = fmt(pointAt[1]) + 'px'; });
     ring.style.removeProperty('opacity'); ring.classList.add('on');          /* bright and small, then grows and fades */
   }
@@ -700,7 +729,7 @@
   }
 
   window.VK = {
-    version: '0.5.1',
+    version: '0.5.2',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; }, faults: function () { return faults.slice(); }, cardPlace: function () { return cardPlaced; },
