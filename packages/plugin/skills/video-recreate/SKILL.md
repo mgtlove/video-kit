@@ -8,7 +8,7 @@ description: >
   captures, the face traced from the page, and a fidelity ledger of what is true, substituted,
   invented or missing.
 metadata:
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 Who runs this: the director's chat (this project). The captures come from `capture-walkthrough`, run in a Claude Code session on the machine with the browser against the app's `capture-request.md` (the expert's coverage) with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.
@@ -19,7 +19,7 @@ The method is `docs/RECREATE.md` in the kit; this is the order of work. The rule
 
 ## The page contract
 
-A screen is one page. States of the same screen (the manifest's `screen` column) share the page's markup, so the engine can morph one into the next in place and scroll between them: mark the scrolling element and the scrollbar thumb `data-scrolls`, draw a long page once at full height moved by the state's scroll, give an id to anything the timeline points at or that changes between states (a field, a link crumb, an error line). Pictures are drawn in whole screen pixels (`vkit app crop` grows a region to even pixels at 2x and says so). `docs/RECREATE.md` section 5.
+A screen is one page. States of the same screen (the manifest's `screen` column) share the page's markup, so the engine can morph one into the next in place and scroll between them: mark the scrolling element and the scrollbar thumb `data-scrolls`, draw a long page once at full height moved by the state's scroll, give an id to anything the timeline points at or that changes between states (a field, a link crumb, an error line); mark the fixed frame (top bar, breadcrumb bar, footer) `data-chrome` so a page load keeps it; give a control `hover` and `pressed` classes from the captures of it hovered and held down. Pictures are drawn in whole screen pixels (`vkit app crop` grows a region to even pixels at 2x and says so). `docs/RECREATE.md` section 5.
 
 ## 1. Read the captures
 

@@ -15,7 +15,7 @@ const os = require('os');
 const path = require('path');
 // The plugin's version, carried by every skill; bump all together when the skills change, because
 // claude.ai keeps the uploaded copy and a re-upload is how the chats get the change (8 October 2026).
-const PLUGIN_VERSION = '0.1.3';
+const PLUGIN_VERSION = '0.1.4';
 const { spawnSync } = require('child_process');
 const core = require('../src');
 const { KIT } = require('../src/new');

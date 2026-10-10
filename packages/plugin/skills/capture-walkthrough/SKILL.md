@@ -7,10 +7,12 @@ description: >
   own capture browser through the task and vkit shoot writes the capture set; nothing is pasted,
   nothing is redacted after the fact, and sign-in is the person's.
 metadata:
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Capture a walkthrough with the kit's browser
+
+What to shoot: the path the request names, and one layer out from it: each dropdown open, the hover and the held-down look of every control the path clicks (hover with the Playwright server, hold with `page.mouse.down()` in a page script, shoot, release off the control), the validation and error messages, the confirmation dialogs, the empty and populated versions. Captures are cheap and a recreation is not; a captured state that no video needs yet is still the app's.
 
 Who runs this: a Claude Code session on the machine that has the browser (the director's side), with the person signed in. The subject expert writes the request and knows where to click, but a cloud chat cannot run the capture browser (the rule below), so the request is the expert's and the session is the director's; the director's chat recreates from what lands in `captures/` (`video-recreate`). The request is `capture-request.md` in the app folder (the whole coverage of a tool, written by `video-brief` before any video exists) or in a video folder (the pickups a storyboard needs). `vkit handoffs` shows an app whose request is newer than its captures as waiting for this skill. Every `vkit` here can be spelled `node ~/Developer/video/video-kit/packages/cli/bin/vkit.js` from a shell that has the folder but not the command.
 

@@ -6,7 +6,7 @@ description: >
   clip has been regenerated, or asks where each sentence is said. It turns the clips into the
   rig's exact part timing and places every sentence at its spoken word, never stretching anything.
 metadata:
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Measure the voice clips

@@ -190,16 +190,31 @@
     });
   }
 
-  var cardNear = null, cardSide = null;
+  var cardNear = null, cardSide = null, cardKind = 'card';   /* the annotation up: the explanation card, or the note (engine 0.5.1) */
   var SAFE = { l: 96, t: 54, r: W - 96, b: H - 54 }, GAP = 24;
   var cardPlaced = null;                     /* the last placement: where, beside what, and how much of the screen it covers (px²) */
-  function card(text, nearId, side) {
-    var c = $('card'); if (!c) return;
+  /* card(text, nearId, side): the explanation card, for concept scenes. note(text, nearId, side): the callout for a
+     recreated screen: one line, small, with a leader line to the element it names, marked decoration because the
+     voice carries the words (the card's 54 px body was the read-text floor applied to text nobody has to read; seen
+     by the producer on the first watch, 9 October 2026). Both are placed clear of the screen the same way, both wait
+     for a camera move or a scroll in their beat, and one is up at a time. */
+  function card(text, nearId, side) { annot('card', text, nearId, side); }
+  function note(text, nearId, side) { annot('note', text, nearId, side); }
+  function noteEl() {
+    var n = $('note'); if (n) return n;
+    n = document.createElement('aside'); n.id = 'note'; n.setAttribute('data-decor', '');
+    n.innerHTML = '<svg class="leader" aria-hidden="true"><path/></svg><span class="body"></span>';
+    stage.appendChild(n); return n;
+  }
+  function annot(kind, text, nearId, side) {
+    var c = kind === 'note' ? noteEl() : $('card'); if (!c) return;
+    var other = $(kind === 'note' ? 'card' : 'note'); if (other && other.classList.contains('on')) { other.classList.remove('on'); other.style.transitionDelay = '0s'; }
     if (!text) { c.classList.remove('on'); c.style.transitionDelay = '0s'; cardNear = null; cardSide = null; cardPlaced = null; return; }
+    cardKind = kind;
     var k = c.querySelector('.kick'), b = c.querySelector('.body');
     if (b) b.textContent = text;
     if (k && window.COPY && window.COPY.cardKicker) k.textContent = window.COPY.cardKicker;
-    if (nearId) want(nearId, 'card');
+    if (nearId) want(nearId, kind);
     cardNear = nearId || ''; cardSide = side || null;
     placeCard();
     /* a card named in the same beat as a camera move waits for the camera to land, then arrives: it is placed
@@ -224,7 +239,8 @@
      kept clear of the named element and landed on the fields under it. 0.4.4: every visible leaf
      of the screen is an obstacle, and the nearest clear spot is searched for.) */
   function placeCard() {
-    var c = $('card'), w = c.offsetWidth, h = c.offsetHeight, x, y;
+    var c = $(cardKind === 'note' ? 'note' : 'card'); if (!c) return;
+    var w = c.offsetWidth, h = c.offsetHeight, x, y;
     var cx = function (v) { return Math.min(Math.max(v, SAFE.l), SAFE.r - w); };
     var cy = function (v) { return Math.min(Math.max(v, SAFE.t), SAFE.b - h); };
     var el = cardNear ? $(cardNear) : null, b = el ? frameBox(el) : null;
@@ -264,10 +280,24 @@
         }
         if (best) pick = best;
       }
-      if (pick) { x = pick.x; y = pick.y; cardPlaced = { near: cardNear, side: pick.side || cardSide, cover: Math.round(pick.cover === undefined ? covered(pick) : pick.cover), x: Math.round(pick.x), y: Math.round(pick.y), w: w, h: h }; }
+      if (pick) { x = pick.x; y = pick.y; cardPlaced = { kind: cardKind, near: cardNear, side: pick.side || cardSide, cover: Math.round(pick.cover === undefined ? covered(pick) : pick.cover), x: Math.round(pick.x), y: Math.round(pick.y), w: w, h: h }; }
     }
-    if (x === undefined) { x = SAFE.r - w; y = SAFE.b - h; cardPlaced = { near: cardNear, side: 'corner', cover: -1, x: Math.round(x), y: Math.round(y), w: w, h: h }; }   /* bottom right, inside title safe; cover -1: nothing to measure against */
+    if (x === undefined) { x = SAFE.r - w; y = SAFE.b - h; cardPlaced = { kind: cardKind, near: cardNear, side: 'corner', cover: -1, x: Math.round(x), y: Math.round(y), w: w, h: h }; }   /* bottom right, inside title safe; cover -1: nothing to measure against */
     c.style.left = Math.round(x) + 'px'; c.style.top = Math.round(y) + 'px';
+    if (cardKind === 'note') leader(c, x, y, w, h, b);
+  }
+  /* the note's leader: a line from the note's nearest edge to the nearest edge of the element it names, in the
+     look's hand (--stroke-rough, --stroke-width); seeded from the words and the id so a re-render is identical */
+  function leader(c, x, y, w, h, b) {
+    var svg = c.querySelector('svg.leader'), p = svg && svg.querySelector('path'); if (!p) return;
+    if (!b) { p.setAttribute('d', ''); return; }
+    var ex = Math.min(Math.max(x + w / 2, b.l), b.l + b.w), ey = Math.min(Math.max(y + h / 2, b.t), b.t + b.h);   /* the nearest point of the element to the note's centre */
+    var sx = Math.min(Math.max(ex, x), x + w), sy = Math.min(Math.max(ey, y), y + h);                         /* the nearest point of the note to that */
+    if (Math.abs(sx - ex) < 6 && Math.abs(sy - ey) < 6) { p.setAttribute('d', ''); return; }                   /* touching: no line */
+    rough = tokenNumber('--stroke-rough', 1);
+    var r = rng('leader:' + cardNear + ':' + (c.textContent || '')), pts = [], n = 6;
+    for (var i = 0; i <= n; i++) { var t = i / n, px = sx + (ex - sx) * t, py = sy + (ey - sy) * t; if (i > 0 && i < n) { px += wobble(r, 2.5); py += wobble(r, 2.5); } pts.push([px - x, py - y]); }
+    p.setAttribute('d', pathOf(pts, false));
   }
   /* the elements a card must keep clear of: the named element's siblings, and every visible leaf
      element with an id inside the recreated screen (a field, a button, a row), never its own
@@ -378,7 +408,7 @@
   }
 
   /* the pointer: one cursor that glides to an element over --pointer-glide; click() rings where it is */
-  var pointAt = null;
+  var pointAt = null, pointedEl = null;
   function instant(el, fn) { el.style.setProperty('transition-property', 'none'); fn(); void getComputedStyle(el).transform; el.style.removeProperty('transition-property'); }   /* a change with no transition */
   function pointerEl() {
     var p = $('pointer'); if (p) return p;
@@ -392,6 +422,7 @@
     var p = pointerEl();
     if (!id) { p.classList.remove('on'); return; }
     var el = want(id, 'pointer'); if (!el) return;
+    pointedEl = el;
     var b = pos(el); pointAt = [b.x + (dx || 0), b.y + (dy || 0)];
     var move = function () { p.style.transform = 'translate(' + fmt(pointAt[0]) + 'px,' + fmt(pointAt[1]) + 'px)'; };
     if (opts && opts.jump) instant(p, move); else move();
@@ -399,6 +430,15 @@
   }
   function click() {
     var ring = $('ring'); if (!ring || !pointAt) return;
+    /* the control answers: it takes the app's `pressed` look at once (the app's CSS from a capture of the button held
+       down; the engine's generic darkening until then) and lets go of it over the next 250 ms, so the press is seen
+       before the ring. A transition, so a seek holds it like any other (engine 0.5.1). */
+    if (pointedEl && pointedEl.isConnected) {
+      var el = pointedEl;
+      instant(el, function () { el.classList.add('pressed'); });
+      el.style.transition = 'filter .15s .1s, background-color .15s .1s, border-color .15s .1s, color .15s .1s, box-shadow .15s .1s';
+      el.classList.remove('pressed');
+    }
     instant(ring, function () { ring.classList.remove('on'); ring.style.opacity = '.9'; ring.style.left = fmt(pointAt[0]) + 'px'; ring.style.top = fmt(pointAt[1]) + 'px'; });
     ring.style.removeProperty('opacity'); ring.classList.add('on');          /* bright and small, then grows and fades */
   }
@@ -447,6 +487,18 @@
     return end;
   }
 
+  /* openPage(t, stateId, ms): a page change the way a browser shows one: at t the content goes (the fixed chrome
+     the app marks data-chrome stays, the page's ground shows), and after `ms` (450 by default) the new screen is
+     up. Two beats registered at build time, so a seek lands on either side of the load exactly as playback does.
+     A state of the same screen is never opened this way; state() morphs it. (Engine 0.5.1: the first watch saw a
+     page change as an instant cut, which read as a slide, 9 October 2026.) */
+  function openPage(t, stateId, ms) {
+    var sec = (ms || 450) / 1000;
+    at(t, function () { var m = $('mock'); if (m) m.classList.add('loading'); });
+    at(t + sec, function () { var m = $('mock'); if (m) m.classList.remove('loading'); state(stateId); }, true);
+    return t + sec;
+  }
+
   /* the cast: seeded figures beside an element. who(name, pose, nearId, side); who(null) hides.
      Poses: point, think, wave. Two figures by name (any name; the seed is the name). The
      mechanism is here; the drawing style belongs to a look (roadmap step 7). */
@@ -490,7 +542,9 @@
     var castL = $('cast'); if (castL) while (castL.firstChild) castL.removeChild(castL.firstChild);
     var ptr = $('pointer'); if (ptr) { ptr.style.transform = 'translate(' + (W - 80) + 'px,' + (H - 80) + 'px)'; pointAt = null; }   /* home: bottom right, hidden */
     var typed = document.querySelectorAll('.typing'); for (var ty = 0; ty < typed.length; ty++) typed[ty].classList.remove('typing');
-    cardNear = null; cardSide = null; stage.classList.remove('screen');
+    cardNear = null; cardSide = null; stage.classList.remove('screen'); pointedEl = null;
+    var mk0 = $('mock'); if (mk0) mk0.classList.remove('loading');
+    var nt = $('note'); if (nt) { nt.classList.remove('on'); nt.style.transitionDelay = '0s'; }
     for (var k = 0; k < resetHooks.length; k++) resetHooks[k]();
     snapping = true; home(); snapping = false;
     void stage.offsetHeight;
@@ -646,19 +700,19 @@
   }
 
   window.VK = {
-    version: '0.5.0',
+    version: '0.5.1',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; }, faults: function () { return faults.slice(); }, cardPlace: function () { return cardPlaced; },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
     scene: scene, show: show, state: state, fade: fadeTo, card: card,
-    ink: ink, pointer: pointer, click: click, type: type, typeTo: typeTo, who: who, rng: rng,
+    ink: ink, pointer: pointer, click: click, type: type, typeTo: typeTo, note: note, open: openPage, who: who, rng: rng,
     focus: focus, focusEl: focusEl, travel: travel, ease: ease, home: home, camTo: camTo, pos: pos,
     W: W, H: H
   };
   /* short names for the page's timeline */
   window.at = at; window.P = P;
-  window.scene = scene; window.show = show; window.state = state; window.fade = fadeTo; window.card = card;
+  window.scene = scene; window.show = show; window.state = state; window.fade = fadeTo; window.card = card; window.note = note; window.openPage = openPage;
   window.focusAt = focus; window.focusEl = focusEl; window.travel = travel; window.ease = ease; window.home = home; window.pos = pos;
   window.ink = ink; window.pointer = pointer; window.click = click; window.type = type; window.typeTo = typeTo; window.who = who;
 })();

@@ -106,12 +106,13 @@ function measureInPage(t) {
     strokes.push({ kind: paths[p].getAttribute('data-stroke') || '', color: rgb(pcs.stroke), width: parseFloat(pcs.strokeWidth) || 6, glow: px.length >= 3 ? parseFloat(px[2]) : 0, box: { l: pr.left - sr.left, t: pr.top - sr.top, r: pr.right - sr.left, b: pr.bottom - sr.top } }); }
   var cam = document.getElementById('cam'), m = /matrix\(([^)]+)\)/.exec(getComputedStyle(cam).transform), camScale = m ? parseFloat(m[1].split(',')[0]) : 1;
   // the explanation card, when it is up: where the engine put it and how much of the recreated screen it covers (engine 0.4.4)
-  var cardEl = document.getElementById('card'), cardUp = cardEl && cardEl.classList.contains('on') && parseFloat(getComputedStyle(cardEl).opacity) > 0;   /* up means seen: a card waiting for the camera to land (engine 0.4.4) is not up yet */
+  var cardEl = ['note', 'card'].map(function (id) { return document.getElementById(id); }).filter(function (e) { return e && e.classList.contains('on') && parseFloat(getComputedStyle(e).opacity) > 0; })[0];   /* the annotation up and seen: the note or the card; one waiting for the camera to land (engine 0.4.4) is not up yet */
+  var cardUp = !!cardEl;
   var card = cardUp && window.VK.cardPlace ? window.VK.cardPlace() : null;
   if (card) {
     var cover = [], mk = document.getElementById('mock');
     if (mk && mk.classList.contains('on')) {
-      var cb = cardEl.getBoundingClientRect(), all = mk.querySelectorAll('*');
+      var cb = (cardEl.querySelector('.body') || cardEl).getBoundingClientRect(), all = mk.querySelectorAll('*');   /* the note's box is its label; its leader line is thin and meant to cross */
       for (var k = 0; k < all.length; k++) {
         var n = all[k]; if (n.firstElementChild && n.tagName !== 'IMG') continue;
         if (!(n.tagName === 'IMG' || (n.textContent && n.textContent.trim()))) continue;
@@ -328,8 +329,8 @@ async function check(videoDir, opts) {
   const faults = pass1[pass1.length - 1].data.faults || [];
   // a card beside the screen covers none of it: at every still with the card up, the card's box meets no text or picture of the recreated screen (engine 0.4.4 places it clear of every leaf; this measures the still, at the still's camera)
   const cardStills = pass1.filter((s) => s.data && s.data.card);
-  const covering = cardStills.filter((s) => s.data.card.coveredArea > 0).map((s) => s.t.toFixed(1) + ' s: the card beside ' + (s.data.card.near || 'nothing') + ' (' + s.data.card.side + ') covers ' + s.data.card.covers.map((c) => c.what + ' ' + c.area + ' px²').join(', '));
-  if (meta.app && meta.app.ref) add('craft', row('cards-clear', ['C-COMP-16'], cardStills.length ? (covering.length ? 'fail' : 'pass') : 'not measured', cardStills.length ? (covering.length ? covering.slice(0, 4).join('; ') : cardStills.length + ' stills with a card up; none covers the screen\'s text or pictures') : 'no card up at any beat', 'a card never sits on the screen it explains', 'rig/index.html timeline (card near, side)'));
+  const covering = cardStills.filter((s) => s.data.card.coveredArea > 0).map((s) => s.t.toFixed(1) + ' s: the ' + (s.data.card.kind || 'card') + ' beside ' + (s.data.card.near || 'nothing') + ' (' + s.data.card.side + ') covers ' + s.data.card.covers.map((c) => c.what + ' ' + c.area + ' px²').join(', '));
+  if (meta.app && meta.app.ref) add('craft', row('cards-clear', ['C-COMP-16'], cardStills.length ? (covering.length ? 'fail' : 'pass') : 'not measured', cardStills.length ? (covering.length ? covering.slice(0, 4).join('; ') : cardStills.length + ' stills with a note or card up; none covers the screen\'s text or pictures') : 'no card up at any beat', 'a card never sits on the screen it explains', 'rig/index.html timeline (card near, side)'));
   add('footage', row('beats-on-screen', [], faults.length ? 'fail' : 'pass', faults.length ? faults.map((f) => f.fn + '(' + JSON.stringify(f.id) + ') at ' + (f.t == null ? '?' : f.t.toFixed(1)) + ' s' + (f.state ? ' with state ' + f.state + ' up' : f.fn === 'state' ? '' : ' with no state up')).join('; ') : beats.length + ' beats; every id and state a beat names is on screen', 'none missing', 'rig/index.html timeline' + (meta.app ? ', rig/app/manifest.csv' : '')));
 
   // ---- seek-correct ----

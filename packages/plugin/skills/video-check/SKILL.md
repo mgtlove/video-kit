@@ -5,7 +5,7 @@ description: >
   checker", "why did check fail", "is this footage", or before a video is called done. It runs
   vkit check, reads the report by rule id, and says what to change and where.
 metadata:
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Check a video
@@ -26,7 +26,7 @@ Common failures and what they mean:
 - `stroke-contrast` or `text-contrast`: a colour under 3:1 or 4.5:1 against the pixels behind it. With a look or brand on, the fix is in the pack or the brand (`vkit brand --check` names the ratio); never a literal in the rig.
 - `still-run`: a hold longer than the tone allows (8 s, 12 s formal). Add a beat or cut.
 - `actions-move`: a storyboard row with an Action (click, type, scroll) shows no motion between 0.4 and 1.6 s into its beat. The timeline translated the row into a state swap and a camera hold; write the action (`pointer` and `click`, `typeTo`, a scrolled state of the same screen) at the row's time.
-- `cards-clear`: at a still with a card up, the card's box meets the screen's text or a picture (the row names the still, the element the card is beside, the side the engine chose and what it covers). Name a smaller leaf (the radio, not the section), shorten the words to two lines, change the push-in, or drop the card and mark the control with a stroke; a card in the same beat as a camera move waits for the camera, so a still mid move with the card not yet visible is not measured.
+- `cards-clear`: at a still with a note or card up, its box meets the screen's text or a picture (the row names the still, the element it is beside, the side the engine chose and what it covers). Name a smaller leaf (the radio, not the section), shorten the words, change the push-in, or drop it and mark the control with a stroke; a card in the same beat as a camera move waits for the camera, so a still mid move with the card not yet visible is not measured.
 - `deterministic`: identical byte for byte, or within the seek proof's tolerance (under 0.05 percent of pixels over 8 levels; a curve under a fractional camera scale rasterizes a few levels apart between sessions). The row names each still that differed and by how much; beyond the tolerance, render that still three times and diff. A picture drawn at a fractional size or place was the cause once (F9): crops are whole screen pixels.
 - `sentences-match` or `captions`: `storyboard.md` and `narration/part-N.md` disagree; one sentence per row, in order.
 - `seek-equals-playback`: a frame at t differs from playback at t. An engine matter, not a video one: say so and stop; `npm test` in the kit is the proof.
