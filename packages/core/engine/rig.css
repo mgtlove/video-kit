@@ -24,7 +24,7 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
 .card .t{font-size:28px;line-height:1.4;color:var(--paper-dim,var(--dim));font-family:var(--text,var(--head))}   /* a card's body is decoration under the rules; mark it data-decor, or make it 54 px */
 
 /* ---- the recreated screen: its box is the video's; the engine only fades it ---- */
-#mock{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .6s;overflow:hidden}
+#mock{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity .6s;overflow:hidden;isolation:isolate}   /* one layer: a recreated screen's own z-indexes (its page under its top bar) stay inside it; without this they painted over the ink and cast layers once the screen was fully on (engine 0.4.4) */
 #mock.on{opacity:1}
 #stage .hl{outline:4px solid var(--hi);outline-offset:6px;border-radius:8px;box-shadow:0 0 0 12px var(--hi-bg)}
 

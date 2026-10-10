@@ -8,7 +8,7 @@ description: >
   under the craft rules and in the narrator's voice, gates it with vkit narration, checks the
   rows against the app's states, and leaves FULL.md for the fact check before anyone records.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # From a storyboard to a narration

@@ -8,7 +8,7 @@ description: >
   captures, the face traced from the page, and a fidelity ledger of what is true, substituted,
   invented or missing.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 Who runs this: the director's chat (this project). The captures come from `capture-walkthrough`, run in a Claude Code session on the machine with the browser against the app's `capture-request.md` (the expert's coverage) with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.

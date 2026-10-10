@@ -2,7 +2,7 @@
 name: video-fact-check
 description: Use in the subject expert's chat when the user says a narration is ready to check, asks what is waiting, or asks to fact check or review a video's script. Finds the video's narration/FULL.md and storyboard.md, writes fact-check.md beside them with a verdict per sentence.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Fact-checking a narration

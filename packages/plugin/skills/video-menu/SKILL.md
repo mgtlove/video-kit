@@ -6,7 +6,7 @@ description: >
   see or change any choice a video has made. It walks the ten choices one at a time, with the
   reason behind each, and writes them only through vkit menu.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # The video menu

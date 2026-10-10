@@ -2,7 +2,7 @@
 name: video-brief
 description: Use in the subject expert's chat when the user has an idea for a video, says a video is ready for them, asks what is waiting, or asks to outline or storyboard a video or which screens are missing. Starts the video folder with brief.md and the screens it needs, and later answers the kit's brief-request.md with the storyboard rows and capture-request.md, all as files in the video folder.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # The idea, and the brief request

@@ -5,7 +5,7 @@ description: >
   checker", "why did check fail", "is this footage", or before a video is called done. It runs
   vkit check, reads the report by rule id, and says what to change and where.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Check a video
@@ -25,6 +25,8 @@ Common failures and what they mean:
 - `line-length`: over 42 characters a line; narrow the box, and remember the proof machine's fonts decide.
 - `stroke-contrast` or `text-contrast`: a colour under 3:1 or 4.5:1 against the pixels behind it. With a look or brand on, the fix is in the pack or the brand (`vkit brand --check` names the ratio); never a literal in the rig.
 - `still-run`: a hold longer than the tone allows (8 s, 12 s formal). Add a beat or cut.
+- `cards-clear`: at a still with a card up, the card's box meets the screen's text or a picture (the row names the still, the element the card is beside, the side the engine chose and what it covers). Name a smaller leaf (the radio, not the section), shorten the words to two lines, change the push-in, or drop the card and mark the control with a stroke; a card in the same beat as a camera move waits for the camera, so a still mid move with the card not yet visible is not measured.
+- `deterministic`: the row names the still that differed between the two sessions. Render that still three times and diff; a picture drawn at a fractional size is the known cause (`docs/FINDINGS.md` F9).
 - `sentences-match` or `captions`: `storyboard.md` and `narration/part-N.md` disagree; one sentence per row, in order.
 - `seek-equals-playback`: a frame at t differs from playback at t. An engine matter, not a video one: say so and stop; `npm test` in the kit is the proof.
 - `state:<id>`: fidelity, reported, not judged; say the score and the coverage and show the side-by-side PNG in `out/fidelity/`.

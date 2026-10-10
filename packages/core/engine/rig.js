@@ -67,13 +67,16 @@
 
   /* ---------- camera ---------- */
   var camState = { x: 0, y: 0, s: 1 }, camNextSec = null, snapping = false;
+  var camEndsAt = 0;                        /* when the camera move in flight lands, on the timeline's clock (engine 0.4.4) */
   function ease(sec) { camNextSec = sec; }                  /* for the next move only */
   function camTo(x, y, s) {
     s = Math.max(1, s);
     x = Math.min(Math.max(x, 0), W - W / s);
     y = Math.min(Math.max(y, 0), H - H / s);
+    var moves = Math.abs(x - camState.x) > 0.01 || Math.abs(y - camState.y) > 0.01 || Math.abs(s - camState.s) > 0.001;   /* the same frame again is not a move: nothing slides, a card need not wait */
     camState = { x: x, y: y, s: s };
     cam.style.transitionDuration = snapping ? '0s' : (camNextSec || 1.4) + 's';
+    if (!snapping && moves) camEndsAt = (firing ? firing.t : clock) + (camNextSec || 1.4);
     camNextSec = null;
     cam.style.transform = 'scale(' + s + ') translate(' + (-x) + 'px,' + (-y) + 'px)';
     if (cardNear !== null) placeCard();
@@ -140,15 +143,22 @@
 
   var cardNear = null, cardSide = null;
   var SAFE = { l: 96, t: 54, r: W - 96, b: H - 54 }, GAP = 24;
+  var cardPlaced = null;                     /* the last placement: where, beside what, and how much of the screen it covers (px²) */
   function card(text, nearId, side) {
     var c = $('card'); if (!c) return;
-    if (!text) { c.classList.remove('on'); cardNear = null; cardSide = null; return; }
+    if (!text) { c.classList.remove('on'); c.style.transitionDelay = '0s'; cardNear = null; cardSide = null; cardPlaced = null; return; }
     var k = c.querySelector('.kick'), b = c.querySelector('.body');
     if (b) b.textContent = text;
     if (k && window.COPY && window.COPY.cardKicker) k.textContent = window.COPY.cardKicker;
     if (nearId) want(nearId, 'card');
     cardNear = nearId || ''; cardSide = side || null;
     placeCard();
+    /* a card named in the same beat as a camera move waits for the camera to land, then arrives: it is placed
+       for where the camera is going, and the screen must not slide under it (a CSS delay, so a seek holds it
+       like any transition; the clock is the beat's own time) */
+    var wait = camEndsAt - (firing ? firing.t : clock);
+    if (parseFloat(getComputedStyle(c).opacity) > 0) { c.style.transition = 'none'; c.classList.remove('on'); void c.offsetHeight; c.style.removeProperty('transition'); }   /* a swap (the old card still showing, or card(null) in this same beat): the old card cuts out now; the new one makes its own entrance. One flush would have kept the old one up, sliding over the screen under a camera move */
+    c.style.transitionDelay = wait > 0.01 ? wait.toFixed(2) + 's' : '0s';
     c.classList.add('on');
   }
   function frameBox(el) {                 /* an element's box on the frame, where the camera is going */
@@ -159,9 +169,11 @@
      clear of that element's neighbours: the elements beside it that a viewer is reading (its
      siblings, and every leaf element with an id in the recreated screen). A side that would land
      on a neighbour is passed over; when every side of the element does, the card goes beside the
-     group the element belongs to (below the last sibling, say); when even that fails, the side
-     that covers the least. A side the author names wins over all of this. (Engine 0.4.1: the
-     first placement only kept clear of the named element and landed on the fields under it.) */
+     group the element belongs to (below the last sibling, say); when even that fails, the nearest
+     clear spot anywhere on the frame; and only when the frame has none, the side that covers the
+     least. A side the author names wins over all of this. (Engine 0.4.1: the first placement only
+     kept clear of the named element and landed on the fields under it. 0.4.4: every visible leaf
+     of the screen is an obstacle, and the nearest clear spot is searched for.) */
   function placeCard() {
     var c = $('card'), w = c.offsetWidth, h = c.offsetHeight, x, y;
     var cx = function (v) { return Math.min(Math.max(v, SAFE.l), SAFE.r - w); };
@@ -177,7 +189,7 @@
         if (side === 'below') return { x: cx(box.l + box.w / 2 - w / 2), y: cy(box.t + box.h + GAP), n: SAFE.b - (box.t + box.h) - GAP, need: h };
         return { x: cx(box.l + box.w / 2 - w / 2), y: cy(box.t - GAP - h), n: box.t - SAFE.t - GAP, need: h };
       };
-      var covered = function (o) { var a = 0; for (var i = 0; i < others.length; i++) { var q = others[i]; a += Math.max(0, Math.min(o.x + w, q.l + q.w) - Math.max(o.x, q.l)) * Math.max(0, Math.min(o.y + h, q.t + q.h) - Math.max(o.y, q.t)); } return a; };
+      var covered = function (o, pad) { pad = pad || 0; var a = 0; for (var i = 0; i < others.length; i++) { var q = others[i]; a += Math.max(0, Math.min(o.x + w + pad, q.l + q.w) - Math.max(o.x - pad, q.l)) * Math.max(0, Math.min(o.y + h + pad, q.t + q.h) - Math.max(o.y - pad, q.t)); } return a; };
       var sides = ['right', 'left', 'below', 'above'], options = [];
       sides.forEach(function (sd) { var o = at(sd, b); o.side = sd; o.tier = 0; o.cover = covered(o); options.push(o); });
       sides.forEach(function (sd) { var o = at(sd, G); o.side = sd; o.tier = 1; o.cover = covered(o); options.push(o); });
@@ -190,9 +202,22 @@
         pool.sort(function (a, z) { return a.tier - z.tier || (clear.length ? (z.n - z.need) - (a.n - a.need) : a.cover - z.cover); });
         pick = pool[0];
       }
-      if (pick) { x = pick.x; y = pick.y; }
+      if (!cardSide && (!pick || pick.cover > 0)) {
+        /* no side of the element or its group is clear (a dense screen, a console at 1:1): the nearest clear
+           spot anywhere inside title safe, walked on a 16 px grid, nearest to the element's centre wins (engine 0.4.4).
+           Only when the frame has no clear spot the card's size does the least-covering side above stand. */
+        var ex = b.l + b.w / 2, ey = b.t + b.h / 2, best = null, STEP = 16;
+        for (var gy = SAFE.t; gy + h <= SAFE.b; gy += STEP) for (var gx = SAFE.l; gx + w <= SAFE.r; gx += STEP) {
+          var d = (gx + w / 2 - ex) * (gx + w / 2 - ex) + (gy + h / 2 - ey) * (gy + h / 2 - ey);
+          if (best && d >= best.d) continue;
+          var onEl = gx < b.l + b.w && gx + w > b.l && gy < b.t + b.h && gy + h > b.t;              /* never on the element it explains */
+          if (!onEl && covered({ x: gx, y: gy }, GAP / 2) === 0) best = { x: gx, y: gy, d: d, side: 'nearest clear spot', cover: 0 };   /* with air: half a gap all round, so rounding never lands it on a glyph */
+        }
+        if (best) pick = best;
+      }
+      if (pick) { x = pick.x; y = pick.y; cardPlaced = { near: cardNear, side: pick.side || cardSide, cover: Math.round(pick.cover === undefined ? covered(pick) : pick.cover), x: Math.round(pick.x), y: Math.round(pick.y), w: w, h: h }; }
     }
-    if (x === undefined) { x = SAFE.r - w; y = SAFE.b - h; }   /* bottom right, inside title safe */
+    if (x === undefined) { x = SAFE.r - w; y = SAFE.b - h; cardPlaced = { near: cardNear, side: 'corner', cover: -1, x: Math.round(x), y: Math.round(y), w: w, h: h }; }   /* bottom right, inside title safe; cover -1: nothing to measure against */
     c.style.left = Math.round(x) + 'px'; c.style.top = Math.round(y) + 'px';
   }
   /* the elements a card must keep clear of: the named element's siblings, and every visible leaf
@@ -203,7 +228,16 @@
     var add = function (n) { if (!n || n === el || seen[n.id || ''] && n.id || el.contains(n) || n.contains(el)) return; if (!n.offsetWidth || !n.offsetHeight) return; if (n.id) seen[n.id] = true; out.push(n); };
     if (el.parentElement) for (var s = el.parentElement.firstElementChild; s; s = s.nextElementSibling) add(s);
     var mk = $('mock');
-    if (mk && mk.classList.contains('on')) { var ids = mk.querySelectorAll('[id]'); for (var i = 0; i < ids.length; i++) if (!ids[i].querySelector('[id]')) add(ids[i]); }
+    if (mk && mk.classList.contains('on')) {
+      /* every visible leaf of the recreated screen is an obstacle: text, pictures, controls, named or not. Only the
+         named ones were, so a card sat on the console's text wherever the text had no id (seen 9 October 2026) */
+      var all = mk.querySelectorAll('*');
+      for (var i = 0; i < all.length; i++) {
+        var n = all[i];
+        if (n.firstElementChild && n.tagName !== 'IMG') continue;                      /* a container is not an obstacle: its empty inside is room (the check measures the same leaves) */
+        if (n.tagName === 'IMG' || n.tagName === 'SVG' || n.tagName === 'CANVAS' || (n.textContent && n.textContent.trim()) || n.id) add(n);
+      }
+    }
     return out;
   }
 
@@ -364,7 +398,7 @@
   var resetHooks = [];
   function onReset(fn) { resetHooks.push(fn); }
   function resetAll() {
-    playing = false; clock = 0; lastNow = null; camNextSec = null;
+    playing = false; clock = 0; lastNow = null; camNextSec = null; camEndsAt = 0;
     stage.classList.add('snap');                      /* a reset never animates, and it cancels anything in flight */
     var touched = document.querySelectorAll('.on, .clear');
     for (var i = 0; i < touched.length; i++) { touched[i].classList.remove('on'); touched[i].classList.remove('clear'); }
@@ -531,10 +565,10 @@
   }
 
   window.VK = {
-    version: '0.4.3',
+    version: '0.4.4',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
-    ready: function () { return ready; }, faults: function () { return faults.slice(); },
+    ready: function () { return ready; }, faults: function () { return faults.slice(); }, cardPlace: function () { return cardPlaced; },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
     scene: scene, show: show, state: state, fade: fadeTo, card: card,
     ink: ink, pointer: pointer, click: click, type: type, who: who, rng: rng,

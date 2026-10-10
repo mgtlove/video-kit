@@ -15,6 +15,7 @@ const COMMANDS = {
   'brief':          ['[dir]', 'write brief-request.md: the ask to the subject expert, with the app\'s states and the storyboard template already in it (the video-brief skill answers it)'],
   'handoffs':       ['[dir]', 'what is waiting and for whom, per video: dir is a video folder or the folder that holds them; both chats run this instead of asking'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
+  'time':           ['[dir] [--redo] [--prompt "labels"] [--model name]', 'word times from each clip (faster-whisper, local) and every sentence\'s start written into storyboard.md; the beats are placed where the words are said'],
   'measure':        ['[dir]', 'read voice/part-N.* with ffprobe and write the exact PARTS line; the clips are the clock'],
   'frames':         ['[dir] [times...|--every N]', 'a still per beat so you can look before recording anything'],
   'render':         ['[dir] [--fps N]', 'every frame from the seek, the voice muxed, captions beside it: out/<name>.mp4'],
@@ -171,6 +172,14 @@ async function main() {
     if (r.done.looks) console.log(r.done.looks.count + ' looks into looks/ from ' + r.done.looks.source);
     if (r.done.patterns) console.log(r.done.patterns.count + ' moves into patterns/index.json from ' + r.done.patterns.source);
     console.log('reference ' + r.reference + (r.done.rules && r.done.rules.commit ? ' at ' + r.done.rules.commit : ' (no commit recorded)'));
+    return 0;
+  }
+  if (cmd === 'time') {
+    const flags = {}, pos = [];
+    for (let i = 0; i < args.length; i++) { if (args[i] === '--redo') flags.redo = true; else if (args[i] === '--prompt') flags.prompt = args[++i]; else if (args[i] === '--model') flags.model = args[++i]; else pos.push(args[i]); }
+    const r = core.timeVideo(pos[0] || '.', flags);
+    console.log(r.report.join('\n'));
+    console.log('wrote Start for ' + r.rows + ' rows of storyboard.md and voice/times.json');
     return 0;
   }
   if (cmd === 'handoffs') {

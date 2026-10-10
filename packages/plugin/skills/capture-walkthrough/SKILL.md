@@ -7,7 +7,7 @@ description: >
   own capture browser through the task and vkit shoot writes the capture set; nothing is pasted,
   nothing is redacted after the fact, and sign-in is the person's.
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Capture a walkthrough with the kit's browser

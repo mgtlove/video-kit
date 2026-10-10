@@ -57,8 +57,9 @@ test('the look layer is inert until a look is applied, and none restores it', as
   for (let i = 0; i < a.files.length; i++) assert.ok(fs.readFileSync(a.files[i]).equals(fs.readFileSync(b.files[i])), 'the empty look layer changed ' + path.basename(a.files[i]));
   core.look(layered.dir, 'doodle');
   const c = await core.frames(layered.dir, Object.assign({ outDir: path.join(layered.dir, 'rig', '_doodle') }, opts));
-  const changed = c.files.filter((f, i) => !fs.readFileSync(f).equals(fs.readFileSync(a.files[i]))).length;
-  assert.ok(changed >= a.files.length - 2, 'a look changes the stills (' + changed + ' of ' + a.files.length + ' differ; the black opener and the fade may not)');
+  const unchanged = c.files.filter((f, i) => fs.readFileSync(f).equals(fs.readFileSync(a.files[i]))).map((f) => path.basename(f));
+  const changed = c.files.length - unchanged.length; console.log('look: unchanged stills ' + unchanged.join(', '));
+  assert.ok(changed >= a.files.length - 2, 'a look changes the stills (' + changed + ' of ' + a.files.length + ' differ; the black opener, the fade and a still over the recreated screen with nothing of the teaching layer up may not: ' + unchanged.join(', ') + ')');   /* engine 0.4.4: at t2+4.3 the card is waiting for the camera to land, and a look never restyles the screen; t3+0.0 is the screen alone too */
   const back = core.look(layered.dir, 'none');
   assert.strictEqual(back.name, 'none');
   const d = await core.frames(layered.dir, Object.assign({ outDir: path.join(layered.dir, 'rig', '_none') }, opts));

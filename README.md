@@ -16,6 +16,7 @@ vkit brief               brief-request.md for the subject expert: the app's stat
 vkit handoffs            what is waiting and for whom, per video and per app; the folder is the handoff, nothing is pasted between chats
 vkit narration           the script parts against their limits, FULL.md, estimates
 vkit measure             exact clip lengths from the voice files into PARTS; the clips are the clock
+vkit time                where each sentence is said: word times from the clips (faster-whisper, on this machine) into the Start column and voice/times.json
 vkit frames              a still per beat: look before you record
 vkit render              every frame, the voice muxed, an MP4 and its captions
 vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity

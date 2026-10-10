@@ -25,7 +25,7 @@ The claude.ai upload puts the plugin on the account, so every chat (the director
 | `video-capture` | the other way to get screenshots: sends the capture brief (`docs/CAPTURE.md`) to whoever has the tool, runs `vkit capture` on the walkthrough document that comes back, reads every picture before a screen is recreated |
 | `video-frames` | rendering and judging frames after any change |
 | `video-check` | running `vkit check`, reading the report by rule id, saying what to change and where |
-| `video-measure` | turning voice clips into exact part lengths; what locks after |
+| `video-measure` | turning voice clips into exact part lengths and every sentence into its spoken start (`vkit measure`, `vkit time`); what locks after |
 | `brand-apply` | setting up or changing the brand a video carries, through `vkit brand` and `--check` |
 
 The hook (`hooks/hooks.json`, `hooks/scripts/guard.py`, 21 cases in `test_guard.py`, run by `npm test`) runs before every shell command and blocks: a browser download; `git push --force`, `git reset --hard`, `git clean -f`, branch and repo deletion; `rm` outside temporary folders; a call to a paid API unless the command carries `--approved`. A blocked call says why and what to do instead. The hook fails open on its own errors.

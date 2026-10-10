@@ -14,6 +14,7 @@ const { syncReference } = require('./sync');
 const { applyLook } = require('./look');
 const { narration, measure } = require('./words');
 const { briefRequest, handoffs, formatHandoffs } = require('./brief');
+const { timeVideo } = require('./time');
 const brand = require('./brand');
 const captureMod = require('./capture');
 const shoot = require('./shoot');
@@ -34,6 +35,7 @@ module.exports = {
   briefRequest: briefRequest,                // the ask to the subject expert, with the app's states and the storyboard template in it
   handoffs: handoffs,                        // per video: what is waiting and for whom (the folder is the handoff)
   formatHandoffs: formatHandoffs,
+  timeVideo: timeVideo,                      // the beats placed where the words are said: word times from the clips into the storyboard's Start column
   measure: measure,                          // clip files -> exact PARTS in the page and video.json; re-timing items lock
   frames: frames,                            // rig -> a PNG per beat (seek-correct)
   renderVideo: renderVideo,                  // rig -> every frame at 30 fps -> mux with clips -> MP4, captions sidecar

@@ -60,8 +60,9 @@ test('no brand is inert; the example brand holds the rules, shows at the right t
   assert.strictEqual(chk.failures, 0, core.brands.formatCheck(chk));
 
   const c = await core.frames(v.dir, Object.assign({ outDir: path.join(v.dir, 'rig', '_branded') }, opts));
-  const changed = c.files.filter((f, i) => !fs.readFileSync(f).equals(fs.readFileSync(a.files[i]))).length;
-  assert.ok(changed >= a.files.length - 1, 'the brand changes the stills (' + changed + ' of ' + a.files.length + '; the black opener may not)');
+  const unchanged = c.files.filter((f, i) => fs.readFileSync(f).equals(fs.readFileSync(a.files[i]))).map((f) => path.basename(f));
+  const changed = c.files.length - unchanged.length; console.log('brand: unchanged stills ' + unchanged.join(', '));
+  assert.ok(changed >= a.files.length - 2, 'the brand changes the stills (' + changed + ' of ' + a.files.length + '; the black opener may not, nor a still over the recreated screen with nothing of the teaching layer up: ' + unchanged.join(', ') + ')');   /* engine 0.4.4: at t2+4.3 the card is waiting for the camera to land, so only the screen shows, and a brand never restyles the screen; t3+0.0 is the screen alone too */
 
   const report = await core.check(v.dir, Object.assign({ quick: true }, opts));
   const failing = Object.values(report.groups).flat().filter((x) => x.result === 'fail').map((x) => x.id + ': ' + x.measured.slice(0, 120));

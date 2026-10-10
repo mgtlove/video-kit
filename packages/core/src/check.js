@@ -105,7 +105,25 @@ function measureInPage(t) {
     var px = /drop-shadow/.test(pcs.filter || '') ? ((pcs.filter || '').replace(/rgba?\([^)]*\)/g, '').match(/-?[\d.]+px/g) || []) : [];   /* the colour stripped first; then x, y and the blur */
     strokes.push({ kind: paths[p].getAttribute('data-stroke') || '', color: rgb(pcs.stroke), width: parseFloat(pcs.strokeWidth) || 6, glow: px.length >= 3 ? parseFloat(px[2]) : 0, box: { l: pr.left - sr.left, t: pr.top - sr.top, r: pr.right - sr.left, b: pr.bottom - sr.top } }); }
   var cam = document.getElementById('cam'), m = /matrix\(([^)]+)\)/.exec(getComputedStyle(cam).transform), camScale = m ? parseFloat(m[1].split(',')[0]) : 1;
-  return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale, faults: window.VK.faults ? window.VK.faults() : [] };
+  // the explanation card, when it is up: where the engine put it and how much of the recreated screen it covers (engine 0.4.4)
+  var cardEl = document.getElementById('card'), cardUp = cardEl && cardEl.classList.contains('on') && parseFloat(getComputedStyle(cardEl).opacity) > 0;   /* up means seen: a card waiting for the camera to land (engine 0.4.4) is not up yet */
+  var card = cardUp && window.VK.cardPlace ? window.VK.cardPlace() : null;
+  if (card) {
+    var cover = [], mk = document.getElementById('mock');
+    if (mk && mk.classList.contains('on')) {
+      var cb = cardEl.getBoundingClientRect(), all = mk.querySelectorAll('*');
+      for (var k = 0; k < all.length; k++) {
+        var n = all[k]; if (n.firstElementChild && n.tagName !== 'IMG') continue;
+        if (!(n.tagName === 'IMG' || (n.textContent && n.textContent.trim()))) continue;
+        var r = n.getBoundingClientRect(); if (!r.width || !r.height) continue;
+        var ox = Math.min(cb.right, r.right) - Math.max(cb.left, r.left), oy = Math.min(cb.bottom, r.bottom) - Math.max(cb.top, r.top);
+        if (ox > 0 && oy > 0) cover.push({ what: (n.id ? '#' + n.id + ' ' : '') + '"' + (n.tagName === 'IMG' ? (n.getAttribute('src') || 'picture').split('/').pop() : n.textContent.trim().slice(0, 28)) + '"', area: Math.round(ox * oy) });
+      }
+    }
+    cover.sort(function (a, b) { return b.area - a.area; });
+    card.covers = cover.slice(0, 4); card.coveredArea = cover.reduce(function (a, c) { return a + c.area; }, 0);
+  }
+  return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale, faults: window.VK.faults ? window.VK.faults() : [], card: card };
 }
 
 /* ---------- pixel work on a PNG buffer ---------- */
@@ -293,10 +311,14 @@ async function check(videoDir, opts) {
   const times = [...new Set([...starts, ...beats.map((t) => +(t + 0.3).toFixed(2))])].filter((t) => t <= total).sort((a, b) => a - b);
   const pass1 = await render.survey(rig, times, measureInPage, progress.phase(opts, 'check stills'));
   const pass2 = await render.survey(rig, times, function () { return null; }, progress.phase(opts, 'check stills again'));
-  let same = 0; for (let i = 0; i < pass1.length; i++) if (pass1[i].png.equals(pass2[i].png)) same++;
-  add('footage', row('deterministic', [], same === pass1.length ? 'pass' : 'fail', same + ' of ' + pass1.length + ' stills identical across two browser sessions', 'all identical', 'rig/'));
+  let same = 0; const differ = []; for (let i = 0; i < pass1.length; i++) if (pass1[i].png.equals(pass2[i].png)) same++; else differ.push(pass1[i].t + ' s');
+  add('footage', row('deterministic', [], same === pass1.length ? 'pass' : 'fail', same + ' of ' + pass1.length + ' stills identical across two browser sessions' + (differ.length ? '; differs at ' + differ.join(', ') : ''), 'all identical', 'rig/'));
   // every beat names things on screen: the engine records a beat that names an id or a state the screen does not have (VK.faults, engine 0.4.3)
   const faults = pass1[pass1.length - 1].data.faults || [];
+  // a card beside the screen covers none of it: at every still with the card up, the card's box meets no text or picture of the recreated screen (engine 0.4.4 places it clear of every leaf; this measures the still, at the still's camera)
+  const cardStills = pass1.filter((s) => s.data && s.data.card);
+  const covering = cardStills.filter((s) => s.data.card.coveredArea > 0).map((s) => s.t.toFixed(1) + ' s: the card beside ' + (s.data.card.near || 'nothing') + ' (' + s.data.card.side + ') covers ' + s.data.card.covers.map((c) => c.what + ' ' + c.area + ' px²').join(', '));
+  if (meta.app && meta.app.ref) add('craft', row('cards-clear', ['C-COMP-16'], cardStills.length ? (covering.length ? 'fail' : 'pass') : 'not measured', cardStills.length ? (covering.length ? covering.slice(0, 4).join('; ') : cardStills.length + ' stills with a card up; none covers the screen\'s text or pictures') : 'no card up at any beat', 'a card never sits on the screen it explains', 'rig/index.html timeline (card near, side)'));
   add('footage', row('beats-on-screen', [], faults.length ? 'fail' : 'pass', faults.length ? faults.map((f) => f.fn + '(' + JSON.stringify(f.id) + ') at ' + (f.t == null ? '?' : f.t.toFixed(1)) + ' s' + (f.state ? ' with state ' + f.state + ' up' : f.fn === 'state' ? '' : ' with no state up')).join('; ') : beats.length + ' beats; every id and state a beat names is on screen', 'none missing', 'rig/index.html timeline' + (meta.app ? ', rig/app/manifest.csv' : '')));
 
   // ---- seek-correct ----
