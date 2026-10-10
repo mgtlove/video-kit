@@ -19,7 +19,7 @@ vkit measure             exact clip lengths from the voice files into PARTS; the
 vkit time                where each sentence is said: word times from the clips (faster-whisper, on this machine) into the Start column and voice/times.json
 vkit frames              a still per beat: look before you record
 vkit render              every frame, the voice muxed, an MP4 and its captions
-vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity
+vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules (actions move, cards clear, still runs), contrast, fidelity
 vkit sync-reference      copy the rules, the look packs and the patterns index from video-reference into the kit
 vkit publish             a host adapter and a URL
 ```

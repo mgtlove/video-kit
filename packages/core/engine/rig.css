@@ -45,7 +45,7 @@ html,body{margin:0;height:100%;background:var(--stage);overflow:hidden}
   border:3px solid var(--pointer-ring,var(--hi));opacity:0;transform:scale(.4);transition:transform .5s ease-out,opacity .5s ease-out}
 #ring.on{opacity:0;transform:scale(1.8)}   /* click() first sets it bright and small with no transition, then this is what it transitions to */
 .typing{box-shadow:inset 0 0 0 2px var(--p-accent,var(--hi))}
-.typing::after{content:"";display:inline-block;width:2px;height:1em;margin-left:1px;vertical-align:-2px;background:var(--p-strong,currentColor)}
+.typing::after,.caret::after{content:"";display:inline-block;width:2px;height:1em;margin-left:1px;vertical-align:-2px;background:var(--p-strong,currentColor)}   /* .caret: the caret alone, for typeTo, whose field already wears the state's own focus look */
 
 /* ---- the card that explains, placed beside its element by the engine ---- */
 #card{position:absolute;z-index:45;left:0;top:0;width:620px;padding:26px 30px;border-radius:12px;box-sizing:border-box;

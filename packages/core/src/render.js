@@ -43,17 +43,25 @@ function findClips(videoDir, parts) {
 // storyboardRows(videoDir, parts, opts): the rows of storyboard.md. By default only rows in a part the
 // rig has (parts.length); opts.all keeps every row, for checks that read the expert's storyboard
 // before the parts exist (a row in part 4 of a three-part rig was dropped unseen, 8 October 2026).
+// The columns are read by their header names, so a storyboard written before the Action column
+// (Part, Sentence, Start, On screen, Camera, Card, Capture) reads the same as one written after
+// (Action between Start and On screen). A row is { part, text, start, action, on, camera, card, capture }.
+const COLS = { part: 'part', sentence: 'text', 'start (s)': 'start', start: 'start', action: 'action', 'on screen': 'on', camera: 'camera', card: 'card', capture: 'capture' };
 function storyboardRows(videoDir, parts, opts) {
   const all = opts && opts.all;
   const file = path.join(videoDir, 'storyboard.md');
   if (!fs.existsSync(file)) return [];
-  const rows = [];
+  const rows = []; let cols = null;
   for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
     if (!line.trim().startsWith('|')) continue;
     const cells = line.trim().slice(1, -1).split('|').map((c) => c.trim());
-    const part = Number(cells[0]), start = Number(cells[2]);
-    if (!Number.isInteger(part) || part < 1 || (!all && part > parts.length) || !cells[1] || isNaN(start)) continue;
-    rows.push({ part, text: cells[1], start, on: cells[3] || '' });
+    if (cells[0].toLowerCase() === 'part') { cols = cells.map((c) => COLS[c.toLowerCase()] || null); continue; }
+    if (!cols || /^-+$/.test(cells[0])) continue;
+    const r = { part: NaN, text: '', start: NaN, action: '', on: '', camera: '', card: '', capture: '' };
+    cols.forEach((k, i) => { if (k) r[k] = cells[i] || ''; });
+    r.part = Number(r.part); r.start = Number(r.start);
+    if (!Number.isInteger(r.part) || r.part < 1 || (!all && r.part > parts.length) || !r.text || isNaN(r.start)) continue;
+    rows.push(r);
   }
   return rows;
 }

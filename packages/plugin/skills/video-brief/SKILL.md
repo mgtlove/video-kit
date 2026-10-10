@@ -2,7 +2,7 @@
 name: video-brief
 description: Use in the subject expert's chat when the user has an idea for a video, says a video is ready for them, asks what is waiting, or asks to outline or storyboard a video or which screens are missing. Starts the video folder with brief.md and the screens it needs, and later answers the kit's brief-request.md with the storyboard rows and capture-request.md, all as files in the video folder.
 metadata:
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # The idea, and the brief request
@@ -36,12 +36,13 @@ Take the video the person named, or the one `vkit handoffs` marks `subject exper
 
 The file exists with the kit's header, a note and the starter's rows. Keep the header and the note; replace every row. One row per beat; a beat is one sentence of narration. The table is exactly as the request prints it:
 
-| Part | Sentence | Start (s) | On screen | Camera | Card | Capture |
+| Part | Sentence | Start (s) | Action | On screen | Camera | Card | Capture |
 
 - **Part**: a stretch the narrator records in one go; a scene change or a natural pause is a boundary. Two to five parts for a video under three minutes, no part over about 1000 characters of narration.
 - **Sentence**: the substance in plain words, not the final wording. One idea per row. The director writes the narration from this and keeps the meaning.
 - **Start**: blank. The clips set it.
-- **On screen**: `state <id>` from the request's list, then a comma and what the eye should be on, in the screen's own words (`state create-top, the Bucket name field`). A concept moment with no screen is `scene <name>`. Never a state the list does not have.
+- **Action**: what the learner does in this beat, in the console's own words: `click Create bucket`, `type the bucket name`, `scroll to Block Public Access settings`, `press Enter`, `open the Objects tab`. Blank when the beat only looks. A screen recording is actions and the screen's answers; the director animates every action (the cursor goes there, the click lands, the text is typed character by character, the page scrolls), so a beat whose screen changes needs the action that changed it. A field never goes from empty to filled without the typing on screen; a page never scrolls without the scroll; a page never changes without the click that changed it.
+- **On screen**: the console's answer: `state <id>` from the request's list, then a comma and what the eye should be on, in the screen's own words (`state create-top, the Bucket name field`). A concept moment with no screen is `scene <name>`. Never a state the list does not have. Two rows on the same page at different scroll positions are a scroll, which the kit animates; two rows on different pages are a page change, which follows a click.
 - **Camera**: plain words: `rest`, `push in on the Create bucket button`, `travel to Block all public access`, `hold`.
 - **Card**: what a small explanation card beside the screen would say, if this beat needs one; otherwise blank. One line.
 - **Capture**: the state's capture id from the list (`CAP-002`).

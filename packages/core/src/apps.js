@@ -77,7 +77,9 @@ function resolveApp(ref) {
 function statesJs(dir, rows) {
   const states = {};
   for (const r of rows) states[r.id] = fs.readFileSync(path.join(dir, 'states', r.file || r.id + '.html'), 'utf8').replace(/\s+$/, '');
-  return '/* written by vkit from the app\'s states/; edit the app, not this file */\nwindow.STATES = ' + JSON.stringify(states, null, 2) + ';\n';
+  const screens = {};
+  for (const r of rows) if (r.screen) screens[r.id] = r.screen;
+  return '/* written by vkit from the app\'s states/; edit the app, not this file */\nwindow.STATES = ' + JSON.stringify(states, null, 2) + ';\n/* which screen (page) each state is a state of, from manifest.csv: two states of one screen morph in place and scroll; a new screen is a cut (engine 0.5.0) */\nwindow.SCREENS = ' + JSON.stringify(screens, null, 1) + ';\n';
 }
 
 // ---- marker blocks in the starter: the inline screen lives between them ----
@@ -231,8 +233,15 @@ function appCrop(ref, captureId, opts) {
   if (!fs.existsSync(src)) throw new Error('no such capture: ' + path.relative(process.cwd(), src));
   const { PNG } = require('pngjs');
   const png = PNG.sync.read(fs.readFileSync(src));
-  const x = Number(opts.x), y = Number(opts.y), w = Number(opts.w), h = Number(opts.h);
+  const x = Number(opts.x), y = Number(opts.y); let w = Number(opts.w), h = Number(opts.h);
   if (![x, y, w, h].every((n) => Number.isInteger(n) && n >= 0) || w === 0 || h === 0 || x + w > png.width || y + h > png.height) throw new Error('the region ' + [x, y, w, h].join(',') + ' is not inside the ' + png.width + 'x' + png.height + ' picture (in the picture\'s own pixels)');
+  /* whole screen pixels: a crop from a 2x capture is drawn at half size, and a picture drawn at a fractional CSS size
+     (18 by 21.5) rasterizes differently from one browser session to the next and breaks the deterministic proof
+     (docs/FINDINGS.md F9). The region grows by up to scale-1 pixels right and down, inside the picture, and the
+     result says so. */
+  const scale0 = Math.round(png.width / 1920) || 1; const asked = { w, h };
+  w = Math.min(Math.ceil(w / scale0) * scale0, png.width - x); h = Math.min(Math.ceil(h / scale0) * scale0, png.height - y);
+  const rounded = w !== asked.w || h !== asked.h ? 'region ' + asked.w + 'x' + asked.h + ' grown to ' + w + 'x' + h + ' so it is whole screen pixels at ' + scale0 + 'x' : '';
   const out = new PNG({ width: w, height: h });
   for (let row = 0; row < h; row++) png.data.copy(out.data, row * w * 4, ((y + row) * png.width + x) * 4, ((y + row) * png.width + x + w) * 4);
   const dir = path.join(app.dir, 'crops');
@@ -247,7 +256,7 @@ function appCrop(ref, captureId, opts) {
   lines = lines.filter((l, i) => i === 0 || parseCsvLine(l)[0] !== opts.name);
   lines.push(CROPS_HEAD.split(',').map((k) => csvCell(row[k])).join(','));
   fs.writeFileSync(csv, lines.join('\n') + '\n');
-  return { file, row, width: w, height: h, scale };
+  return { file, row, width: w, height: h, scale, rounded };
 }
 
 module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, installApp, appUse, appNew, appAddState, appExtract, appCrop, MARK, MANIFEST_HEAD, CROPS_HEAD };

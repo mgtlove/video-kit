@@ -107,10 +107,59 @@
     if (!id) { m.classList.remove('on'); return; }
     if (window.STATES) {
       if (window.STATES[id] === undefined) { miss('state', id); return; }   /* an app-backed video with no such state: nothing is shown */
-      if (screenState !== id) { m.innerHTML = window.STATES[id]; screenState = id; }
+      if (screenState !== id) {
+        /* two states of the same screen (window.SCREENS, from the manifest's screen column) are one page that
+           changed: the markup is morphed in place, so what did not change keeps its element, the page's
+           scroll (elements marked data-scrolls) moves on the camera's ease, and a field being typed into keeps
+           its box. A different screen is a page change: a cut, as the real page change is (engine 0.5.0). */
+        var same = screenState && m.classList.contains('on') && window.SCREENS && window.SCREENS[id] && window.SCREENS[id] === window.SCREENS[screenState];
+        if (same) { var sec = camNextSec || 1.4; if (morph(m, window.STATES[id], sec) && !snapping) camEndsAt = Math.max(camEndsAt, (firing ? firing.t : clock) + sec); camNextSec = null; }   /* a scroll settles like a camera move: a card named in this beat waits for it */
+        else m.innerHTML = window.STATES[id];
+        screenState = id;
+      }
     }
     m.classList.add('on');
   }
+  /* morph(root, html, sec): the live markup becomes `html` with as little replaced as possible: children are
+     matched in order, an element with an id is matched by its id wherever it sits among its siblings (so a line
+     inserted above it does not replace it), attributes are brought to the new ones, text is set, and an
+     element marked data-scrolls whose inline top changes gets a transition of `sec` seconds on it (the page
+     and the scrollbar thumb). Anything else that moved jumps, as a reflow does in the real console. */
+  var scrolled = false;
+  function morph(root, html, sec) {
+    var tpl = document.createElement('template'); tpl.innerHTML = html;
+    scrolled = false; morphChildren(root, tpl.content, sec);
+    return scrolled;   /* true when a data-scrolls element moved: the page scrolled */
+  }
+  function morphChildren(a, b, sec) {
+    var want = Array.prototype.slice.call(b.childNodes);
+    for (var i = 0; i < want.length; i++) {
+      var w = want[i], have = a.childNodes[i];
+      if (w.nodeType === 1 && w.id) {
+        var byId = null;
+        for (var c = a.firstChild; c; c = c.nextSibling) if (c.nodeType === 1 && c.id === w.id) { byId = c; break; }
+        if (byId && byId !== have) { a.insertBefore(byId, have || null); have = byId; }
+      }
+      if (!have) { a.appendChild(w.cloneNode(true)); continue; }
+      if (alike(have, w)) morphNode(have, w, sec); else a.replaceChild(w.cloneNode(true), have);
+    }
+    while (a.childNodes.length > want.length) a.removeChild(a.lastChild);
+  }
+  function alike(x, y) { return x.nodeType === y.nodeType && (x.nodeType !== 1 || (x.tagName === y.tagName && (x.id || '') === (y.id || ''))); }
+  function morphNode(have, w, sec) {
+    if (have.nodeType === 3) { if (have.data !== w.data) have.data = w.data; return; }
+    if (have.nodeType !== 1) return;
+    var i, names = {};
+    for (i = 0; i < w.attributes.length; i++) {
+      var at = w.attributes[i]; names[at.name] = true;
+      var v = at.value;
+      if (at.name === 'style' && have.hasAttribute('data-scrolls') && topOf(v) !== topOf(have.getAttribute('style') || '')) { v += ';transition:top ' + sec + 's cubic-bezier(.4,0,.2,1)'; scrolled = true; }   /* a scroll */
+      if (have.getAttribute(at.name) !== v) have.setAttribute(at.name, v);
+    }
+    for (i = have.attributes.length - 1; i >= 0; i--) if (!names[have.attributes[i].name]) have.removeAttribute(have.attributes[i].name);
+    if (have.tagName !== 'IMG') morphChildren(have, w, sec);
+  }
+  function topOf(style) { var m = /(?:^|;)\s*top\s*:\s*([^;]+)/.exec(style); return m ? m[1].trim() : ''; }
 
   /* ---------- the brand mark and banner (engine 0.4.0) ----------
      vkit brand writes rig/brand.css: --brand-mark-when (never, opener, close, both, always,
@@ -366,6 +415,38 @@
     return end;   /* the field is looked up at beat time: in an app-backed video it exists only once its state is on */
   }
 
+  /* typeTo(t, stateId, elId, cps): the learner types into a field and the screen answers with its next
+     state. At t the state comes on with the field's text held empty (its box, border and focus ring are the
+     state's); then one minor beat per character sets the text to the prefix, 12 a second by default. The
+     text is the state's own (read from window.STATES at build time), so what gets typed is what the capture
+     shows, and a field never goes from empty to full in a cut (engine 0.5.0). Returns when the last
+     character lands. */
+  function textLeaf(el) {   /* the element whose text is typed: the one being typed, else the first leaf with text, else the first leaf, else the element */
+    if (!el) return null;
+    if (!el.firstElementChild) return el;
+    var all = el.querySelectorAll('*'), i;
+    for (i = 0; i < all.length; i++) if (all[i].classList.contains('caret')) return all[i];
+    for (i = 0; i < all.length; i++) if (!all[i].firstElementChild && all[i].textContent.trim()) return all[i];
+    for (i = 0; i < all.length; i++) if (!all[i].firstElementChild) return all[i];
+    return el;
+  }
+  function stateText(stateId, elId) {
+    if (!window.STATES || window.STATES[stateId] === undefined) return null;
+    var tpl = document.createElement('template'); tpl.innerHTML = window.STATES[stateId];
+    var el = tpl.content.getElementById ? tpl.content.getElementById(elId) : tpl.content.querySelector('#' + elId);
+    var leaf = textLeaf(el);
+    return leaf ? leaf.textContent.trim() : null;
+  }
+  function typeTo(t, stateId, elId, cps) {
+    cps = cps || 12;
+    var text = stateText(stateId, elId) || '';
+    at(t, function () { state(stateId); var leaf = textLeaf(want(elId, 'typeTo')); if (leaf) { leaf.textContent = ''; leaf.classList.add('caret'); } });
+    for (var n = 1; n <= text.length; n++) (function (n) { at(t + n / cps, function () { var leaf = textLeaf($(elId)); if (leaf) leaf.textContent = text.slice(0, n); }, true); })(n);
+    var end = t + text.length / cps;
+    at(end + 0.6, function () { var leaf = textLeaf($(elId)); if (leaf) leaf.classList.remove('caret'); }, true);
+    return end;
+  }
+
   /* the cast: seeded figures beside an element. who(name, pose, nearId, side); who(null) hides.
      Poses: point, think, wave. Two figures by name (any name; the seed is the name). The
      mechanism is here; the drawing style belongs to a look (roadmap step 7). */
@@ -565,13 +646,13 @@
   }
 
   window.VK = {
-    version: '0.4.4',
+    version: '0.5.0',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; }, faults: function () { return faults.slice(); }, cardPlace: function () { return cardPlaced; },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
     scene: scene, show: show, state: state, fade: fadeTo, card: card,
-    ink: ink, pointer: pointer, click: click, type: type, who: who, rng: rng,
+    ink: ink, pointer: pointer, click: click, type: type, typeTo: typeTo, who: who, rng: rng,
     focus: focus, focusEl: focusEl, travel: travel, ease: ease, home: home, camTo: camTo, pos: pos,
     W: W, H: H
   };
@@ -579,5 +660,5 @@
   window.at = at; window.P = P;
   window.scene = scene; window.show = show; window.state = state; window.fade = fadeTo; window.card = card;
   window.focusAt = focus; window.focusEl = focusEl; window.travel = travel; window.ease = ease; window.home = home; window.pos = pos;
-  window.ink = ink; window.pointer = pointer; window.click = click; window.type = type; window.who = who;
+  window.ink = ink; window.pointer = pointer; window.click = click; window.type = type; window.typeTo = typeTo; window.who = who;
 })();

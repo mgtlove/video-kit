@@ -311,8 +311,19 @@ async function check(videoDir, opts) {
   const times = [...new Set([...starts, ...beats.map((t) => +(t + 0.3).toFixed(2))])].filter((t) => t <= total).sort((a, b) => a - b);
   const pass1 = await render.survey(rig, times, measureInPage, progress.phase(opts, 'check stills'));
   const pass2 = await render.survey(rig, times, function () { return null; }, progress.phase(opts, 'check stills again'));
-  let same = 0; const differ = []; for (let i = 0; i < pass1.length; i++) if (pass1[i].png.equals(pass2[i].png)) same++; else differ.push(pass1[i].t + ' s');
-  add('footage', row('deterministic', [], same === pass1.length ? 'pass' : 'fail', same + ' of ' + pass1.length + ' stills identical across two browser sessions' + (differ.length ? '; differs at ' + differ.join(', ') : ''), 'all identical', 'rig/'));
+  /* identical byte for byte, or within the seek proof's tolerance: a browser rasterizes an anti-aliased curve under a
+     fractional camera scale a few levels differently from one session to the next (12 pixels by 17 levels on a button's
+     rounded end mid move, 9 October 2026, F9), so a still mid move may differ by under 0.05 percent of its pixels over
+     8 levels and still be the same picture; the row says which stills and by how much */
+  let same = 0, near = 0; const differ = [], over = [];
+  for (let i = 0; i < pass1.length; i++) {
+    if (pass1[i].png.equals(pass2[i].png)) { same++; continue; }
+    const A = decode(pass1[i].png), B = decode(pass2[i].png); let n = 0, max = 0;
+    for (let k = 0; k < A.data.length; k += 4) { const d = Math.max(Math.abs(A.data[k] - B.data[k]), Math.abs(A.data[k + 1] - B.data[k + 1]), Math.abs(A.data[k + 2] - B.data[k + 2])); if (d > max) max = d; if (d > 8) n++; }
+    const note = (+pass1[i].t).toFixed(2) + ' s: ' + n + ' px over 8 levels (max ' + max + ')';
+    if (n / (A.width * A.height) <= 0.0005) { near++; differ.push(note); } else over.push(note);
+  }
+  add('footage', row('deterministic', [], over.length ? 'fail' : 'pass', same + ' of ' + pass1.length + ' stills identical across two browser sessions' + (near ? ', ' + near + ' within tolerance (' + differ.join('; ') + ')' : '') + (over.length ? '; beyond tolerance at ' + over.join('; ') : ''), 'identical, or under 0.05 percent of pixels over 8 levels', 'rig/'));
   // every beat names things on screen: the engine records a beat that names an id or a state the screen does not have (VK.faults, engine 0.4.3)
   const faults = pass1[pass1.length - 1].data.faults || [];
   // a card beside the screen covers none of it: at every still with the card up, the card's box meets no text or picture of the recreated screen (engine 0.4.4 places it clear of every leaf; this measures the still, at the still's camera)
@@ -420,6 +431,21 @@ async function check(videoDir, opts) {
   const mismatch = []; parts.forEach((_, i) => { const sb = rows.filter((r) => r.part === i + 1).length, na = narration[i] ? narration[i].length : null; if (na !== null && sb !== na) mismatch.push('part ' + (i + 1) + ': ' + sb + ' storyboard rows, ' + na + ' narration sentences'); });
   if (beyond.length) mismatch.push(beyond.length + ' storyboard row' + (beyond.length === 1 ? '' : 's') + ' in part ' + [...new Set(beyond.map((r) => r.part))].join(', ') + ', which the rig does not have (PARTS has ' + parts.length + ')');
   add('craft', row('sentences-match', ['C-PACE-5', 'C-ACC-2'], narration.every((n) => n === null) ? 'not measured' : (mismatch.length ? 'fail' : 'pass'), mismatch.length ? mismatch.join('; ') : rows.length + ' storyboard rows match the narration sentences part by part', 'one row per sentence', 'storyboard.md, narration/'));
+
+  // ---- actions move: a storyboard row with an Action (click, type, scroll) shows motion on screen inside its beat: the still
+  //      0.4 s after the row's start differs from the one 1.6 s after it (the pointer gliding, the text landing, the page
+  //      scrolling, the camera leaning). A screen recording is actions and answers; a row whose action leaves the frame
+  //      untouched is a slideshow with a verb in it (9 October 2026, the first watch of the S3 video)
+  {
+    const acted = rows.filter((r) => r.action && r.action.trim() && !/^(hold|none|-)$/i.test(r.action.trim()));
+    if (acted.length) {
+      const pairs = acted.map((r) => { const t0 = P(parts, r.part - 1) + r.start; return [+(t0 + 0.4).toFixed(2), +(t0 + 1.6).toFixed(2)]; }).filter((p) => p[1] <= total);
+      const stills = await render.survey(rig, pairs.flat(), function () { return null; }, progress.phase(opts, 'check actions'));
+      const stillAt = {}; stills.forEach((s) => { stillAt[s.t] = s.png; });
+      const dead = acted.filter((r, i) => pairs[i] && stillAt[pairs[i][0]] && stillAt[pairs[i][1]] && stillAt[pairs[i][0]].equals(stillAt[pairs[i][1]])).map((r) => 'part ' + r.part + ' at ' + r.start.toFixed(1) + ' s "' + r.action.trim() + '": nothing on screen moved between 0.4 and 1.6 s into the beat');
+      add('craft', row('actions-move', ['C-COMP-16'], dead.length ? 'fail' : 'pass', dead.length ? dead.slice(0, 6).join('; ') : acted.length + ' rows with an action; each shows motion inside its beat', 'the frame changes between 0.4 and 1.6 s after an action row starts', 'storyboard.md Action, rig/index.html timeline'));
+    } else add('craft', row('actions-move', ['C-COMP-16'], 'not measured', 'no row has an Action (the column is empty or absent)', 'the frame changes between 0.4 and 1.6 s after an action row starts', 'storyboard.md Action'));
+  }
 
   // ---- the storyboard names screens the app has: a row's On screen begins "state <id>" (or "scene <name>" for a concept scene) ----
   if (meta.app && meta.app.ref) {

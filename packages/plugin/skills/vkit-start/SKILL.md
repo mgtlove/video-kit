@@ -6,7 +6,7 @@ description: >
   "where does this video stand", or opens a video folder made by vkit new. It checks the install
   and the repos and prints the state before anything is built.
 metadata:
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # Start a session

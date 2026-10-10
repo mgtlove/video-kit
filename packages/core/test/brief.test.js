@@ -23,7 +23,7 @@ test('vkit brief writes the ask with the states in it, and check covers the stor
   const r = core.briefRequest(backed.dir);
   assert.strictEqual(r.states, 1);
   const text = fs.readFileSync(r.file, 'utf8');
-  assert.ok(/^# Brief request: backed/m.test(text) && /\| `work-item` \|/.test(text) && /## What to hand back/.test(text) && /\| Part \| Sentence \| Start \(s\) \| On screen \| Camera \| Card \| Capture \|/.test(text) && /state work-item/.test(text), text.slice(0, 400));
+  assert.ok(/^# Brief request: backed/m.test(text) && /\| `work-item` \|/.test(text) && /## What to hand back/.test(text) && /\| Part \| Sentence \| Start \(s\) \| Action \| On screen \| Camera \| Card \| Capture \|/.test(text) && /state work-item/.test(text), text.slice(0, 400));
   // the command itself, from inside the folder and from outside it (the first real run died on an
   // undefined name in the CLI that the core call above could never see, 8 October 2026)
   const c1 = spawnSync(process.execPath, [VKIT, 'brief'], { cwd: backed.dir, encoding: 'utf8' });
@@ -39,7 +39,7 @@ test('vkit brief writes the ask with the states in it, and check covers the stor
   const sb = path.join(backed.dir, 'storyboard.md');
   const head = fs.readFileSync(sb, 'utf8').split('\n').filter((l) => !/^\|\s*\d/.test(l)).join('\n');
   // the fourth row sits in part 4, which the starter's three-part rig does not have: coverage still reads it (8 October 2026)
-  const rows = (bad) => '\n| 1 | Every task starts somewhere. | 0.0 | scene opener | rest | | |\n| 2 | Here is where you set it. | 0.0 | state work-item, the form | rest | | |\n| 2 | The category field is where it starts. | 4.1 | state ' + (bad ? 'work-itm' : 'work-item') + ', the Category field | push on r1 | | |\n| 4 | And it is saved. | | state work-item, the Save button | rest | | |\n';
+  const rows = (bad) => '\n| 1 | Every task starts somewhere. | 0.0 | | scene opener | rest | | |\n| 2 | Here is where you set it. | 0.0 | | state work-item, the form | rest | | |\n| 2 | The category field is where it starts. | 4.1 | | state ' + (bad ? 'work-itm' : 'work-item') + ', the Category field | push on r1 | | |\n| 4 | And it is saved. | | | state work-item, the Save button | rest | | |\n';
   fs.writeFileSync(sb, head + rows(true));
   const opts = require('./opts')({ quick: true });
   let report = await core.check(backed.dir, opts);
@@ -75,31 +75,31 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   step('subject expert', 'video-fact-check', /FULL\.md waits for fact-check/);
   // the verdicts are read, not the file's presence: open verdicts send it back to the director, then all true to the producer
   touch('fact-check.md', '| Part | Sentence | Verdict | Note |\n|---|---|---|---|\n| 1 | One line. | wrong | says the wrong thing |\n| 1 | Two. | caveat | add a clause |\n| 1 | Three. | true | |\n\ntrue 3, wrong 0 (the counts line lies; the rows are read)');
-  step('director', 'video-script, step 5', /1 wrong, 1 caveat to apply/);
+  step('director', 'video-script, step 6', /1 wrong, 1 caveat to apply/);
   // a check is current by its sentences, not its date: new words with the old check on file go back to the expert
   touch('narration/FULL.md', 'One line, fixed.\nTwo.\nThree.');
   step('subject expert', 'video-fact-check', /waits for fact-check.*other sentences/);
   touch('fact-check.md', '| 1 | One line, fixed. | true | |\n| 1 | Two. | true | |\n| 1 | Three. | true | |');
-  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  step('producer', 'video-script, step 7', /checked; the words want a yes/);
   // the brief changed after the words but the check on file is of these very words (the expert checked after the change): nothing is owed
   touch('brief.md', '# Outline, revised');
-  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  step('producer', 'video-script, step 7', /checked; the words want a yes/);
   // the brief changed and the check is of other words: the director looks again before the expert does
   touch('narration/FULL.md', 'One line, fixed again.\nTwo.\nThree.'); touch('brief.md', '# Outline, revised twice');
-  step('director', 'video-script, step 3', /brief\.md changed after the words/);
+  step('director', 'video-script, step 4', /brief\.md changed after the words/);
   touch('narration/FULL.md', 'One line, fixed again.\nTwo.\nThree.');
   step('subject expert', 'video-fact-check', /waits for fact-check/);
   touch('fact-check.md', '| 1 | One line, fixed again. | true | |\n| 1 | Two. | true | |\n| 1 | Three. | true | |');
-  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  step('producer', 'video-script, step 7', /checked; the words want a yes/);
   // rows touched after the words with the same sentences (a Card, a Camera): nothing is owed; a changed sentence is
   const sbText = fs.readFileSync(path.join(v.dir, 'storyboard.md'), 'utf8');
   const head = sbText.split('\n').filter((l) => !/^\|\s*\d/.test(l)).join('\n');
-  touch('storyboard.md', head + '\n| 1 | One line, fixed again. | | state work-item, the form | rest | A card | |\n| 1 | Two. | | state work-item | rest | | |\n| 1 | Three. | | state work-item | rest | | |\n');
-  step('producer', 'video-script, step 6', /checked; the words want a yes/);
-  touch('storyboard.md', head + '\n| 1 | One line, following the rows. | | state work-item, the form | rest | | |\n');
-  step('director', 'video-script, step 3', /storyboard\.md is newer than the narration and its sentences differ/);
+  touch('storyboard.md', head + '\n| 1 | One line, fixed again. | | | state work-item, the form | rest | A card | |\n| 1 | Two. | | | state work-item | rest | | |\n| 1 | Three. | | | state work-item | rest | | |\n');
+  step('producer', 'video-script, step 7', /checked; the words want a yes/);
+  touch('storyboard.md', head + '\n| 1 | One line, following the rows. | | | state work-item, the form | rest | | |\n');
+  step('director', 'video-script, step 4', /storyboard\.md is newer than the narration and its sentences differ/);
   touch('narration/FULL.md', 'One line, following the rows.'); touch('fact-check.md', '| 1 | One line, following the rows. | true | |');
-  step('producer', 'video-script, step 6', /checked; the words want a yes/);
+  step('producer', 'video-script, step 7', /checked; the words want a yes/);
   touch('voice/part-1.m4a', 'x'); touch('voice/part-2.m4a', 'x');
   step('director', 'video-measure', /2 clips in voice/);
   // a redo re-opens the handoff: a newer narration wants a new fact check; a newer request, a new answer

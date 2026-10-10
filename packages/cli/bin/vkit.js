@@ -96,7 +96,7 @@ async function main() {
       if (!pos[0] || !pos[1] || !pos[2] || !flags.at) { console.error('vkit app crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]   (in the picture\'s own pixels)'); return 2; }
       const [x, y, w, h] = flags.at.split(',').map(Number);
       const r = core.apps.appCrop(pos[0], pos[1], { name: pos[2], x, y, w, h, replace: 'replace' in flags });
-      console.log('cropped ' + r.width + 'x' + r.height + ' from ' + r.row.capture + ' at ' + [x, y].join(',') + ' into ' + path.relative(process.cwd(), r.file) + ' (' + r.scale + 'x); crops.csv has the row. The capture is unchanged.');
+      console.log('cropped ' + r.width + 'x' + r.height + ' from ' + r.row.capture + ' at ' + [x, y].join(',') + ' into ' + path.relative(process.cwd(), r.file) + ' (' + r.scale + 'x)' + (r.rounded ? '; ' + r.rounded : '') + '; crops.csv has the row. The capture is unchanged.');
       return 0;
     }
     console.error('vkit app new|add-state|extract|crop'); return 2;

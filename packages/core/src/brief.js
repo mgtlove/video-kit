@@ -40,7 +40,7 @@ function briefRequest(videoDir) {
     out.push('');
   } else out.push('## The states the app has', '', 'None. This video has no recreated app, so every screen is a concept scene drawn by the kit; name scenes in plain words (`scene opener`, `scene cards`).', '');
   out.push(RETURN);
-  out.push('## The storyboard table', '', 'Copy this header and add one row per beat. The Sentence column holds the substance in plain words; the director turns it into narration.', '', '| Part | Sentence | Start (s) | On screen | Camera | Card | Capture |', '|---|---|---|---|---|---|---|', '| 1 | (what this beat says, in plain words) | | state ' + (states[0] ? states[0].id : '<id>') + ', (what the eye is on) | rest | | ' + (states[0] && states[0].capture ? states[0].capture.replace(/\.png$/i, '') : 'CAP-?') + ' |', '');
+  out.push('## The storyboard table', '', 'Copy this header and add one row per beat. The Sentence column holds the substance in plain words; the director turns it into narration. The Action column is what the learner does in this beat, in the console\'s own words (click Create bucket; type the name; scroll to Block Public Access; press Enter), or blank when nothing is done; On screen is the console\'s answer. A screen recording is actions and answers, and the kit animates each action: the cursor goes there, the click lands, the text is typed, the page scrolls.', '', '| Part | Sentence | Start (s) | Action | On screen | Camera | Card | Capture |', '|---|---|---|---|---|---|---|---|', '| 1 | (what this beat says, in plain words) | | (what the learner does, or blank) | state ' + (states[0] ? states[0].id : '<id>') + ', (what the eye is on) | rest | | ' + (states[0] && states[0].capture ? states[0].capture.replace(/\.png$/i, '') : 'CAP-?') + ' |', '');
   out.push('A part is a stretch the narrator records in one go (a scene change or a pause is a part boundary); two to five parts for a video under three minutes. Keep a part under about 1000 characters of narration so it is cheap to record again.', '');
   const file = path.join(dir, 'brief-request.md');
   fs.writeFileSync(file, out.join('\n'));
@@ -81,11 +81,11 @@ function handoff(dir) {
   else if (!req) { who = 'director'; what = 'app ' + app + ' is in; no brief-request.md yet'; skill = 'vkit brief'; }
   else if (brief < req) { who = 'subject expert'; what = 'brief-request.md waits for brief.md, the storyboard rows and capture-request.md'; skill = 'video-brief'; }
   else if (!full) { who = 'director'; what = 'the expert answered' + (pickups >= brief ? ' (capture-request.md listed; pickups first)' : '') + '; no narration/FULL.md yet'; skill = 'video-script'; }
-  else if (rowsDiffer) { who = 'director'; what = 'storyboard.md is newer than the narration and its sentences differ; the sentences follow the rows'; skill = 'video-script, step 3'; }
-  else if (!checkCurrent && brief > full) { who = 'director'; what = 'brief.md changed after the words; the words get another look, then vkit narration'; skill = 'video-script, step 3'; }
+  else if (rowsDiffer) { who = 'director'; what = 'storyboard.md is newer than the narration and its sentences differ; the sentences follow the rows'; skill = 'video-script, step 4'; }
+  else if (!checkCurrent && brief > full) { who = 'director'; what = 'brief.md changed after the words; the words get another look, then vkit narration'; skill = 'video-script, step 4'; }
   else if (!checkCurrent) { who = 'subject expert'; what = 'narration/FULL.md waits for fact-check.md' + (fact ? ' (the check on file is of other sentences)' : ''); skill = 'video-fact-check'; }
-  else if (verdicts.open) { who = 'director'; what = 'fact-check.md has ' + verdicts.summary + ' to apply, then vkit narration again'; skill = 'video-script, step 5'; }
-  else if (!voice.length) { who = 'producer'; what = 'the narration is checked; the words want a yes and a recording (voice/part-N.m4a)'; skill = 'video-script, step 6'; }
+  else if (verdicts.open) { who = 'director'; what = 'fact-check.md has ' + verdicts.summary + ' to apply, then vkit narration again'; skill = 'video-script, step 6'; }
+  else if (!voice.length) { who = 'producer'; what = 'the narration is checked; the words want a yes and a recording (voice/part-N.m4a)'; skill = 'video-script, step 7'; }
   else { who = 'director'; what = voice.length + ' clip' + (voice.length === 1 ? '' : 's') + ' in voice/; the clips are the clock'; skill = 'video-measure'; }
   return { name, dir, who, what, skill };
 }

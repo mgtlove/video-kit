@@ -30,7 +30,7 @@ test('a beat naming something not on screen is recorded in VK.faults and reporte
   assert.ok(f.every((x) => x.t === 1 || x.t === 2), 'each miss carries its beat time: ' + JSON.stringify(f));
   assert.strictEqual(out[1].data.mockOn, true, 'an inline screen has no STATES, so state() of any id shows it and is not a miss');
   assert.strictEqual(out[2].data.faults.length, 4, 'the later good beats add no faults and the page reaches the end');
-  assert.strictEqual(out[2].data.version, '0.4.4');
+  assert.strictEqual(out[2].data.version, '0.5.0');
   // the checker's row
   const report = await core.check(r.dir, Object.assign({ quick: true }, opts));
   const row = report.groups.footage.find((x) => x.id === 'beats-on-screen');
