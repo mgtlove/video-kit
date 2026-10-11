@@ -10,6 +10,7 @@ Training and explainer videos from screenshots and a script, with no screen reco
 
 ```
 vkit                     the front door: what this is, what is waiting here, the three ways in
+vkit help [command]      the manual page: every command in the order a video is made, or one in full
 vkit new my-video        a video is a folder; --app family/tool puts a recreated app's screens in it
 vkit app new|use|add-state|extract|crop   a recreated app: one folder per tool, built from your own captures; use puts it into a video or brings the copy up to date; crop copies a logo or icon out of a capture
 vkit capture walkthrough.docx    the screenshots and their steps out of a Word walkthrough into captures/, the shape checked (docs/CAPTURE.md is the brief)

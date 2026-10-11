@@ -81,13 +81,26 @@ test('vkit with no command is the front door', () => {
   const run = (cwd) => spawnSync('node', [VKIT], { cwd, encoding: 'utf8', env: process.env });
   let r = run(tmp);
   assert.strictEqual(r.status, 0, r.stderr);
-  assert.ok(/^vkit: training and explainer videos from screenshots and a script\./.test(r.stdout) && /not a video folder/.test(r.stdout) && /Three ways in:/.test(r.stdout) && /I have an idea/.test(r.stdout) && /Who does what/.test(r.stdout), r.stdout);
+  assert.ok(/^vkit\n  Training and explainer videos from screenshots and a script\./.test(r.stdout) && /Where you are:\n  .*not a video folder/.test(r.stdout) && /What is waiting elsewhere:\n  (nothing|1\. app )/.test(r.stdout) && /Three ways in:\n  1\. I have an idea/.test(r.stdout) && /Who does what:\n  producer/.test(r.stdout) && /More:\n  vkit help/.test(r.stdout), r.stdout);
   const v = core.newVideo('door', { cwd: tmp });
   r = run(v.dir);
-  assert.ok(/Here: the video "door" \(engine \d+\.\d+\.\d+, no recreated app\)\./.test(r.stdout) && /Waiting: door: subject expert \(video-brief\)/.test(r.stdout), r.stdout);
+  assert.ok(/Where you are:\n  .*, the video "door"\n  engine \d+\.\d+\.\d+, no recreated app\n\nWhat is waiting:\n  1\. door\n     whose turn: the subject expert, with the video-brief skill\n     what: no brief\.md yet/.test(r.stdout), r.stdout);
   r = run(tmp);
-  assert.ok(/Here: videos in this folder\.\n  door: subject expert/.test(r.stdout), r.stdout);
+  assert.ok(/Where you are:\n  .*, a folder of videos\n\nWhat is waiting:\n  1\. door\n     whose turn: the subject expert/.test(r.stdout), r.stdout);
+  // vkit help is a manual page: every command in a group, one subcommand per line, one command in full on request
   const h = spawnSync('node', [VKIT, 'help'], { encoding: 'utf8' });
-  assert.ok(/^vkit <command>/.test(h.stdout) && /upgrade \[dir\]/.test(h.stdout), 'vkit help is the table');
-  console.log('front door: ' + r.stdout.split('\n')[3]);
+  assert.ok(/^VKIT\(1\)\n\nNAME\n/.test(h.stdout) && /\nSYNOPSIS\n/.test(h.stdout) && /\nCOMMANDS\n/.test(h.stdout) && /\nENVIRONMENT\n/.test(h.stdout) && /\nFILES\n/.test(h.stdout) && /\nSEE ALSO\n/.test(h.stdout), 'the sections');
+  const cli = fs.readFileSync(VKIT, 'utf8');
+  const table = {}; for (const m of cli.matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
+  for (const c of Object.keys(table)) {
+    const heads = h.stdout.split('\n').filter((l) => l === '    ' + c || l.startsWith('    ' + c + ' '));
+    assert.strictEqual(heads.length, 1, 'vkit help names ' + c + ' once as a heading: ' + JSON.stringify(heads));
+    if (table[c].includes(' | ')) for (const sub of table[c].split('|').map((x) => x.trim().split(/\s/)[0])) assert.ok(h.stdout.includes('      ' + c + ' ' + sub), 'vkit help lists ' + c + ' ' + sub + ' on its own line');
+  }
+  assert.ok(!h.stdout.split('\n').some((l) => l.length > 100), 'no line over 100 columns: ' + h.stdout.split('\n').find((l) => l.length > 100));
+  const one = spawnSync('node', [VKIT, 'help', 'app'], { encoding: 'utf8' });
+  assert.ok(/^VKIT HELP: app\n/.test(one.stdout) && /      app crop /.test(one.stdout) && /its own folder beside the videos/.test(one.stdout), one.stdout);
+  const bad = spawnSync('node', [VKIT, 'help', 'nope'], { encoding: 'utf8' });
+  assert.strictEqual(bad.status, 2);
+  console.log('front door: ' + r.stdout.split('\n').slice(5, 10).join(' | '));
 });

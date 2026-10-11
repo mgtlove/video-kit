@@ -46,40 +46,138 @@ function progressSink() {
   }, tty ? 200 : 5000);
 }
 
-function help() {
-  console.log('vkit <command>\n');
-  for (const [name, [args, what]] of Object.entries(COMMANDS)) { const head = name + ' ' + args; console.log(head.length > 32 ? '  ' + head + '\n' + ' '.repeat(36) + what : '  ' + head.padEnd(34) + what); }
-  console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames, render and check; shoot and face use it without being told; nothing downloads a browser.\nLong commands show a progress line (a bar on a terminal, plain lines in a pipe); VKIT_QUIET=1 turns it off.');
+/* vkit help: a manual page. The command table above is the one source of a command's arguments and
+   one-line meaning; MAN adds the groups (in the order a video is made), each command's longer
+   explanation, and its subcommands one per line. vkit help <command> prints one command in full. */
+const MAN = {
+  groups: [
+    ['Making a video', ['new', 'menu', 'brief', 'handoffs', 'narration', 'measure', 'time', 'frames', 'render', 'check']],
+    ['Screens: capturing and recreating a tool', ['shoot', 'capture', 'face', 'app']],
+    ['Looks and brands', ['look', 'brand']],
+    ['The kit itself', ['upgrade', 'plugin', 'sync-reference', 'publish']]
+  ],
+  detail: {
+    'new': ['A video is a folder: storyboard.md, narration/, voice/, rig/ (the page that is the footage) and video.json (the record of its choices). The engine is copied in at the kit\'s version.', 'With --app, the recreated app\'s states are copied into rig/app/ and the page points at them.'],
+    'menu': ['The ten choices a video makes: job, sources, layout, brand, look, tone, patterns, voice, characters, fixed lines. Each is recorded in video.json with where it came from and when.', 'After vkit measure, the items that would re-time the video are locked.'],
+    'brief': ['The director\'s ask to the subject expert, written into the video folder. The expert\'s chat answers it with the video-brief skill: brief.md, the storyboard rows and capture-request.md.'],
+    'handoffs': ['Reads the files in each video folder (and each app folder) and says whose turn it is and with which skill. Both chats run this instead of asking each other.'],
+    'narration': ['Reads narration/part-N.md (one sentence per line, one line per storyboard row), holds each part to its limits, writes narration/FULL.md, writes the final sentences into storyboard.md\'s Sentence column and logs every row whose words moved from the expert\'s in narration/changes.md.'],
+    'measure': ['The clips are the clock: each voice/part-N file is read to the millisecond and the lengths go into the page\'s PARTS line and video.json. Nothing is stretched or padded.'],
+    'time': ['Runs faster-whisper on this machine (word timestamps on; the model downloads once) over each clip, aligns the written words to the heard words, and writes each sentence\'s start into storyboard.md and voice/times.json.'],
+    'frames': ['One PNG per beat into rig/_frames/, 0.3 s after each beat lands, so the rig is judged by looking. Times as arguments pick moments; --every N takes a still every N seconds.'],
+    'render': ['Every frame drawn from the seek at 30 fps into ffmpeg, the voice clips muxed at their part offsets, captions written from the storyboard. The MP4 is exactly the sum of the parts long.'],
+    'check': ['Footage: offline, deterministic, seekable, seek equals playback. Craft: the rules from rules.json by id (text floors, line length, holds, actions move, notes clear). Contrast on the pixels. Fidelity: each app state against its capture.', 'Each row names its measurement, threshold and place; --quick skips the slow proofs while you work.'],
+    'shoot': ['The capture browser: the Chrome already on this machine, on the kit\'s own profile, with the page\'s viewport at exactly 1920x1080 at a device pixel ratio of 2. Sign in once in a visible window (start --show), then run headless.', 'Each shot hides the selectors in shoot.json\'s mask, sweeps the text for an account id, an ARN, an email or an IP and refuses while any remain, then writes CAP-NNN.png with a values file, walkthrough.md and captures.csv.'],
+    'capture': ['The other way in: a Word document from whoever has the tool, a heading per step, a line of what was done, the screenshot under it. Written into captures/ in reading order with the text beside each picture; the shape is checked (PNG, size, unique, under a step).'],
+    'face': ['The product\'s typeface, traced from the page open in the capture browser: each glyph drawn at 1000 px and traced, widths and kerning measured, written as an OTF of our own with a provenance note. Nothing is read from the product\'s font file.'],
+    'app': ['A recreated app is its own folder beside the videos (apps/<family>/<tool>/), built from your own captures and used by many videos.'],
+    'look': ['A look pack from looks/ written as --look-* tokens in rig/look.css; the theme reads brand, then look, then its defaults. Seven packs from the research.'],
+    'brand': ['A brand is one folder: five colours, two faces, a mark and a banner placed by when and where. Written as --brand-* tokens; --check measures each colour against the surface it sits on.'],
+    'upgrade': ['The kit\'s engine copied into a video\'s rig/engine/, VERSION and video.json.engine written. The old copy goes to the video\'s _suggested-trash/, never deleted; a copy that was edited inside the video is named.'],
+    'plugin': ['The Claude plugin (packages/plugin/) zipped the way claude.ai\'s upload takes it. Then: claude.ai, Customize, Plugins, Upload a plugin.'],
+    'sync-reference': ['Copies the craft rules, the look packs and the patterns index from the research repo beside this one, with the source commit recorded.'],
+    'publish': ['Not built yet: hands the MP4 to a host adapter and records the URL in video.json.']
+  },
+  subs: {
+    'app': [['new family/tool', 'make an app folder: app.json, tokens.css, screen.css, states/, manifest.csv'],
+      ['use family/tool [video]', 'copy the app into a video that exists, or bring the video\'s copy up to date; writes video.json'],
+      ['add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t]', 'add a state that cites a capture'],
+      ['extract <video> family/tool <id> [--capture f]', 'lift a video\'s inline screen into an app folder'],
+      ['crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]', 'copy a region of a capture (a logo, an icon) into crops/, in whole screen pixels']],
+    'shoot': [['start [--show]', 'run the capture browser headless; --show opens a window to sign in'],
+      ['status', 'where the page is, the viewport, whether it is a sign-in page, the session\'s age'],
+      ['go <url>', 'open a page'],
+      ['"<step>" "<what was done>" [--into dir] [--allow-hits]', 'take the shot into dir/captures/; refused while private text shows'],
+      ['stop', 'close the browser its own way, so cookies are kept']],
+    'plugin': [['pack [--out file]', 'write the upload zip (default ~/Desktop/vkit-plugin.zip)']]
+  },
+  env: [['PW_CHANNEL=chrome', 'use the Chrome already on this machine for frames, render and check. shoot and face use it without being told. Nothing ever downloads a browser.'],
+    ['VKIT_QUIET=1', 'no progress line. Long commands otherwise show one: a bar on a terminal, plain lines in a pipe.'],
+    ['VKIT_APPS=<folder>', 'where recreated apps are looked for first; then ../apps beside the kit, then the kit\'s examples.']],
+  files: [['video.json', 'the record of a video\'s choices, parts, engine and app'], ['storyboard.md', 'one row per sentence: part, sentence, start, action, on screen, camera, card, capture'],
+    ['narration/part-N.md', 'the words, one sentence per line; FULL.md and changes.md are written by vkit narration'], ['voice/part-N.m4a', 'the recordings, one per part; .wav, .mp3, .aac, .flac, .ogg are read too'],
+    ['rig/index.html', 'the page that is the footage; rig/engine/ is the kit\'s engine, never edited here'], ['out/', 'the MP4, captions, check.json and render.json'],
+    ['apps/<family>/<tool>/', 'a recreated app: states, crops, faces, manifest.csv, fidelity.md, capture-request.md']],
+  see: [['README.md', 'the two-minute version'], ['docs/ENGINE.md', 'what a rig page can call'], ['docs/ROADMAP.md', 'the plan'], ['the vkit plugin', 'the skills that drive these commands from a chat; vkit-start opens a session']]
+};
+
+function wrap(text, indent, width) {
+  const out = []; let line = '';
+  for (const w of text.split(' ')) {
+    if ((line + ' ' + w).trim().length > width - indent && line) { out.push(' '.repeat(indent) + line); line = w; } else line = (line ? line + ' ' : '') + w;
+  }
+  if (line) out.push(' '.repeat(indent) + line);
+  return out;
+}
+function manCommand(name, full) {
+  const [args, what] = COMMANDS[name];
+  const out = [];
+  const subs = MAN.subs[name];
+  out.push('    ' + name + (subs ? ' <subcommand>' : (args ? ' ' + args : '')));
+  out.push(...wrap(what.charAt(0).toUpperCase() + what.slice(1) + (/[.!?]$/.test(what) ? '' : '.'), 8, 78));
+  if (full) for (const d of MAN.detail[name] || []) out.push(...wrap(d, 8, 78));
+  if (subs) for (const [a, w] of subs) { out.push('      ' + name + ' ' + a); out.push(...wrap(w, 10, 78)); }
+  return out;
+}
+function help(one) {
+  if (one && !COMMANDS[one]) { console.error('unknown command: ' + one + '. vkit help lists them.'); return 2; }
+  if (one) { console.log(['VKIT HELP: ' + one, ''].concat(manCommand(one, true)).join('\n')); return 0; }
+  const out = ['VKIT(1)', '', 'NAME', '    vkit: training and explainer videos from screenshots and a script', '',
+    'SYNOPSIS', '    vkit                       the front door: what this is, what is waiting, the ways in', '    vkit <command> [options]', '    vkit help [command]        this page, or one command in full', '',
+    'COMMANDS', '    In the order a video is made. A video is a folder; every command takes its path', '    or runs inside it.'];
+  for (const [title, names] of MAN.groups) { out.push('', '  ' + title); for (const n of names) { out.push(''); out.push(...manCommand(n, false)); } }
+  out.push('', 'ENVIRONMENT'); for (const [k, v] of MAN.env) { out.push('    ' + k); out.push(...wrap(v, 8, 78)); }
+  out.push('', 'FILES'); for (const [k, v] of MAN.files) { out.push('    ' + k); out.push(...wrap(v, 8, 78)); }
+  out.push('', 'SEE ALSO'); for (const [k, v] of MAN.see) { out.push('    ' + k); out.push(...wrap(v, 8, 78)); }
+  out.push('', 'RULES', ...wrap('Never download a browser. Never call a paid service without a go-ahead. Never delete: move it aside and say so. The recreated screen is never restyled. Nothing on screen is invented: no capture, no control.', 4, 78));
+  console.log(out.join('\n'));
+  return 0;
 }
 
 /* the front door: vkit with no command says what this is, where this folder stands and the ways in,
    for someone who has never seen the project. vkit --help is the command table. */
 function frontDoor() {
-  const lines = ['vkit: training and explainer videos from screenshots and a script.',
-    'The screen is recreated in HTML, every frame is drawn from a clock, and it is checked before anyone records anything. A video is a folder.', ''];
+  const lines = ['vkit', '  Training and explainer videos from screenshots and a script.',
+    '  The screen is recreated in HTML, every frame is drawn from a clock,', '  and it is checked before anyone records anything. A video is a folder.', ''];
   const cwd = process.cwd();
+  const home = require('os').homedir();
+  const where = cwd.startsWith(home) ? '~' + cwd.slice(home.length) : cwd;
+  const item = (n, h) => ['  ' + n + ' ' + h.name, '     whose turn: the ' + h.who + ', with ' + (/^vkit /.test(h.skill) ? h.skill : 'the ' + h.skill + ' skill'), '     what: ' + h.what];
   if (fs.existsSync(path.join(cwd, 'video.json'))) {
     const meta = JSON.parse(fs.readFileSync(path.join(cwd, 'video.json'), 'utf8'));
-    lines.push('Here: the video "' + meta.name + '" (engine ' + meta.engine + (meta.app && meta.app.ref ? ', app ' + meta.app.ref + ' ' + meta.app.version : ', no recreated app') + ').');
-    try { lines.push('Waiting: ' + core.formatHandoffs(core.handoffs(cwd, { apps: false }))); } catch (e) { lines.push('Waiting: ' + e.message); }
+    lines.push('Where you are:', '  ' + where + ', the video "' + meta.name + '"', '  engine ' + meta.engine + (meta.app && meta.app.ref ? ', app ' + meta.app.ref + ' ' + meta.app.version : ', no recreated app'), '');
+    lines.push('What is waiting:');
+    try { for (const h of core.handoffs(cwd, { apps: false })) lines.push(...item('1.', h)); } catch (e) { lines.push('  ' + e.message); }
   } else {
-    let list = []; try { list = core.handoffs(cwd); } catch (e) { list = core.appHandoffs(); }
-    if (list.length) lines.push('Here: ' + (fs.existsSync(path.join(cwd, 'video.json')) || list.some((h) => !/^app /.test(h.name)) ? 'videos in this folder.' : 'not a video folder; what is waiting elsewhere:'), ...list.map((h) => '  ' + h.name + ': ' + h.who + ' (' + h.skill + '): ' + h.what));
-    else lines.push('Here: not a video folder (no video.json here or one level down), and nothing is waiting.');
+    let list = [], videos = true; try { list = core.handoffs(cwd); } catch (e) { list = core.appHandoffs(); videos = false; }
+    lines.push('Where you are:', '  ' + where + (videos ? ', a folder of videos' : ', not a video folder (no video.json here or one level down)'), '');
+    lines.push(videos ? 'What is waiting:' : 'What is waiting elsewhere:');
+    const vids = list.filter((h) => !/^app /.test(h.name)), apps = list.filter((h) => /^app /.test(h.name));
+    if (!list.length) lines.push('  nothing');
+    vids.forEach((h, i) => lines.push(...item((i + 1) + '.', h)));
+    if (apps.length && vids.length) lines.push('', 'Apps waiting on their own:');
+    apps.forEach((h, i) => lines.push(...item((i + 1) + '.', h)));
   }
   lines.push('', 'Three ways in:',
-    '  I have an idea for a video      the subject expert\'s chat with the video-brief skill writes brief.md and the screens it needs; vkit new <name> makes the folder',
-    '  I have screenshots of a tool    vkit capture <walkthrough.docx> reads a Word document of them, or vkit shoot takes them; then the video-recreate skill builds the screen',
-    '  I have a recording              vkit measure sets the clock from the clips, vkit time places every sentence where it is said',
-    '', 'Who does what: the producer owns the goal, the words and the first watch; the subject expert (its own chat) owns the teaching and the fact check; the director (the chat with this repo) owns the words under the craft rules, the camera and the timeline. vkit handoffs says whose turn it is.',
-    'Every command: vkit --help. The start of a session: the vkit-start skill. The two-minute version: README.md.');
+    '  1. I have an idea for a video', '     In the subject expert\'s chat, the video-brief skill writes brief.md and the screens it needs.', '     vkit new <name> makes the folder.',
+    '  2. I have screenshots of a tool', '     vkit capture <walkthrough.docx> reads a Word document of them, or vkit shoot takes them.', '     Then the video-recreate skill builds the screen.',
+    '  3. I have a recording', '     vkit measure sets the clock from the clips.', '     vkit time places every sentence where it is said.',
+    '', 'Who does what:',
+    '  producer         the goal, the words, the first watch',
+    '  subject expert   the teaching and the fact check, in its own chat',
+    '  director         the words under the craft rules, the camera, the timeline; the chat with this repo',
+    '  vkit handoffs says whose turn it is.',
+    '', 'More:',
+    '  vkit help        the manual page; vkit help <command> for one command in full',
+    '  vkit-start       the skill for the start of a session',
+    '  README.md        the two-minute version');
   console.log(lines.join('\n'));
 }
 
 async function main() {
   const [cmd, ...args] = process.argv.slice(2);
   if (!cmd) { frontDoor(); return 0; }
-  if (cmd === '--help' || cmd === '-h' || cmd === 'help') { help(); return 0; }
+  if (cmd === '--help' || cmd === '-h' || cmd === 'help') return help(args[0]);
   if (!COMMANDS[cmd]) { console.error('unknown command: ' + cmd + '. Try vkit --help'); return 2; }
   const channel = process.env.PW_CHANNEL || undefined;
   const captureChannel = process.env.PW_CHANNEL || 'chrome';   /* the capture browser only ever means the Chrome already here */
