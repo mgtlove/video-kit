@@ -7,7 +7,7 @@ description: >
   own capture browser through the task and vkit shoot writes the capture set; nothing is pasted,
   nothing is redacted after the fact, and sign-in is the person's.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Capture a walkthrough with the kit's browser
@@ -20,8 +20,8 @@ The kit runs the Chrome already on this machine on a profile folder of its own (
 
 ## Before the first capture on this machine
 
-1. The MCP server, once. It is pinned in the kit's dev dependencies and lockfile (`@playwright/mcp`), so `npm install` in `video-kit` puts it in place, and it is registered for the video folder only, from `~/Developer/video`: `claude mcp add --scope local playwright -- node video-kit/node_modules/@playwright/mcp/cli.js --cdp-endpoint http://127.0.0.1:9333`. Restart Claude Code once so the server is loaded. It is a local process on this Mac speaking to Claude Code over standard input and output; nothing in it reaches any server of its own. The server's `--allowed-origins` can fence the browser to the tool's origins; a console loads from several hosts, and a fence that misses one looks like a broken page, so add the fence only after a first capture has shown which hosts the tool uses (`shoot.json`'s `allowed_origins` records them).
-2. The app folder's `shoot.json` (`apps/<family>/<tool>/shoot.json`): `start` (the first URL), `session_hours` (the sign-in session's length, 1 for an AWS capture account), `mask` (selectors hidden before every shot), `known` (literal strings that must never appear, such as an account id, kept in the private app repo only), `allowed_origins` (filled after the first capture). Read it; never guess at it.
+1. The MCP server, once. It is pinned in the kit's dev dependencies and lockfile (`@playwright/mcp`), so `npm install` in `video-kit` puts it in place, and it is registered for the video folder only, from `~/Developer/video`: `claude mcp add --scope local playwright -- node video-kit/node_modules/@playwright/mcp/cli.js --cdp-endpoint http://127.0.0.1:9333`. Restart Claude Code once so the server is loaded. It is a local process on this Mac speaking to Claude Code over standard input and output; nothing in it reaches any server of its own. The server's `--allowed-origins` can fence the browser to the tool's origins; a console loads from several hosts, and a fence that misses one looks like a broken page, so add the fence only after a first capture has shown which hosts the tool uses; write them into `shoot.json` under `allowed_origins` by hand as a record (the kit reads `start`, `session_hours`, `mask` and `known` from that file and nothing writes it).
+2. The app folder's `shoot.json` (`apps/<family>/<tool>/shoot.json`): `start` (the first URL), `session_hours` (the sign-in session's length, 1 for an AWS capture account), `mask` (selectors hidden before every shot), `known` (literal strings that must never appear, such as an account id, kept in the private app repo only), `allowed_origins` (a record kept by hand after the first capture; the kit does not read it). Read it; never guess at it.
 
 ## Signing in (the person's step)
 

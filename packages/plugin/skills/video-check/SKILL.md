@@ -5,10 +5,12 @@ description: >
   checker", "why did check fail", "is this footage", or before a video is called done. It runs
   vkit check, reads the report by rule id, and says what to change and where.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Check a video
+
+Runs in the director's chat, on the video folder.
 
 `vkit check` answers two questions about a video folder: is it footage (offline, deterministic, seekable, and a seek equals real playback) and is it well made (the craft rules in `rules.json`, contrast of every text colour and stroke against what it sits on, fidelity of each app state against its capture). Every row is a rule id with its measurement, the threshold and the place to look. The exit code is 1 when any row fails.
 

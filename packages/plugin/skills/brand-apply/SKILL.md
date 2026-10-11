@@ -6,10 +6,12 @@ description: >
   or when video-menu item 4 needs a brand the video does not carry. It sets up or changes the brand
   by asking, showing what it will write, writing rig/brand/, running vkit brand and showing frames.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Apply a brand
+
+Runs in the director's chat, on the video folder.
 
 A brand is one folder in the kit's `brands/<name>/`: `brand.json` (five colours: ground, ink, primary, secondary, highlight, any of them empty; two faces, display and text; a mark and a banner with when, where, size, opacity and seconds) and the files it names. `vkit brand <name>` copies it into the video's `rig/brand/` and writes `rig/brand.css`; the theme reads `--brand-*` first, so "no brand" renders the look and the defaults; `vkit brand none` takes it off; `vkit brand` with no name rebuilds after a hand edit; `vkit brand --check` measures every colour against the surface it sits on. The product screen is never branded, and a mark set to `always` hides while the screen is up. `brands/example/` is a neutral brand to look at; `brands/TEMPLATE/` is the empty shape.
 

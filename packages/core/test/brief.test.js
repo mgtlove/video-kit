@@ -160,3 +160,41 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   assert.throws(() => core.handoffs(path.join(tmp, 'not-a-video')), /no video folder/);
   console.log('handoffs: ' + c.stdout.trim().split('\n').join(' | ') + ' | app use: ' + cu.stdout.trim());
 });
+
+test('vkit narration writes the Sentence column and logs every change from the expert\'s words', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vkit-changes-'));
+  const v = core.newVideo('words', { cwd: tmp });
+  const sb = path.join(v.dir, 'storyboard.md');
+  const head = fs.readFileSync(sb, 'utf8').split('\n').filter((l) => !/^\|\s*\d/.test(l)).join('\n');
+  // the expert's rows: two in part 1, one in part 2; Start and Action stay as they are
+  fs.writeFileSync(sb, head + '\n| 1 | A bucket is where objects live. | 0.5 | | scene opener | rest | | |\n| 1 | Click the create button. | 4.0 | click Create bucket | state create-top | hold | | |\n| 2 | The name is unique everywhere. | 0.0 | | state create-named | hold | | |\n');
+  fs.writeFileSync(path.join(v.dir, 'brief-request.md'), '# request'); fs.writeFileSync(path.join(v.dir, 'brief.md'), '# the idea');   /* the chain up to the words */
+  fs.mkdirSync(path.join(v.dir, 'narration'), { recursive: true });
+  for (const f of fs.readdirSync(path.join(v.dir, 'narration'))) if (/^part-\d+\.md$/.test(f)) fs.unlinkSync(path.join(v.dir, 'narration', f));
+  fs.writeFileSync(path.join(v.dir, 'narration', 'part-1.md'), 'A bucket is where objects live.\nPress Create bucket.\n');
+  fs.writeFileSync(path.join(v.dir, 'narration', 'part-2.md'), 'The name is unique everywhere.\n');
+  let r = core.narration(v.dir);
+  assert.deepStrictEqual([r.storyboard.rows, r.storyboard.written, r.storyboard.changed, r.storyboard.mismatched], [3, 1, ['part 1 row 2'], []], JSON.stringify(r.storyboard));
+  let rows = fs.readFileSync(sb, 'utf8').split('\n').filter((l) => /^\|\s*\d/.test(l));
+  assert.strictEqual(rows[1], '| 1 | Press Create bucket. | 4.0 | click Create bucket | state create-top | hold | | |', 'only the Sentence cell moved: ' + rows[1]);
+  const changes = path.join(v.dir, 'narration', 'changes.md');
+  let log = core.narration && require('../src/words').readChanges(changes);
+  assert.deepStrictEqual(Object.values(log).map((e) => [e.part, e.row, e.expert, e.director]), [[1, 2, 'Click the create button.', 'Press Create bucket.']], fs.readFileSync(changes, 'utf8'));
+  // a second rewording keeps the expert's words as first seen
+  fs.writeFileSync(path.join(v.dir, 'narration', 'part-1.md'), 'A bucket is where objects live.\nNow press Create bucket.\n');
+  r = core.narration(v.dir);
+  log = require('../src/words').readChanges(changes);
+  assert.deepStrictEqual(Object.values(log).map((e) => [e.expert, e.director]), [['Click the create button.', 'Now press Create bucket.']]);
+  // handoffs counts it for the expert's fact check
+  const h = core.handoffs(v.dir, { apps: false })[0];
+  assert.ok(h.who === 'subject expert' && h.skill === 'video-fact-check' && /1 sentence changed from the expert's words, see narration\/changes\.md/.test(h.what), JSON.stringify(h));
+  // put back to the expert's words: the row leaves the log; a part whose counts differ is left alone and named
+  fs.writeFileSync(path.join(v.dir, 'narration', 'part-1.md'), 'A bucket is where objects live.\nClick the create button.\n');
+  fs.writeFileSync(path.join(v.dir, 'narration', 'part-2.md'), 'The name is unique everywhere.\nAcross every account.\n');
+  r = core.narration(v.dir);
+  assert.deepStrictEqual([r.storyboard.changed, r.storyboard.mismatched], [[], ['part 2: 1 rows, 2 sentences']], JSON.stringify(r.storyboard));
+  assert.ok(/Every row says what the expert wrote/.test(fs.readFileSync(changes, 'utf8')));
+  const c = spawnSync('node', [VKIT, 'narration', v.dir], { encoding: 'utf8' });
+  assert.ok(/every row says what the expert wrote/.test(c.stdout) && /not synced, rows and sentences differ: part 2/.test(c.stdout), c.stdout + c.stderr);
+  console.log('changes: ' + fs.readFileSync(changes, 'utf8').split('\n').filter((l) => /^\|\s*\d/.test(l)).join(' | ') + ' | ' + c.stdout.trim().split('\n').pop());
+});

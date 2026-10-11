@@ -25,7 +25,6 @@
   --paper-dim:var(--look-paper-dim,var(--dim));
   --panel:var(--look-panel,#101211);   /* opaque: a see-through card let the screen's text show under its own (docs/FINDINGS.md F1) */
   --panel-ink:var(--look-panel-ink,var(--ink));
-  --panel-kick:var(--look-panel-kick,var(--accent));
   --panel-bd:#ffffff22;
   --scrim:#1c1e1dd9;
   --shadow:0 10px 44px #00000077;

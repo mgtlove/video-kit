@@ -5,6 +5,11 @@
 // again; no sentence over 30 words, rules.json pacing), writes narration/FULL.md
 // (every part in order, for a voice session or a reviewer), and estimates each
 // part's length at the target rate so a PARTS line exists before any clip does.
+// It also writes the final sentences into storyboard.md's Sentence column, one row per
+// sentence, and logs every row whose words changed from the expert's in
+// narration/changes.md (part, row, the expert's words as first seen, the director's words,
+// the date): the director keeps the final call on the words and nothing moves silently.
+// The fact check judges drift against that log; vkit handoffs counts it.
 //
 // measure(videoDir): the clips are the clock. ffprobe reads voice/part-N.* to
 // the millisecond; the lengths go into rig/index.html's PARTS line to two
@@ -46,8 +51,61 @@ function narration(videoDir, opts) {
   files.forEach((f, i) => { full.push('## Part ' + (i + 1) + ' (' + parts[i].words + ' words, about ' + parts[i].estimateSeconds + ' s at ' + wpm + ' wpm)', '', ...sentencesOf(f), ''); });
   const fullFile = path.join(dir, 'narration', 'FULL.md');
   fs.writeFileSync(fullFile, full.join('\n'));
+  const sync = syncStoryboard(dir, files.map(sentencesOf));
   const total = parts.reduce((a, p) => a + p.estimateSeconds, 0);
-  return { parts, wpm, estimate: parts.map((p) => p.estimateSeconds), total: +total.toFixed(1), full: fullFile, problems: parts.reduce((a, p) => a + p.problems.length, 0), partsLine: 'var PARTS = [' + parts.map((p) => p.estimateSeconds).join(', ') + '];   /* ESTIMATES at ' + wpm + ' wpm until the clips are measured */' };
+  return { parts, wpm, estimate: parts.map((p) => p.estimateSeconds), total: +total.toFixed(1), full: fullFile, storyboard: sync, problems: parts.reduce((a, p) => a + p.problems.length, 0), partsLine: 'var PARTS = [' + parts.map((p) => p.estimateSeconds).join(', ') + '];   /* ESTIMATES at ' + wpm + ' wpm until the clips are measured */' };
+}
+
+// syncStoryboard(dir, partSentences): the storyboard's Sentence column follows the narration, row
+// by row inside each part, and the rows whose words changed are logged with the words they had.
+// A part whose row count is not its sentence count is left alone and named (sentences-match says
+// the same in vkit check). Only the Sentence cell is rewritten; Start, Action and the rest stay.
+const CHANGES_HEAD = ['# The words, as the expert wrote them and as the narration says them', '', 'Written by vkit narration. One row per storyboard row whose sentence differs from the expert\'s; the expert\'s words are kept as first seen, the director\'s are the latest. A row put back to the expert\'s words leaves the table. The fact check judges drift against this file.', '', '| Part | Row | Expert\'s words | Director\'s words | Changed on |', '|---|---|---|---|---|'];
+function readChanges(file) {
+  const out = {};
+  if (!fs.existsSync(file)) return out;
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    if (!/^\|\s*\d+\s*\|\s*\d+\s*\|/.test(line)) continue;
+    const c = line.split('|').map((x) => x.trim());
+    out[c[1] + ':' + c[2]] = { part: +c[1], row: +c[2], expert: c[3], director: c[4], on: c[5] };
+  }
+  return out;
+}
+function syncStoryboard(dir, partSentences) {
+  const sb = path.join(dir, 'storyboard.md');
+  const result = { rows: 0, written: 0, changed: [], mismatched: [], file: null };
+  if (!fs.existsSync(sb)) return result;
+  const lines = fs.readFileSync(sb, 'utf8').split('\n');
+  const byPart = {};
+  lines.forEach((l, i) => { const m = l.match(/^\|\s*(\d+)\s*\|/); if (m) (byPart[+m[1]] = byPart[+m[1]] || []).push(i); });
+  const changesFile = path.join(dir, 'narration', 'changes.md');
+  const log = readChanges(changesFile);
+  const today = new Date().toISOString().slice(0, 10);
+  partSentences.forEach((sentences, pi) => {
+    const part = pi + 1, idx = byPart[part] || [];
+    result.rows += idx.length;
+    if (!idx.length) return;
+    if (idx.length !== sentences.length) { result.mismatched.push('part ' + part + ': ' + idx.length + ' rows, ' + sentences.length + ' sentences'); return; }
+    idx.forEach((li, k) => {
+      const cells = lines[li].split('|');
+      const had = cells[2].trim(), want = sentences[k], key = part + ':' + (k + 1);
+      if (had !== want) {
+        const expert = log[key] ? log[key].expert : had;
+        if (expert === want) delete log[key]; else log[key] = { part, row: k + 1, expert, director: want, on: today };
+        cells[2] = ' ' + want + ' ';
+        lines[li] = cells.join('|');
+        result.written++;
+      }
+    });
+  });
+  if (result.written) fs.writeFileSync(sb, lines.join('\n'));
+  const entries = Object.values(log).sort((a, b) => a.part - b.part || a.row - b.row);
+  result.changed = entries.map((e) => 'part ' + e.part + ' row ' + e.row);
+  if (entries.length || fs.existsSync(changesFile)) {
+    fs.writeFileSync(changesFile, CHANGES_HEAD.concat(entries.map((e) => '| ' + e.part + ' | ' + e.row + ' | ' + e.expert + ' | ' + e.director + ' | ' + e.on + ' |'), entries.length ? '' : 'Every row says what the expert wrote.', '').join('\n'));
+    result.file = changesFile;
+  }
+  return result;
 }
 
 function probe(file) {
@@ -68,7 +126,7 @@ function measure(videoDir) {
   if (!m) throw new Error('rig/index.html has no "var PARTS = [...]" line');
   const count = m[1].split(',').filter((x) => x.trim()).length;
   const voice = path.join(dir, 'voice');
-  if (!fs.existsSync(voice)) throw new Error('no voice/ folder in ' + dir + '. Clips go in voice/part-N.wav or .mp3, one per part.');
+  if (!fs.existsSync(voice)) throw new Error('no voice/ folder in ' + dir + '. Clips go in voice/part-N.m4a, .wav, .mp3, .aac, .flac or .ogg, one per part.');
   const clips = [], missing = [];
   for (let i = 1; i <= count; i++) {
     const f = CLIP_EXT.map((e) => path.join(voice, 'part-' + i + e)).find((x) => fs.existsSync(x));
@@ -85,4 +143,4 @@ function measure(videoDir) {
   return { clips, total: +clips.reduce((a, c) => a + c.seconds, 0).toFixed(2), line, extra, locked: ['look', 'tone', 'patterns', 'voice'].filter((i) => meta.menu[i]) };
 }
 
-module.exports = { narration, measure, words, PART_CHARS };
+module.exports = { narration, measure, words, readChanges, PART_CHARS };

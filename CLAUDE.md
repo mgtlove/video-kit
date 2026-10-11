@@ -11,4 +11,5 @@ Read `docs/ARCHITECTURE.md`, then `docs/ROADMAP.md`, then `docs/CARRYOVER.md`. T
 - Docs change in the same commit as the code: README, this file, `docs/`.
 - Never delete anything; move it aside and say so. Never download a browser without being asked. Never call a paid service without a recorded go-ahead. State failure modes before anything irreversible.
 - Nothing from any employer's or client's repository is copied here. Facts and lessons are carried in `docs/CARRYOVER.md` in their own words.
+- The command is `vkit`, never `vk`. A video's `video.json` is written by `vkit app use` and `vkit upgrade`, never delivered by hand from another machine: it carries that machine's paths.
 - Plain language, no em dashes.

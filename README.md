@@ -1,32 +1,40 @@
 # video-kit
 
-Training videos from screenshots and a script. The screen is recreated in HTML from stills, the explanation is timed to the voice, every frame is rendered from a seekable clock, and a checker proves the footage before anyone records anything. One library, a CLI, a Claude plugin, and the seams for an MCP server and a cloud renderer.
+Training and explainer videos from screenshots and a script, with no screen recording, no voice re-takes and no video editor.
 
-Status: October 2026, roadmap steps 1 to 9 of 12 done and step 10 in progress (the capture of the real console done, the recreation built and judged, the face and the video next), with the plugin's first findings fixed (8a), strokes that draw in rendered frames (8b), captures read from a walkthrough document (9) and the kit's own capture browser (9b). `vkit new` (inline or `--app`), `vkit app`, `vkit frames` and `vkit render` work; the engine draws seeded strokes, glides a pointer, clicks, types and places a figure, all seek-correct: a seek matches real playback pixel for pixel at nine moments, two renders are identical, and the MP4 is the run with the voice at its part offsets and captions beside it `vkit check` tells footage from not-footage and well made from not, by rule id; `vkit look` applies any of seven look packs as tokens and every one passes the checker; `vkit measure` makes the clips the clock; `vkit brand` applies a brand's colours, faces, mark and banner as tokens and no brand renders identically; `vkit menu` walks the ten choices with every option read from the data files; every long command shows a progress line; `vkit capture` reads a walkthrough document (a heading per step, a line of what was done, the screenshot, a note) into a checked capture set, and `vkit shoot` runs the Chrome already here on its own profile at exactly 1920x1080 so an agent can capture a tool itself, with private text caught before a picture is written; `vkit app crop` copies a logo or an icon out of one of the app's own captures and `vkit face` traces the product's typeface from the page as a face of our own, so a recreated screen is measured and cited down to its glyphs (the first real app, the S3 console, has eight states and a fidelity ledger, `docs/RECREATE.md`); the engine (0.4.3) records a beat that names something not on screen instead of crashing or skipping it, and `vkit check` names each, and judges each recreated state for text drawn over text or a picture, a line past its box and the product's face being available; the Claude plugin's thirteen skills drive the commands and its hook blocks the four things an agent must never do; the rules, looks and patterns are copied from the research (`npm test` proves all of it; it renders and checks the whole starter, so allow twenty minutes, and it reports as it goes). The engine is rebuilt clean from measured studies of how good explainer video is made; `docs/ROADMAP.md` has the order, `docs/ARCHITECTURE.md` the shape, `docs/ENGINE.md` what a rig page can call. Next: the sample video itself (10c), with the roles as skills: `vkit brief` asks the subject expert, `video-brief` and `video-fact-check` answer, `video-script` writes the words under the rules, and `storyboard-covered` proves every row names a state the app has.
+**How it works, in two minutes.** The screen of the tool being taught is recreated in HTML from your own screenshots, measured and cited down to the typeface, so it is a page, not a picture: it types, scrolls, clicks and loads the way the real thing does. A video is a folder with a storyboard, a narration, the voice clips and a rig page. The voice clips are the clock: every beat is timed to the word where it is said, so nothing is stretched and the explanation lands on the frame it belongs to. Every frame is drawn from a seekable clock, so a still at any second is exactly what plays at that second, and a checker proves that, plus the craft rules (text size, line length, contrast, holds, the camera), before anyone records. The result is an MP4 with the voice muxed and captions beside it, rendered with the Chrome you already have.
+
+**Who does what.** Three roles, each a chat with the plugin's skills, and every handoff is a file in the video folder, never a pasted prompt. The producer owns the goal, the words and the first watch. The subject expert owns the teaching: the brief, the storyboard rows, the screens to capture, the fact check of the finished narration. The director owns the words under the craft rules, the recreated screen, the camera and the timeline. `vkit handoffs` says whose turn it is; `vkit` with no command says where a folder stands and the three ways in.
+
+**Where it stands.** October 2026: the kit is at engine 0.5.3 and plugin 0.1.5, with the first real video (creating an S3 bucket, from the console recreated with nine states) accepted as a proof of concept after four watches. Next, in order: the light twin (the recreated app driven by a hand instead of a timeline), looks and brands over the teaching layer, concept scenes for theory, the command line and code as app kinds, then the MCP server and the cloud and voice adapters. `docs/ROADMAP.md` is the plan; `docs/ARCHITECTURE.md` the shape; `docs/ENGINE.md` what a rig page can call; `docs/FINDINGS.md` what is open.
 
 ```
+vkit                     the front door: what this is, what is waiting here, the three ways in
 vkit new my-video        a video is a folder; --app family/tool puts a recreated app's screens in it
-vkit app new|use|add-state|extract   a recreated app: one folder per tool, built from your own captures; use puts it into a video that exists, or brings the video's copy up to date
+vkit app new|use|add-state|extract|crop   a recreated app: one folder per tool, built from your own captures; use puts it into a video or brings the copy up to date; crop copies a logo or icon out of a capture
 vkit capture walkthrough.docx    the screenshots and their steps out of a Word walkthrough into captures/, the shape checked (docs/CAPTURE.md is the brief)
 vkit shoot start|"step" "did"|stop   the capture browser: Chrome on the kit's own profile at 1920x1080, headless; each shot masked, swept for private text, measured, into captures/
+vkit face <name>         the product's typeface traced from the page as a face of our own, widths and kerning measured
 vkit menu                the ten choices, one at a time, with context; --set answers one from a script
 vkit brand <name>        a brand as tokens: five colours, two faces, a mark and a banner by when and where; --check measures it
 vkit look <name>         a look pack as tokens: lightboard, code-report, studio-walkthrough, clippings, doodle, lecture-slides, archive-camera
 vkit brief               brief-request.md for the subject expert: the app's states and the storyboard table in it
-vkit handoffs            what is waiting and for whom, per video and per app; the folder is the handoff, nothing is pasted between chats
-vkit narration           the script parts against their limits, FULL.md, estimates
+vkit handoffs            what is waiting and for whom, per video and per app; the folder is the handoff
+vkit narration           the script parts against their limits, FULL.md, the Sentence column written and every change from the expert's words logged
 vkit measure             exact clip lengths from the voice files into PARTS; the clips are the clock
-vkit time                where each sentence is said: word times from the clips (faster-whisper, on this machine) into the Start column and voice/times.json
+vkit time                where each sentence is said: word times from the clips (faster-whisper, on this machine) into the Start column
 vkit frames              a still per beat: look before you record
 vkit render              every frame, the voice muxed, an MP4 and its captions
-vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules (actions move, cards clear, still runs), contrast, fidelity
+vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick while you work
+vkit upgrade             a video's engine copy brought to the kit's; the old copy kept aside
+vkit plugin pack         the plugin zipped for the claude.ai upload
 vkit sync-reference      copy the rules, the look packs and the patterns index from video-reference into the kit
-vkit publish             a host adapter and a URL
+vkit publish             a host adapter and a URL (the adapter is not built yet)
 ```
 
-`packages/plugin/` holds the Claude plugin: skills over `vkit` (start, menu, build, frames, check, measure, brand, capture, capture-walkthrough, recreate, brief, script, fact-check) and a guardrail hook. `docs/workspace/` is the committed copy of the workspace orientation files.
+`packages/plugin/` holds the Claude plugin: 13 skills over `vkit` (start, menu, build, frames, check, measure, brand, capture, capture-walkthrough, recreate, brief, script, fact-check) and a guardrail hook that blocks the four things an agent must never do (download a browser, force push, delete without asking, call a paid service without a go-ahead). `docs/workspace/` is the workspace's orientation files (the folder `claude/` beside the repos links to it).
 
-The research behind it (seven creator studies, 96 craft rules, 35 named moves, seven look packs) lives in [video-reference](https://github.com/mgtlove/video-reference).
+The research behind it (seven creator studies, 96 craft rules, 35 named moves, seven look packs) lives in [video-reference](https://github.com/mgtlove/video-reference). `npm test` proves all of it on every push (GitHub's runner, with its own Chrome); the run's log says how long each proof takes.
 
 Try it:
 

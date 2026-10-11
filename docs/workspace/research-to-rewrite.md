@@ -26,8 +26,4 @@ anime.js (adopt, staged), Motion (second choice), three.js (kept ready; ES-modul
 
 ## Not in the reference
 
-The brand kit schema and the ten menu items are product, not research; their designs are in `project-brief.md` and `video-kit/menu-defaults.json`, and the plugin skill drafts in `video-kit/packages/plugin/`.
-
-## Brand kit and menu (kept for the record)
-
-The brand schema and the ten menu items are product, not research; their designs are in `project-brief.md` and `video-kit/menu-defaults.json`, and the plugin skill drafts in `video-kit/packages/plugin/`.
+The brand kit schema and the ten menu items are product, not research; their designs are in `project-brief.md` and `video-kit/menu-defaults.json`, and the plugin's skills in `video-kit/packages/plugin/` (13 of them at 0.1.5; they were drafts when this inventory was written on 2 October 2026).

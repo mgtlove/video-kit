@@ -225,9 +225,8 @@
     var other = $(kind === 'note' ? 'card' : 'note'); if (other && other.classList.contains('on')) { other.classList.remove('on'); other.style.transitionDelay = '0s'; }
     if (!text) { c.classList.remove('on'); c.style.transitionDelay = '0s'; cardNear = null; cardSide = null; cardPlaced = null; return; }
     cardKind = kind;
-    var k = c.querySelector('.kick'), b = c.querySelector('.body');
+    var b = c.querySelector('.body');
     if (b) b.textContent = text;
-    if (k && window.COPY && window.COPY.cardKicker) k.textContent = window.COPY.cardKicker;
     if (nearId) want(nearId, kind);
     cardNear = nearId || ''; cardSide = side || null;
     placeCard();
@@ -457,7 +456,7 @@
   function click() {
     var ring = $('ring'); if (!ring || !pointAt) return;
     /* the control answers: it takes the app's `pressed` look at once (the app's CSS from a capture of the button held
-       down; the engine's generic darkening until then) and lets go of it over the next 250 ms, so the press is seen
+       down; the engine's generic darkening until then) and lets go of it over the next 200 ms, so the press is seen
        before the ring. A transition, so a seek holds it like any other (engine 0.5.1). */
     if (pointedEl && pointedEl.isConnected) {
       var el = pointedEl;
@@ -729,7 +728,7 @@
   }
 
   window.VK = {
-    version: '0.5.2',
+    version: '0.5.3',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; }, faults: function () { return faults.slice(); }, cardPlace: function () { return cardPlaced; },

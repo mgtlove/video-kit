@@ -67,3 +67,19 @@ The kit is rebuilt clean, not copied. This file lists what the rebuild has to ho
 - A click with no answer from the control reads as a photograph being clicked; a page that appears in one frame reads as a slide. The press is two frames and the load is half a second, and they are the difference the viewer feels but cannot name.
 - Place for where things will be, not where they are. A note placed while the page was scrolling pointed at where its element had been; the leader ran off the frame. Anything placed during a move reads the move's destination.
 - A teaching device beside a real control competes with it. The click ring over the console made the button's own press invisible; over a recreated screen the press is the click.
+- `video.json` is written by `vkit app use`, never delivered by hand: it carries the app's path on that machine, and a copy from another machine sends the checker looking for captures that are not there (10 October 2026). Deliver the rig, the engine and the storyboard; let the command write the record.
+- A doc that names a thing the code does not have is a bug, and a proof catches it the way a proof catches any bug. The hardening audit of 10 October 2026 found eleven wrong names (a command that never existed, a flag the kit never set, a key the kit never read, a step number, a percentage, a version) and every one was outside what the plugin test covered. `names.test.js` now reads every doc and skill and holds each version, command, subcommand, check row, engine call, path and the storyboard header to its source; a wrong name fails the suite.
+- Status written in five places is status written in none. By 10 October the kit README, the workspace README, ABOUT and START-HERE described 2 to 6 October while two files knew the truth. Now three files have three jobs (README the two-minute version, ROADMAP the plan, roadmap-and-status this week on one screen) and the orientation files have one copy, reached by links, instead of a mirror kept by hand.
+- A promise in a doc is a task or it is a lie. `vkit upgrade` was promised in four places for nine days; 10d was named and never written; the two-minute README was in step 10's own text. The roadmap's "Next, in order" and "Parking lot" are where a promise goes, with what done looks like, and nothing else in the docs says "to come".
+- Overwriting the expert's words to satisfy a check loses the thing the fact check judges. The director rewrote the Sentence column by hand (the `sentences-match` row wants the storyboard and the narration equal) and `drift` had nothing on disk to judge against. The command that needs the two equal is the one that writes the column, and it logs what it changed.
+
+## Delivering from a cloud session to the Mac
+
+A session that builds in a sandbox hands its files over a bridge, and each step has bitten once. The order, so it is not re-derived:
+
+1. Fetch and compare first: `git fetch`, `git diff --stat origin/main` against the sandbox tree, so the sandbox builds on what the Mac committed.
+2. Stage the files under one batch folder, at most 50 per call, with a checksum list (`shasum -a 256`) written beside them to `_suggested-trash/deliver-<name>.sha256` on the Mac.
+3. Verify on the Mac: `shasum -a 256 -c` in the bridge shell. A PNG delivered over the bridge gains a `caBX` chunk and is stripped with a read-modify-write; `packages/cli/bin/vkit.js` loses its execute bit and gets `chmod 755`.
+4. A video's old files are copied into `_suggested-trash/<video>.before-<name>.<timestamp>/` before any are overwritten. Never deliver `video.json`; `vkit app use` and `vkit upgrade` write it on the Mac.
+5. Matthew runs `PW_CHANNEL=chrome npm test` on the Mac and, when it is green, the commit and push the session wrote out, docs and code in one commit. The GitHub run is the second proof.
+6. A plugin change says whether a re-upload is due; `vkit plugin pack` makes the zip.

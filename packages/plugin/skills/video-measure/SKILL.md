@@ -6,12 +6,14 @@ description: >
   clip has been regenerated, or asks where each sentence is said. It turns the clips into the
   rig's exact part timing and places every sentence at its spoken word, never stretching anything.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Measure the voice clips
 
-The clips are the clock. One clip per part, `voice/part-N.wav` or `.mp3`, in order. `vkit measure` reads each file's exact length to two decimals and writes the `PARTS` line into `rig/index.html` and `video.json.parts` with today's date. No rounding up, no padding: a padded part makes every later part start late in the final cut.
+Runs in the director's chat, after the producer has put the recordings in `voice/`.
+
+The clips are the clock. One clip per part, `voice/part-N.m4a` (Voice Memos), `.wav`, `.mp3`, `.aac`, `.flac` or `.ogg`, in order. `vkit measure` reads each file's exact length to two decimals and writes the `PARTS` line into `rig/index.html` and `video.json.parts` with today's date. No rounding up, no padding: a padded part makes every later part start late in the final cut.
 
 Then `vkit time` places the sentences: it runs faster-whisper on this machine (`packages/core/time/words.py`, word timestamps on; the first run downloads the model once, about 1.5 GB; nothing leaves the machine) over each clip into `voice/part-N.words.json`, aligns the written words of `narration/part-N.md` to the heard words (a dropped word or a number said as digits does not move a sentence; a sentence nobody said is placed between its neighbours and named in the report), and writes each sentence's start into the Start column of `storyboard.md` and `voice/times.json`. Read the report: `part 2: 5 sentences, 61 of 64 written words heard` is a good read; a sentence placed between neighbours is one the recording skipped, which the producer decides on (re-take, or accept). Every beat inside a part is then an offset from that part's start, the Start value typed into the `at()` call with the sentence in the comment; `--redo` re-hears a clip, `--prompt "label, label"` primes the model with the console's own labels. Never stretch or scale a clip to fit a timeline; regenerate or re-record the part, then measure and time again.
 

@@ -62,3 +62,18 @@ Matthew has a personal AWS account and an AWS builder chat. Cloud rendering (a c
 ## The sample video
 
 Not from any employer. Something Matthew can capture freely, probably an AWS console task, showing a concept opener and a walkthrough. It is the demo in the README and the first real use of every command.
+
+## Amendments since 1 October 2026
+
+The brief above is the original problem statement and stays as written. What has changed since, each by a recorded decision (`decisions.md`):
+
+- **The output's own framing.** A console video is a screen recording made of stills: the recreated screen is a page that types, scrolls, clicks, presses and loads (engine 0.5.0 to 0.5.2, 9 and 10 October). The brief's "without screen recording" still holds (nothing real is recorded); what the viewer sees is a recording, recreated.
+- **Three roles and the handoffs.** The producer, the subject expert (its own chat) and the director (the chat with the repo) make a video, and every handoff is a skill and a file in the video's folder, never a pasted prompt (`vkit brief`, `vkit handoffs`, `video-brief`, `video-script`, `video-fact-check`; 7 and 8 October). The storyboard is the teaching and the capture walkthrough the evidence, two documents with two owners; the storyboard carries an Action column.
+- **Apps are built ahead of need.** "Nobody builds an app ahead of need" was replaced on 8 October: an app is its own versioned asset, built before or without any video, brought into a video by `vkit app use`; capture the path plus one layer out (10 October).
+- **The words are timed by the voice, word by word.** `vkit time` places every sentence at the word where it is said (9 October); `vkit narration` writes the storyboard's Sentence column and logs every change from the expert's words (10 October).
+- **The twin moved up.** A light twin (the app driven by a hand through the same page model) comes next, before looks and brands; the full runner stays last (10 October).
+- **The plugin grew** from six drafted skills to 13 at 0.1.5, re-uploaded to claude.ai so every chat on the account has them.
+- **The front door.** `vkit` with no command, and skills written for someone who has not seen the project (10 October).
+- **The menu's layout item** still describes a card beside its element; over a recreated screen a note is used now (F5, open).
+- **AWS** still enters as adapters, not before (milestone F); the S3 console is subject matter only.
+

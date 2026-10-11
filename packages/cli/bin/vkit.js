@@ -22,6 +22,8 @@ const COMMANDS = {
   'check':          ['[dir] [--quick]', 'is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick skips the slow proofs'],
   'brand':          ['<name>|none [dir] [--check]', 'apply a brand from brands/ (copied to rig/brand/, tokens in rig/brand.css); no name rebuilds from rig/brand/brand.json; --check reports what it does to the rules'],
   'look':           ['<name>|none [dir]', 'apply a look pack from looks/ as tokens in rig/look.css; none empties it'],
+  'upgrade':        ['[dir]', 'bring a video\'s engine copy (rig/engine/) up to the kit\'s; the old copy is kept in the video\'s _suggested-trash/'],
+  'plugin':         ['pack [--out file]', 'zip packages/plugin/ for the claude.ai upload (no node_modules, no .DS_Store) to ~/Desktop/vkit-plugin.zip or --out'],
   'sync-reference': ['[path] [--only rules|looks|patterns]', 'copy rules.json, looks/ and patterns/index.json from ../video-reference'],
   'publish':        ['[dir]', 'hand the MP4 to a host adapter and record the URL']
 };
@@ -50,9 +52,34 @@ function help() {
   console.log('\nPW_CHANNEL=chrome uses the Chrome already on this machine for frames, render and check; shoot and face use it without being told; nothing downloads a browser.\nLong commands show a progress line (a bar on a terminal, plain lines in a pipe); VKIT_QUIET=1 turns it off.');
 }
 
+/* the front door: vkit with no command says what this is, where this folder stands and the ways in,
+   for someone who has never seen the project. vkit --help is the command table. */
+function frontDoor() {
+  const lines = ['vkit: training and explainer videos from screenshots and a script.',
+    'The screen is recreated in HTML, every frame is drawn from a clock, and it is checked before anyone records anything. A video is a folder.', ''];
+  const cwd = process.cwd();
+  if (fs.existsSync(path.join(cwd, 'video.json'))) {
+    const meta = JSON.parse(fs.readFileSync(path.join(cwd, 'video.json'), 'utf8'));
+    lines.push('Here: the video "' + meta.name + '" (engine ' + meta.engine + (meta.app && meta.app.ref ? ', app ' + meta.app.ref + ' ' + meta.app.version : ', no recreated app') + ').');
+    try { lines.push('Waiting: ' + core.formatHandoffs(core.handoffs(cwd, { apps: false }))); } catch (e) { lines.push('Waiting: ' + e.message); }
+  } else {
+    let list = []; try { list = core.handoffs(cwd); } catch (e) { list = core.appHandoffs(); }
+    if (list.length) lines.push('Here: ' + (fs.existsSync(path.join(cwd, 'video.json')) || list.some((h) => !/^app /.test(h.name)) ? 'videos in this folder.' : 'not a video folder; what is waiting elsewhere:'), ...list.map((h) => '  ' + h.name + ': ' + h.who + ' (' + h.skill + '): ' + h.what));
+    else lines.push('Here: not a video folder (no video.json here or one level down), and nothing is waiting.');
+  }
+  lines.push('', 'Three ways in:',
+    '  I have an idea for a video      the subject expert\'s chat with the video-brief skill writes brief.md and the screens it needs; vkit new <name> makes the folder',
+    '  I have screenshots of a tool    vkit capture <walkthrough.docx> reads a Word document of them, or vkit shoot takes them; then the video-recreate skill builds the screen',
+    '  I have a recording              vkit measure sets the clock from the clips, vkit time places every sentence where it is said',
+    '', 'Who does what: the producer owns the goal, the words and the first watch; the subject expert (its own chat) owns the teaching and the fact check; the director (the chat with this repo) owns the words under the craft rules, the camera and the timeline. vkit handoffs says whose turn it is.',
+    'Every command: vkit --help. The start of a session: the vkit-start skill. The two-minute version: README.md.');
+  console.log(lines.join('\n'));
+}
+
 async function main() {
   const [cmd, ...args] = process.argv.slice(2);
-  if (!cmd || cmd === '--help' || cmd === '-h') { help(); return 0; }
+  if (!cmd) { frontDoor(); return 0; }
+  if (cmd === '--help' || cmd === '-h' || cmd === 'help') { help(); return 0; }
   if (!COMMANDS[cmd]) { console.error('unknown command: ' + cmd + '. Try vkit --help'); return 2; }
   const channel = process.env.PW_CHANNEL || undefined;
   const captureChannel = process.env.PW_CHANNEL || 'chrome';   /* the capture browser only ever means the Chrome already here */
@@ -101,6 +128,18 @@ async function main() {
     }
     console.error('vkit app new|add-state|extract|crop'); return 2;
   }
+  if (cmd === 'upgrade') {
+    console.log(core.formatUpgrade(core.upgradeEngine(args[0] || '.')));
+    return 0;
+  }
+  if (cmd === 'plugin') {
+    if (args[0] !== 'pack') { console.error('vkit plugin pack [--out file]'); return 2; }
+    const out = args.indexOf('--out') >= 0 ? args[args.indexOf('--out') + 1] : null;
+    const r = core.packPlugin({ out });
+    console.log('wrote ' + r.file + ': plugin ' + r.version + ', ' + r.entries.length + ' files, ' + r.bytes + ' bytes.');
+    console.log('Upload it: claude.ai, Customize, Plugins, Upload a plugin. Every chat on the account then has these skills at ' + r.version + '; a chat opened before the upload keeps the old ones until it is restarted.');
+    return 0;
+  }
   if (cmd === 'frames') {
     let dir = '.', times = [], every = null;
     for (let i = 0; i < args.length; i++) {
@@ -125,7 +164,7 @@ async function main() {
     if (r.files.vtt) console.log('wrote ' + rel(r.files.vtt) + ' and ' + rel(r.files.srt) + ': ' + r.captions + ' cues from storyboard.md');
     else console.log('no captions: storyboard.md has no rows with a part, a sentence and a start');
     if (r.clips.length) console.log('voice: ' + r.clips.map((c) => c.file + ' at ' + c.offset + ' s').join(', '));
-    if (r.parts_without_a_clip.length) console.log('no clip for part ' + r.parts_without_a_clip.join(', ') + (r.clips.length ? '' : '; the track is silent') + '. Clips go in voice/part-N.wav or .mp3');
+    if (r.parts_without_a_clip.length) console.log('no clip for part ' + r.parts_without_a_clip.join(', ') + (r.clips.length ? '' : '; the track is silent') + '. Clips go in voice/part-N.m4a, .wav, .mp3, .aac, .flac or .ogg');
     console.log('report: ' + rel(r.files.report) + '. Play the MP4 and look.');
     return 0;
   }
@@ -197,6 +236,8 @@ async function main() {
     const r = core.narration(dir, { wpm });
     for (const p of r.parts) console.log('part ' + p.part + ': ' + p.sentences + ' sentences, ' + p.words + ' words, ' + p.characters + ' characters, about ' + p.estimateSeconds + ' s' + (p.problems.length ? '\n  ' + p.problems.join('\n  ') : ''));
     console.log('about ' + r.total + ' s at ' + r.wpm + ' wpm. ' + r.partsLine + '\nwrote ' + path.relative(process.cwd(), r.full) + (r.problems ? '\n' + r.problems + ' problem(s) above the limits' : ''));
+    const sb = r.storyboard;
+    if (sb.rows) console.log('storyboard.md: ' + sb.written + ' sentence' + (sb.written === 1 ? '' : 's') + ' written into the Sentence column; ' + (sb.changed.length ? sb.changed.length + ' row' + (sb.changed.length === 1 ? '' : 's') + ' differ from the expert\'s words (' + sb.changed.join(', ') + '), logged in narration/changes.md' : 'every row says what the expert wrote') + (sb.mismatched.length ? '\nnot synced, rows and sentences differ: ' + sb.mismatched.join('; ') : ''));
     return r.problems ? 1 : 0;
   }
   if (cmd === 'measure') {

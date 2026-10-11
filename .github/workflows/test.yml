@@ -1,0 +1,34 @@
+# Every push and pull request runs the kit's own proofs on GitHub's Ubuntu runner, which ships Chrome,
+# so PW_CHANNEL=chrome uses it and nothing downloads a browser (the kit's rule). ffmpeg comes from apt for
+# render and measure; python3 is already there for the plugin's guard hook. The whisper step is not run
+# here (vkit time's proof uses prepared word files). The spec reporter prints every test's duration and
+# the total, which is the number the docs point at instead of guessing; the full log is kept as an artifact.
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PW_CHANNEL: chrome
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+      - name: install
+        run: npm ci
+      - name: the proofs
+        env:
+          NODE_OPTIONS: --test-reporter=spec
+        run: npm test 2>&1 | tee test.log | grep -E '^(✔|✖|ℹ)'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-log
+          path: test.log

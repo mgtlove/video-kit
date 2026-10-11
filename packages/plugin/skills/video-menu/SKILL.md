@@ -6,10 +6,12 @@ description: >
   see or change any choice a video has made. It walks the ten choices one at a time, with the
   reason behind each, and writes them only through vkit menu.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # The video menu
+
+Runs in the director's chat, on the video folder; the job and the sources come from the expert's `brief.md`.
 
 Every choice a video makes lives in `video.json` under `menu`, and `vkit menu` is the one way those choices are set or changed. The person is walked through the items with their hand held: each item says what the question is asking, why it matters, the options with a line of context each, which is the default and why, and what picking it will change. Nothing is chosen for them.
 

@@ -8,10 +8,12 @@ description: >
   recreated. When the tool is reachable in a browser on this machine, capture-walkthrough shoots
   instead.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Captures from a walkthrough document
+
+Runs in the director's chat, where the walkthrough document lands; it never screenshots a product screen itself.
 
 The evidence for a recreated screen arrives one of two ways, and both land in the same `captures/` folder. When the tool can be reached in a browser on this machine, the `capture-walkthrough` skill drives the kit's own capture browser and `vkit shoot` writes the set; that is the first choice. When only another person or chat has the screen, they send one Word document (a heading per step, a line saying what was done, the screenshot under it, a note for what a still cannot carry) and this skill reads it in with `vkit capture`. `docs/CAPTURE.md` in the kit is the brief that asks for the document, the same for a one-off screen built inline in a video and a tool recreated as an app. Nobody invents a screen; a screen with no capture is a concept scene.
 

@@ -2,7 +2,7 @@
 name: video-fact-check
 description: Use in the subject expert's chat when the user says a narration is ready to check, asks what is waiting, or asks to fact check or review a video's script. Finds the video's narration/FULL.md and storyboard.md, writes fact-check.md beside them with a verdict per sentence.
 metadata:
-  version: "0.1.4"
+  version: "0.1.5"
 ---
 
 # Fact-checking a narration
@@ -19,7 +19,7 @@ One table, one row per sentence, in order:
 
 | Part | Sentence | Verdict | Note |
 
-- **Verdict**: `true`; `wrong` (the sentence says something the console does not do, or names a label the screen does not show); `caveat` (true but a learner would be misled without one more clause); `drift` (true but not what the storyboard row meant).
+- **Verdict**: `true`; `wrong` (the sentence says something the console does not do, or names a label the screen does not show); `caveat` (true but a learner would be misled without one more clause); `drift` (true but not what the storyboard row meant: read `narration/changes.md`, which holds your own words for every row the director reworded, and judge the director's sentence against them; a row not in that file still says what you wrote).
 - **Note**: for `wrong`, the correction in plain words, the console's own label where one is involved; for `caveat`, the clause to add; for `drift`, what the row meant. Empty for `true`.
 
 Then two lines: the count of each verdict, and anything the narration should say that no sentence says (a pitfall from the outline that got lost).

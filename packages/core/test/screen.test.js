@@ -12,7 +12,9 @@
 //      load, then the new screen is up; the control under the pointer takes the pressed look on click; a note
 //      is a small callout, decoration, with a leader to its element
 //   5. vkit check --quick: the actions-move row passes when the Action rows move the frame
-// Needs a browser. About 20 s.
+//   6. seeking backward across every beat kind here (the load, the note, the press, the scroll, the typing)
+//      lands on the same state as seeking forward did (engine 0.5.3: every beat's state is reset by a seek)
+// Needs a browser. About 25 s.
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
@@ -65,7 +67,7 @@ test('a screen is one page: typeTo types the state\'s own text, a state change s
   };
   const out = await render.survey(path.join(v.dir, 'rig'), [1.0, 2.5, 4.5, 7.0, 8.9, 9.55, 10.3, 10.8], measure, opts);
   const [before, typing, typed, mid, after, pressed, loading, cut] = out.map((o) => o.data);
-  assert.strictEqual(before.version, '0.5.2');
+  assert.strictEqual(before.version, core.engineVersion(), 'the page runs the kit engine');
   assert.deepStrictEqual(before.screens, { empty: 'Form', typed: 'Form', scrolled: 'Form', done: 'Done' }, 'states.js carries the screen of each state');
   assert.strictEqual(before.cls, 'ph t'); assert.strictEqual(before.focus, false);
   // 1. typing: 0.5 s at 12 a second is six characters, in the typed state's own span, with the caret
@@ -83,6 +85,14 @@ test('a screen is one page: typeTo types the state\'s own text, a state change s
   assert.ok(/brightness/.test(pressed.pressed) && !/brightness\(1\)/.test(pressed.pressed), 'the button under the pointer is pressed 50 ms after the click: ' + pressed.pressed);
   assert.ok(loading.loading && loading.chromeSeen === 'visible' && loading.labelSeen === 'hidden' && !loading.msg, 'mid-load: the chrome stays, the content is gone, the new page is not up yet: ' + JSON.stringify({ loading: loading.loading, chrome: loading.chromeSeen, label: loading.labelSeen, msg: loading.msg }));
   assert.ok(cut.msg && cut.text === null && !cut.loading, 'the Done screen is up after the load: ' + JSON.stringify({ msg: cut.msg, loading: cut.loading }));
+  // 6. the same moments reached backward: after the load, mid-scroll, mid-typing
+  const back = await render.survey(path.join(v.dir, 'rig'), [10.8, 7.0, 2.5], measure, opts);
+  const [cutB, midB, typingB] = back.map((o) => o.data);
+  const same = (a, b, keys, where) => { for (const k of keys) assert.deepStrictEqual(b[k], a[k], 'seeking backward to ' + where + ' differs on ' + k + ': ' + JSON.stringify([a[k], b[k]])); };
+  same(cut, cutB, ['msg', 'text', 'loading', 'cardOpacity', 'pressed'], '10.8 s');
+  same(mid, midB, ['text', 'cardOpacity', 'loading', 'msg', 'focus'], '7.0 s');
+  assert.ok(midB.pageTop < 0 && midB.pageTop > -600, 'the page is mid-scroll again after a backward seek: ' + midB.pageTop);
+  same(typing, typingB, ['text', 'cls', 'typing', 'focus', 'pageTop', 'loading', 'msg'], '2.5 s');
   console.log('screen: typed "' + typing.text + '" at 2.5 s; page ' + mid.pageTop.toFixed(0) + ' px and thumb ' + mid.thumbTop.toFixed(0) + ' px mid-scroll, landed at ' + after.pageTop + ' and ' + after.thumbTop + '; note waited (' + after.noteSize + ' px, leader ' + (after.leader ? 'drawn' : 'none') + '); pressed ' + pressed.pressed + '; mid-load chrome ' + loading.chromeSeen + ', content ' + loading.labelSeen + '; the new page is up at 10.8 s: ' + cut.msg);
   // 4. the actions-move row: two action rows (the typing, the scroll) move the frame; a row that says it acts but does nothing is named
   const sb = path.join(v.dir, 'storyboard.md');

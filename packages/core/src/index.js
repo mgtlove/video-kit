@@ -5,7 +5,7 @@
 // Each export is a contract; a body lands with its frame proof, in the order
 // docs/ROADMAP.md gives. Publish (step 11) arrives as an adapter.
 
-const { newVideo } = require('./new');
+const { newVideo, engineVersion } = require('./new');
 const { frames } = require('./frames');
 const { renderVideo } = require('./render');
 const apps = require('./apps');
@@ -13,8 +13,9 @@ const { check } = require('./check');
 const { syncReference } = require('./sync');
 const { applyLook } = require('./look');
 const { narration, measure } = require('./words');
-const { briefRequest, handoffs, formatHandoffs } = require('./brief');
+const { briefRequest, handoffs, appHandoffs, formatHandoffs } = require('./brief');
 const { timeVideo } = require('./time');
+const upgrade = require('./upgrade');
 const brand = require('./brand');
 const captureMod = require('./capture');
 const shoot = require('./shoot');
@@ -28,13 +29,18 @@ const hosting = require('./adapters/hosting');
 
 module.exports = {
   // a video is a folder; these take its path
+  engineVersion: engineVersion,              // the kit engine's version, read from rig.js
   newVideo: newVideo,                        // copy starter/, engine in at this version, video.json with menu defaults; opts.app for an app-backed video
   apps: apps,                                // recreated apps: resolveApp, installApp, appNew, appAddState, appExtract
   menu: menu,                                // the ten choices: items, show, set, explain, format; options from looks/, brands/, patterns/, apps
   narration: narration,                      // parts -> FULL.md, limits, estimates, a PARTS line
   briefRequest: briefRequest,                // the ask to the subject expert, with the app's states and the storyboard template in it
   handoffs: handoffs,                        // per video: what is waiting and for whom (the folder is the handoff)
+  appHandoffs: appHandoffs,                  // the apps waiting on their own, before any video
   formatHandoffs: formatHandoffs,
+  upgradeEngine: upgrade.upgradeEngine,     // the kit's engine into a video (rig/engine/, VERSION, video.json.engine); the old copy kept aside
+  formatUpgrade: upgrade.formatUpgrade,
+  packPlugin: upgrade.packPlugin,           // packages/plugin/ as the zip claude.ai's upload takes
   timeVideo: timeVideo,                      // the beats placed where the words are said: word times from the clips into the storyboard's Start column
   measure: measure,                          // clip files -> exact PARTS in the page and video.json; re-timing items lock
   frames: frames,                            // rig -> a PNG per beat (seek-correct)

@@ -15,12 +15,12 @@ const os = require('os');
 const path = require('path');
 // The plugin's version, carried by every skill; bump all together when the skills change, because
 // claude.ai keeps the uploaded copy and a re-upload is how the chats get the change (8 October 2026).
-const PLUGIN_VERSION = '0.1.4';
 const { spawnSync } = require('child_process');
 const core = require('../src');
 const { KIT } = require('../src/new');
 
 const PLUGIN = path.join(KIT, 'packages', 'plugin');
+const PLUGIN_VERSION = JSON.parse(fs.readFileSync(path.join(PLUGIN, '.claude-plugin', 'plugin.json'), 'utf8')).version;   /* one source; names.test.js holds the README to it */
 const VKIT = path.join(KIT, 'packages', 'cli', 'bin', 'vkit.js');
 
 function frontmatter(md) {

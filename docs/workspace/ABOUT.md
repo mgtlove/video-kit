@@ -1,3 +1,3 @@
-# Workspace files, a committed copy
+# Workspace files, one copy
 
-These are copies of the files at the root of the `video` workspace folder (`README.md`, `CLAUDE.md`, and the `claude/` folder: START-HERE, project-brief, roadmap-and-status, decisions, research-to-rewrite, new-project-instructions). The root folder is not a git repository, so the copies live here under version control. When one changes, change both. Last synced 2 October 2026.
+These are the orientation files of the `video` workspace folder (`~/Developer/video/`): its `README.md` and `CLAUDE.md`, and the `claude/` folder (START-HERE, project-brief, roadmap-and-status, decisions, research-to-rewrite, new-project-instructions). The workspace folder is not a git repository, so the files live here, under version control in the public kit, and the workspace reaches them through links: `~/Developer/video/claude` is a link to this folder, and the root `README.md` and `CLAUDE.md` are links to the two files here. There is one copy and nothing to keep in step. (Until 10 October 2026 they were copies kept by hand, and they drifted; decided that day.)

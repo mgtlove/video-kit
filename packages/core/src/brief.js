@@ -83,11 +83,16 @@ function handoff(dir) {
   else if (!full) { who = 'director'; what = 'the expert answered' + (pickups >= brief ? ' (capture-request.md listed; pickups first)' : '') + '; no narration/FULL.md yet'; skill = 'video-script'; }
   else if (rowsDiffer) { who = 'director'; what = 'storyboard.md is newer than the narration and its sentences differ; the sentences follow the rows'; skill = 'video-script, step 4'; }
   else if (!checkCurrent && brief > full) { who = 'director'; what = 'brief.md changed after the words; the words get another look, then vkit narration'; skill = 'video-script, step 4'; }
-  else if (!checkCurrent) { who = 'subject expert'; what = 'narration/FULL.md waits for fact-check.md' + (fact ? ' (the check on file is of other sentences)' : ''); skill = 'video-fact-check'; }
+  else if (!checkCurrent) { who = 'subject expert'; what = 'narration/FULL.md waits for fact-check.md' + (fact ? ' (the check on file is of other sentences)' : '') + changedNote(dir); skill = 'video-fact-check'; }
   else if (verdicts.open) { who = 'director'; what = 'fact-check.md has ' + verdicts.summary + ' to apply, then vkit narration again'; skill = 'video-script, step 6'; }
   else if (!voice.length) { who = 'producer'; what = 'the narration is checked; the words want a yes and a recording (voice/part-N.m4a)'; skill = 'video-script, step 7'; }
   else { who = 'director'; what = voice.length + ' clip' + (voice.length === 1 ? '' : 's') + ' in voice/; the clips are the clock'; skill = 'video-measure'; }
   return { name, dir, who, what, skill };
+}
+// changedNote(dir): how many rows the director's words moved from the expert's (narration/changes.md).
+function changedNote(dir) {
+  const n = Object.keys(require('./words').readChanges(path.join(dir, 'narration', 'changes.md'))).length;
+  return n ? '; ' + n + ' sentence' + (n === 1 ? '' : 's') + ' changed from the expert\'s words, see narration/changes.md' : '';
 }
 // factVerdicts(file): the verdict column of fact-check.md. Anything but true is open work for the
 // director; the file's own counts line is not trusted, the rows are read.
@@ -138,7 +143,8 @@ function handoffs(where, opts) {
   let list;
   if (fs.existsSync(path.join(root, 'video.json'))) list = [handoff(root)];
   else {
-    list = fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory() && fs.existsSync(path.join(root, d.name, 'video.json'))).map((d) => handoff(path.join(root, d.name)));
+    const isVideo = (d) => { const f = path.join(root, d.name, 'video.json'); return d.isDirectory() && fs.existsSync(f) && !/\{\{NAME\}\}/.test(fs.readFileSync(f, 'utf8')); };   /* the kit's starter/ is a template, not a video */
+    list = fs.readdirSync(root, { withFileTypes: true }).filter(isVideo).map((d) => handoff(path.join(root, d.name)));
     if (!list.length) throw new Error('no video folder in ' + root + ' (a folder with video.json, or a folder of them)');
   }
   return opts.apps === false ? list : list.concat(appHandoffs());
@@ -147,4 +153,4 @@ function formatHandoffs(list) {
   return list.map((h) => h.name + ': ' + h.who + ' (' + h.skill + '): ' + h.what).join('\n');
 }
 
-module.exports = { briefRequest, handoffs, formatHandoffs };
+module.exports = { briefRequest, handoffs, appHandoffs, formatHandoffs };

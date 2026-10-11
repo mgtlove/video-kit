@@ -1,49 +1,47 @@
-# Roadmap and status
+# Where things stand
 
-As of 5 October 2026. The canonical order is `video-kit/docs/ROADMAP.md`; this is the status view.
+As of 10 October 2026, evening. One screen; the plan with every milestone, its proof and what comes next is `video-kit/docs/ROADMAP.md`, and the two-minute version of the product is `video-kit/README.md`. This file is updated in the same commit as any milestone, finding or decision that changes it; status is written nowhere else.
 
-| Step | What | Status and proof |
+## This week
+
+- The first real video, `videos/create-s3-bucket` (the S3 console recreated with nine states, the producer's own voice, every sentence placed at its spoken word), was accepted as a proof of concept on the fourth watch: pointer, click, press, load, typing, scroll, notes with leaders, the banner framed. Full check, nothing failing.
+- The hardening pass closed the day: the docs audited against the code and the brief and realigned; `names.test.js` now holds every name a doc or skill uses to its source; `vkit upgrade`, `vkit plugin pack` and the front door (`vkit` with no command) built; `vkit narration` owns the storyboard's Sentence column and logs every change from the expert's words; engine 0.5.3; the proofs run on GitHub on every push.
+
+## Versions
+
+| What | Version | Where |
 |---|---|---|
-| 1 | Skeleton and docs | Done (`9922ff6`) |
-| 2 | Core: clock, timeline, reset and seek, camera clamped to the frame, scenes, the self-placing card; `vkit new`; `vkit frames` | Done (`a86803d`). 16 stills per run of the starter |
-| 3 | Seek-correct motion: beats re-fired live and every animation held at t minus beat time | Done. `npm test` plays the starter to four moments and compares with a seek: with engine 0.1.1, 0 of 2,073,600 pixels differ at all four (was up to 6 levels on the crossfade and 225 edge pixels on the camera move with 0.1.0); tolerance 0.05 percent over 8 levels |
-| 4 | Seeded strokes (circle, frame, underline, arrow), characters, the walkthrough layer (pointer glide, click ring, typing), all seek-correct | Done. Engine 0.3.0. `npm test`: two renders of the starter identical, 20 of 20 stills; the seek proof at nine moments, 0 pixels; inline and app-backed still identical. The figures are the mechanism; their drawing style comes with the looks (step 7) |
-| 5 | `vkit render`: every frame at 30 fps, ffmpeg mux with the clips, captions sidecar | Done. `npm test` renders the starter with three beep clips: 2040 frames, 68.000 s; the frame handed to ffmpeg equals `vkit frames` at the four seek-test moments (0 pixels); decoded from the MP4 it is 45.4 to 48.6 dB PSNR on the Mac's Chrome (floor 40; a frame off by one is 26 to 28); the beeps land at 0.300, 24.300, 50.300 s. On the way, two fixes in the kit: the render adapter proves each capture's commit is on screen (a 1 px marker strip outside the footage), and engine 0.1.1 bakes held transitions on the main thread instead of leaving them to the compositor's clock |
-| 5a | The app folder (`apps/<family>/<tool>/`), `state(id)` in engine 0.2.0, `vkit new --app`, `vkit app new`, `add-state`, `extract`, the example app `example/placeholder` | Done. `npm test`: three videos from the starter (inline, `--app example/placeholder`, and the round trip through `vkit app extract`) render all 16 frames byte for byte identical |
-| 6 | `vkit check`: offline, deterministic, seek-correct, craft rules from `rules.json`, contrast, fidelity of each state against its capture | Done. `npm test`: the starter passes a full check (24 rows, 0 failing); four deliberate breaks caught by rule id; fidelity 1.000 against a capture of the state itself, 0.52 against it shifted and blurred. `rules.json` copied from the reference by `vkit sync-reference` |
-| 7a | `vkit sync-reference` for looks and patterns, `vkit look`, `vkit narration`, `vkit measure` | Done. `npm test`: all seven looks pass the checker on the starter; the empty look layer is byte-identical and `none` restores it; clips of odd lengths measure in exactly and the page total equals their sum |
-| 7b | The brand kit (`brands/<name>/brand.json` to `rig/brand.css`, the mark and banner by when and where, engine 0.4.0, `vkit brand --check`) and `vkit menu` (ten items from the data files, `?` `0` `S` `Q`, `--set`, `--show`, `--explain`, locks after measure) | Done. `npm test`: no brand is byte-identical (22 of 22, and identical to engine 0.3.2); the example brand changes 21 of 22 stills and passes the checker; the mark and banner are up and down at the right moments, inside title safe and above the caption band; `always` hides over the screen, `watermark` stays; the menu's `look.css` and `brand.css` equal the commands' byte for byte; a piped walk sets five answers and stops at Q |
-| 8 | The plugin (seven skills over the commands as built, the guard hook in `npm test`) and the progress line every slow command and proof prints | Done. `npm test`: every command, flag and menu item a skill names exists; 21 hook cases pass; `frames` reports 0 to 3 of 3 and the piped CLI prints the count and percentage. Installed into Claude Code from the clone (`/plugin marketplace add ./video-kit/packages/plugin`, then `/plugin install vkit@vkit-local`) on 5 October 2026 and one starter video driven through the skills: the menu's job and sources set with `--set`, items 3 to 10 kept at the defaults, 22 stills looked at, `vkit check` passing with nothing failing (seek equals playback at 0.5, 24.5 and 50.5 s; flashing and still-run sampled at 10 fps) |
-| 8a | The frames skill's first three findings fixed: an opaque card and a `surface-opaque` checker row, card placement clear of neighbours (engine 0.4.1), the starter's part 2 frame past the chrome; `sync-reference` at the research's first full commit | Done. `npm test`: the broken copy fails on five rules including `surface-opaque`; the starter passes the full check; stills show the card below the form, clear of every label |
-| 8b | Strokes draw (engine 0.4.2): the start state written with transitions off, the seek's bake with priority; the stroke-contrast measure reads the surfaces beside the drawn pixels, worst surface first | Done. `npm test`: 0 stroke pixels at the beat, 13,652 mid-draw, 20,670 drawn; seek equals playback mid-draw at 0 pixels; the measure proved on a built picture |
-| 9 | `vkit capture`: a walkthrough document (a heading per step, a line of what was done, the screenshot, a note) read into `captures/CAP-NNN.png`, `walkthrough.md` and `captures.csv`, the shape checked; `docs/CAPTURE.md` the brief; the `video-capture` skill; a plain stop when there is no browser | Done. `npm test`: three pictures in order from a test-written document, the 2x recorded, the repeat one file; the wrong shape fails by picture id on exactly five rows; a second run is refused; no browser stops in under a second |
-| 9b | The capture browser: `vkit shoot start|status|go|shoot|stop`, the Chrome already here on the kit's own profile at exactly 1920x1080, ratio 2, headless, CDP on localhost; masks hidden before the shot, the page's text swept and the shot refused while private shapes remain, the page's own values written beside each picture; the `capture-walkthrough` skill with the Playwright MCP as the agent's eyes; the brief fixed (DevTools screenshot, the badge, an empty capture account) | Done. `npm test`: viewport exactly 1920x1080 at 2x; refused on the badge and the email with the elements named; written at 3840x2160 with the badge gone from the pixels; repeat refused; a persistent cookie survives stop and start. The real console sign-in is the five-minute test before the first capture |
-| 10 | The sample video and the README for a reader with two minutes; the video's app is the first real one, in `video-apps-aws` (private) | Subject: creating an S3 bucket. Split into tests 10a to 10d |
-| 10a | Test 1, the capture pipeline on the real console: eight pictures by the plugin through `vkit shoot`, zero interventions after sign-in; grabber, clock, MCP output folder and messages fixed from its findings | Done. `shoot.test.js` still green; the eight captures and their values in `video-apps-aws/s3/captures/` |
-| 10b | Test 2, the recreation: `docs/RECREATE.md`, `vkit app crop`, `vkit face` (a face of our own traced from the page), engine 0.4.3 (`VK.faults()`, `beats-on-screen`), eight measured states of `aws/s3` with 40 crops and `fidelity.md` | Built and judged on a test video: bands, pictures and colours to the pixel; 0.60 to 0.76 fidelity with every difference a glyph until the face is made on the Mac (F7). Matthew's look found links sitting on their text (F8): fixed by running them after the text, and check gained judged rows for overlaps, overflow and the face. `face.test.js`, `faults.test.js`, `fidelity.test.js` green |
-| 10c | Test 3, the video: roles as skills and files (`vkit brief`, `video-brief`, `video-script`, `video-fact-check`, `storyboard-covered`); script first, Matthew's own recording, the timeline timed to the spoken word, then footage | In progress. 9 October, late: second watch good on keyboard and mouse; engine 0.5.1 answers its three notes (the control presses on click, a page change shows its load with the chrome staying, the card over a console is a one-line note with a leader; the kicker is gone). Hover and pressed captures requested (app pickup 2). Open: F5 (the look and the menu for notes), F10 (the refused-name row). 10 October: third watch answered (engine 0.5.2: placement reads where a scroll lands, leaders cross nothing, no ring over a screen, the banner framed, the Objects beat reframed). Next: the fourth watch, pickup 2, the light twin |
-| 10d | Test 4, design judgement: F5, the explanation card as a device | After 10c |
-| 11 | MCP server; cloud render and a voice provider as adapters; each prints a batch's cost and stops for a yes, and the hook's `--approved` rule goes then | |
-| 12 | The twin runner: the same app folder plus `flows.json`, a learner clicks through; generic runner, private content | After the app folder exists. `docs/TWIN-CARRYOVER.md` |
+| engine | 0.5.3 | `video-kit/packages/core/engine/rig.js`; a video's `rig/engine/VERSION`; `vkit upgrade` moves it |
+| plugin and its 13 skills | 0.1.5 | `video-kit/packages/plugin/.claude-plugin/plugin.json`; re-uploaded to claude.ai with `vkit plugin pack` |
+| app `aws/s3` | 0.3.1, nine states | `apps/aws/s3/app.json`; `vkit app use aws/s3` moves it into a video |
+| `vkit` | 20 commands | `vkit help` |
+| research in the kit | `video-reference` as of 2 October 2026 | `vkit sync-reference` |
 
-`video-reference` holds the research in full as of 2 October 2026 (see `research-to-rewrite.md` for the inventory); `vkit sync-reference` reads it into the kit. A second chat takes the research lane, in `video-reference` only; the build chat never writes there. The research list, in the order that pays off first:
+## Milestones
 
-1. Two more videos per creator (14 videos), the same three instruments; each pattern marked constant or one-off across its three videos; `deep/COMPARISON.md` with ranges instead of single numbers. This is what makes the 35 patterns trustworthy.
-2. Audience evidence per studied video: the most-replayed curve and the top comments, matched to the shot log, so a move has a viewer-side number.
-3. Motion at frame precision around a hundred cuts (easing shape, duration, settle), replacing the guessed motion defaults in the look packs.
-4. Palettes clustered from sampled frames, correcting the look packs' colours, which were read by eye.
-5. Missing genres, one video each: a motion-graphic explainer, a tablet-writing lesson, a 3Blue1Brown-style maths animation, a keynote, a vertical short, and one mediocre corporate training video as the negative example.
-6. Three AWS and cloud teaching channels studied the same way: the register the Udemy courses will be compared against.
-7. Sound as design: a craft note with numbered rules, from the audio notes already taken.
-8. The listening pass: twenty flagged moments a person actually hears, because loudness is not delivery.
-9. Full Ken Burns at half-second steps, and How Money Works' built scenes as a vocabulary study.
+Done, with proof (the proof is a test file unless said): 1 skeleton; 2 the core; 3 seek-correct motion; 4 strokes, the cast, the walkthrough layer; 5 `vkit render`; 5a the app folder; 6 `vkit check`; 7a looks, words and clips; 7b the brand kit and the menu; 8 the plugin and the progress line; 8a the frames skill's findings; 8b strokes draw; 9 `vkit capture`; 9b the capture browser; 10a the S3 capture; 10b the S3 recreation; 10c the S3 video as a proof of concept (four watches); 10e the hardening pass. Each has a sentence and its proof in the roadmap's "Done, with proof" and a paragraph in its history.
 
-When any of these lands in the reference, `vkit sync-reference` brings the new numbers into `rules.json`, `looks/` and `patterns/index.json`, and `npm test` says whether the starter and the seven looks still pass.
+Not started: F the MCP server and the adapters (cloud render, Amazon Polly, a host); G the full twin runner.
 
-## How a step lands
+## Open, carried
 
-Code, its proof (frames compared or a check passing), and the docs (`README`, `ROADMAP`, `ENGINE`, this file) in one commit. Matthew runs the git commands unless he says the session may.
+| Item | Owner | Lands with |
+|---|---|---|
+| F5: the look draws the note; the menu records note / stroke only / none per video; a lane or caption not built | director | milestone B, looks and brands |
+| F10: the refused-name row sits inside the happy path | subject expert | the expert's answer (recapture CAP-009 with the lesson's name, or move the row) |
+| Pickup 2: eight hover and held-down pictures of the S3 console (CAP-010 to 017); the press is substituted until then | director, on the Mac with the browser | the next capture session |
+| The three read deviations in the recording | producer | re-record three sentences, or accept them in the words |
+| The S3 video's `narration/changes.md` starts empty; the expert's original rows are in the `_suggested-trash/` copies of `storyboard.md` on the Mac | director | when the rows are next touched |
+| The workspace links (`claude/`, `README.md`, `CLAUDE.md` to `video-kit/docs/workspace/`) | producer | the commands are in the hardening delivery |
 
-## Where proofs run
+## Next, in order
 
-Quick checks and looking can happen in any environment with a Chromium. Anything that is proof (a byte comparison, a frame committed to the docs, `npm test`) runs on Matthew's Mac with its Chrome (`PW_CHANNEL=chrome`), because fonts and seeded strokes are pixel-identical per machine, not across machines. `npm test` runs its files one at a time: the playback proof is a real-time measurement and should not share the machine with a render.
+A. The light twin (the app engine proved by a hand). B. Looks and brands over the teaching layer (F5 closed). C. Concept scenes for theory. D. The command line and code as app kinds (CloudShell first). E. The front door for a stranger, finished. F. The MCP server and the adapters. G. The twin runner. Each is defined, with what done looks like, in `video-kit/docs/ROADMAP.md`.
+
+## The research lane
+
+`video-reference` holds the research in full as of 2 October 2026 (`research-to-rewrite.md` is the inventory); `vkit sync-reference` reads it into the kit. A second chat takes the research lane, in `video-reference` only; the build chat never writes there. In the order that pays: two more videos per creator with ranges instead of single numbers; audience evidence per studied video; motion at frame precision around a hundred cuts; palettes clustered from sampled frames; the missing genres, one video each; three AWS and cloud teaching channels; sound as design; the listening pass; full Ken Burns at half-second steps and How Money Works' built scenes. When any of these lands, `vkit sync-reference` brings the new numbers into `rules.json`, `looks/` and `patterns/index.json`, and `npm test` says whether the starter and the seven looks still pass.
+
+## How a step lands, and where proofs run
+
+Code, its proof (frames compared or a check passing), and the docs (`README`, `ROADMAP`, `ENGINE`, this file, the skills) in one commit; Matthew runs the git commands unless he says the session may. Quick checks and looking can happen in any environment with a Chromium, and the GitHub run proves every push with the runner's own Chrome; anything pixel-committed (a byte comparison quoted in the docs, a frame committed) runs on Matthew's Mac with its Chrome (`PW_CHANNEL=chrome`), because fonts and seeded strokes are pixel-identical per machine, not across machines.
