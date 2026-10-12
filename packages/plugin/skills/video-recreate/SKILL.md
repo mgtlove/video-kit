@@ -8,7 +8,7 @@ description: >
   captures, the face traced from the page, and a fidelity ledger of what is true, substituted,
   invented or missing.
 metadata:
-  version: "0.1.7"
+  version: "0.1.8"
 ---
 
 Who runs this: the director's chat (this project). The captures come from `capture-walkthrough`, run in a Claude Code session on the machine with the browser against the app's `capture-request.md` (the expert's coverage) with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.
@@ -53,6 +53,10 @@ Write `fidelity.md` in the app folder: the face; every token; the geometry per p
 
 The screens are half the app. `app-model` writes `model.json` (which control on which state leads where) from the same captures and serves the practice copy; a recreation is not finished until the model covers the path a lesson takes and `vkit check` passes its model rows.
 
+## 9. The version, its line, and the spokes
+
+Every video and twin made from the app carries a copy (`docs/MAINTENANCE.md`). When a state changes: `vkit app build family/tool` (the app's own generator run if it has one, the states verified, the ones that moved named byte for byte), then bump `app.json`'s version and write the line in the app's `CHANGES.md` in the same change (`- 0.3.3 (2026-10-14): what changed, from CAP-NNN`), then `vkit app use --all family/tool` in the workspace folder: every video on the app brought up and checked, the failing rows named; `vkit twin family/tool --build` remakes the twin. `vkit status` says what is still behind. An app re-captured after a product change waits first for the expert's `what-changed.md` (`vkit handoffs` says so); read it before touching a state, and answer each line of it in the ledger.
+
 ## What not to do
 
-Do not restyle, round a measured half pixel, type a value from memory of the product, invent a control or a menu, copy anything from the product's files or any employer's repository, or edit a capture. Do not judge a state by reading its code; judge it by the frames beside the capture.
+Do not restyle, round a measured half pixel, type a value from memory of the product, invent a control or a menu, copy anything from the product's files or any employer's repository, or edit a capture. Do not judge a state by reading its code; judge it by the frames beside the capture. Do not bump a version without its `CHANGES.md` line, or change a state without the bump: a spoke that cannot tell what moved is a spoke that drifts.

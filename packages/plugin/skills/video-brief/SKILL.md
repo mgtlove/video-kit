@@ -2,7 +2,7 @@
 name: video-brief
 description: Use in the subject expert's chat when the user has an idea for a video, says a video is ready for them, asks what is waiting, or asks to outline or storyboard a video or which screens are missing. Starts the video folder with brief.md and the screens it needs, and later answers the kit's brief-request.md with the storyboard rows and capture-request.md, all as files in the video folder.
 metadata:
-  version: "0.1.7"
+  version: "0.1.8"
 ---
 
 # The idea, and the brief request
@@ -19,6 +19,10 @@ The videos live in the `videos/` folder beside `video-kit` (on Matthew's Mac, `~
    - the app exists (`apps/<family>/<tool>/manifest.csv` has states): write `capture-request.md` in the video folder with only the screens the app lacks;
    - no app yet: `vkit app new <family>/<tool>` once, then write `apps/<family>/<tool>/capture-request.md`, the whole coverage of the tool for this video. That file is the walkthrough the `capture-walkthrough` skill runs in a Claude Code session on the person's machine (a cloud chat cannot run the capture browser), with the person signed in. The director's chat recreates from the captures.
 4. Say what was written. `vkit handoffs` now shows the app waiting for its captures, or the video waiting for the director to bring the app in (`vkit app use`) and write `brief-request.md`. The storyboard rows wait for that file, because they name states by id and the ids do not exist before the recreation.
+
+## A2. An app with new captures (`vkit handoffs` says `app family/tool: subject expert (video-brief)`)
+
+The product moved and someone captured it: the app folder has captures newer than its states. Before the director touches a state, read the new captures (`apps/<family>/<tool>/captures/CAP-NNN.png` and the `.json` beside each) against the states they replace and against every lesson on the app (`videos/*/storyboard.md` and `narration/FULL.md` where `video.json` names the app), and write `apps/<family>/<tool>/what-changed.md`: a heading per capture; what changed in the product, in plain words; and what it means for each lesson, by video name: a row that no longer holds, a word that moved, a step that is now somewhere else, or nothing. Say so in one line; `vkit handoffs` then shows the app waiting for the director (`video-recreate`). Facts first: say what the picture shows, not what the product probably does now.
 
 ## B. The brief request (the kit wrote `brief-request.md`)
 

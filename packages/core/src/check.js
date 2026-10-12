@@ -456,6 +456,17 @@ async function check(videoDir, opts) {
     const unnamed = allRows.filter((r, i) => !named[i] && !/^\s*scene\b/i.test(r.on || '')).length;
     add('craft', row('storyboard-covered', ['C-COMP-16'], unknown.length ? 'fail' : (allRows.length ? 'pass' : 'not measured'), unknown.length ? unknown.slice(0, 6).join('; ') : (allRows.length ? named.filter(Boolean).length + ' rows name a state the app has' + (unnamed ? '; ' + unnamed + ' name neither a state nor a scene (a concept scene says "scene <name>")' : '') : 'no storyboard rows yet'), 'every state a row names exists in rig/app/manifest.csv', 'storyboard.md, rig/app/manifest.csv'));
   }
+  // ---- the copy is current (docs/MAINTENANCE.md, A2): the app version the video carries against the app folder's; a stale copy never renders quietly ----
+  if (meta.app && meta.app.ref) {
+    let hub = null; try { hub = apps.resolveApp(meta.app.ref); } catch (e) { hub = null; }
+    const have = meta.app.version || '';
+    if (!hub) add('fidelity', row('app-copy-current', ['C-COMP-16'], 'not measured', 'the app folder for ' + meta.app.ref + ' was not found (VKIT_APPS, or apps/ beside the kit); the copy carries ' + (have || 'no version'), 'the copy is at the app\'s version', 'video.json app.version, apps/' + meta.app.ref + '/app.json'));
+    else {
+      const want = hub.app.version || '', behind = require('./maintain').cmpVersion(have, want) < 0;
+      const since = behind ? require('./maintain').changesSince(hub.dir, have, want) : [];
+      add('fidelity', row('app-copy-current', ['C-COMP-16'], behind ? 'fail' : 'pass', behind ? 'the copy is ' + (have || 'unversioned') + ', the app is ' + want + (since.length ? ': ' + since.map((c) => c.version + ' ' + c.text).join('; ').slice(0, 300) : '; CHANGES.md has no line for what moved') + '. vkit app use ' + meta.app.ref : 'the copy is at ' + (want || 'the app\'s version') + ', the app\'s own', 'the copy is at the app\'s version', 'video.json app.version, apps/' + meta.app.ref + '/app.json, CHANGES.md'));
+    }
+  }
   // ---- the app model (docs/MODEL.md, engine 0.6.0): every transition leads to a state the app has and is built, every control is in its state,
   //      and every state change the timeline made is a transition the model has ----
   if (meta.app && meta.app.ref) {

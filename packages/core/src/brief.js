@@ -110,14 +110,21 @@ function factVerdicts(file) {
   return { counts, open, sentences, summary: parts.join(', ') || 'nothing' };
 }
 // An app has its own handoff, before any video: the expert's coverage (capture-request.md in
-// the app folder) waits for captures; new captures wait for states. A quiet app is not listed.
+// the app folder) waits for captures; new captures wait first for the expert's what-changed.md (what moved in the
+// product and what it means for each lesson, docs/MAINTENANCE.md), then for states. A quiet app is not listed.
 function newest(dir, re) { let t = 0; try { for (const f of fs.readdirSync(dir)) if (re.test(f)) t = Math.max(t, mtime(path.join(dir, f))); } catch (e) { t = 0; } return t; }
 function appHandoff(ref, dir) {
   const req = mtime(path.join(dir, 'capture-request.md'));
   const caps = newest(path.join(dir, 'captures'), /^CAP-\d+\.png$/i);
   const manifest = mtime(path.join(dir, 'manifest.csv'));
   if (req && req > caps && req > manifest) return { name: 'app ' + ref, dir, who: 'director', what: 'capture-request.md waits for captures (a Claude Code session on the machine with the browser, the person signed in)', skill: 'capture-walkthrough' };
-  if (caps && caps > manifest) return { name: 'app ' + ref, dir, who: 'director', what: 'captures newer than manifest.csv wait for states', skill: 'video-recreate' };
+  if (caps && caps > manifest) {
+    const seen = mtime(path.join(dir, 'what-changed.md'));
+    const fresh = []; try { for (const f of fs.readdirSync(path.join(dir, 'captures'))) if (/^CAP-\d+\.png$/i.test(f) && mtime(path.join(dir, 'captures', f)) > manifest) fresh.push(f.replace(/\.png$/i, '')); } catch (e) { /* no captures folder */ }
+    const hasStates = apps.readManifest(dir).some((r) => fs.existsSync(path.join(dir, 'states', r.file || r.id + '.html')));   /* a first capture set answers the expert's own request: nothing changed yet, the director recreates */
+    if (hasStates && seen < caps) return { name: 'app ' + ref, dir, who: 'subject expert', what: fresh.length + ' capture' + (fresh.length === 1 ? '' : 's') + ' newer than the states (' + fresh.sort().join(', ') + '): say what changed in the product and what it means for each lesson, as what-changed.md in the app folder, before any state is touched', skill: 'video-brief' };
+    return { name: 'app ' + ref, dir, who: 'director', what: hasStates ? 'what-changed.md is in; captures newer than manifest.csv wait for states, then app.json bumped, the CHANGES.md line, vkit app build and vkit app use --all' : 'captures newer than manifest.csv wait for states', skill: 'video-recreate' };
+  }
   return null;
 }
 function appHandoffs() {
@@ -141,12 +148,8 @@ function handoffs(where, opts) {
   opts = opts || {};
   const root = path.resolve(where || '.');
   let list;
-  if (fs.existsSync(path.join(root, 'video.json'))) list = [handoff(root)];
-  else {
-    const isVideo = (d) => { const f = path.join(root, d.name, 'video.json'); return d.isDirectory() && fs.existsSync(f) && !/\{\{NAME\}\}/.test(fs.readFileSync(f, 'utf8')); };   /* the kit's starter/ is a template, not a video */
-    list = fs.readdirSync(root, { withFileTypes: true }).filter(isVideo).map((d) => handoff(path.join(root, d.name)));
-    if (!list.length) throw new Error('no video folder in ' + root + ' (a folder with video.json, or a folder of them)');
-  }
+  list = require('./maintain').findVideos(root).map(handoff);   /* the folder itself, the folders in it, and a videos/ folder in it; the kit's starter/ is a template, not a video */
+  if (!list.length) throw new Error('no video folder in ' + root + ' (a folder with video.json, a folder of them, or one with videos/ in it)');
   return opts.apps === false ? list : list.concat(appHandoffs());
 }
 function formatHandoffs(list) {

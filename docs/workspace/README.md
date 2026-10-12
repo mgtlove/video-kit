@@ -9,7 +9,7 @@ The repositories, side by side on purpose, and the folders beside them:
 | `video-kit/` | The product: engine, `vkit` command line, starter video, brand kit, looks, patterns index, the Claude plugin, the adapter seats (render built; voice, script and hosting to come) | `video-kit/README.md`, then `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/CARRYOVER.md` |
 | `video-reference/` | The research, in full: seven creator studies with shot logs, rhetoric maps and measured audio; 96 craft rules; 35 named patterns; seven look packs; six library studies; licences | `video-reference/README.md`, then `CATALOG.md` |
 | `apps/<family>/<tool>/` | Recreated apps, each family its own private repository (`apps/aws/` is `video-apps-aws`): measured states, crops, a traced face, `fidelity.md`, `capture-request.md` | `video-kit/docs/RECREATE.md` |
-| `videos/<name>/` | The videos, one folder each: brief, storyboard, narration, voice, rig, the fact check; `create-s3-bucket` is the first | `vkit handoffs videos` |
+| `videos/<name>/` | The videos, one folder each: brief, storyboard, narration, voice, rig, the fact check; `create-s3-bucket` is the first | `vkit handoffs videos`; `vkit status` for what each carries |
 
 This folder itself is not a git repo; the repositories inside it are. The files at this level (`README.md`, `CLAUDE.md`, `claude/`) orient a person or an agent; they are links to `video-kit/docs/workspace/`, where the one copy lives under version control.
 

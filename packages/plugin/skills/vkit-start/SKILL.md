@@ -6,7 +6,7 @@ description: >
   "where does this video stand", or opens a video folder made by vkit new. It checks the install
   and the repos and prints the state before anything is built.
 metadata:
-  version: "0.1.7"
+  version: "0.1.8"
 ---
 
 # Start a session
@@ -19,7 +19,8 @@ Read `claude/START-HERE.md` at the workspace root (the folder holding `video-kit
 
 1. **The install.** `vkit --help` runs (if not: `cd video-kit && npm install && (cd packages/cli && npm link)`). Node 18 or newer. Chrome is installed (`PW_CHANNEL=chrome` is how frames render; nothing downloads a browser). ffmpeg for render and measure (`brew install ffmpeg`).
 2. **The repos.** In each of `video-kit`, `video-reference` and the private app repos under `apps/`: `git fetch`, then say whether the local branch is behind, ahead, or has uncommitted work (`git status --short`, `git log --oneline origin/main -3`). Read the newest commits on the remote before building; two people solving the same thing in one morning has happened. A session that works in a cloud sandbox and delivers files to this machine starts the same way, and compares its tree to `origin/main` before it builds.
-3. **What is waiting.** `vkit handoffs` on the `videos/` folder: each video, whose turn it is and which skill; the apps waiting for captures or states.
+3. **What is waiting.** `vkit handoffs` on the `videos/` folder: each video, whose turn it is and which skill; the apps waiting for captures, for the expert's `what-changed.md`, or for states.
+3b. **What is behind.** `vkit status` in the workspace folder: every app with its states, model, paths, captures, change log and twin, and every video with the engine and app version it carries; a copy behind the kit's engine or the app's version is named with the command that brings it up (`docs/MAINTENANCE.md`). Say which, if any, before anything is built on them.
 4. **The plan.** `video-kit/docs/ROADMAP.md`, "Next, in order": name the next milestone and what done looks like; `claude/roadmap-and-status.md` for where things stand this week.
 5. **A video, if the session is inside one** (a folder with `video.json` and `rig/`): `vkit` with no command, then `vkit menu --show` for the ten choices and their locks; the engine in `rig/engine/VERSION` against the kit's (`vkit upgrade` brings it up and keeps the old copy aside); whether `parts.part_seconds` is filled; `vkit brand --check` if a brand is on.
 

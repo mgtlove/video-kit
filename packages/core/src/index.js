@@ -16,6 +16,7 @@ const { narration, measure } = require('./words');
 const { briefRequest, handoffs, appHandoffs, formatHandoffs } = require('./brief');
 const { timeVideo } = require('./time');
 const upgrade = require('./upgrade');
+const maintain = require('./maintain');
 const twin = require('./twin');
 const brand = require('./brand');
 const captureMod = require('./capture');
@@ -40,6 +41,10 @@ module.exports = {
   appHandoffs: appHandoffs,                  // the apps waiting on their own, before any video
   formatHandoffs: formatHandoffs,
   upgradeEngine: upgrade.upgradeEngine,     // the kit's engine into a video (rig/engine/, VERSION, video.json.engine); the old copy kept aside
+  status: maintain.status, formatStatus: maintain.formatStatus,     // every hub and spoke with its versions, current or behind (docs/MAINTENANCE.md)
+  sweep: maintain.sweep, formatSweep: maintain.formatSweep,         // vkit app use --all: every video up to its app, each checked
+  buildApp: maintain.buildApp, formatBuild: maintain.formatBuild,   // vkit app build: the app's generator run, the states verified
+  changesSince: maintain.changesSince, readChanges: maintain.readChanges,
   formatUpgrade: upgrade.formatUpgrade,
   packPlugin: upgrade.packPlugin,           // packages/plugin/ as the zip claude.ai's upload takes
   buildTwin: twin.buildTwin,                 // the app's states and model as a page a learner clicks through: apps/<family>/<tool>/twin/

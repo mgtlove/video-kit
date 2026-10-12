@@ -9,7 +9,7 @@ description: >
   writes the lesson's path for the sidekick (one file per lesson under paths/, in the lesson's words), proves both with
   vkit check and vkit twin, and turns what the twin cannot do into pickups.
 metadata:
-  version: "0.1.7"
+  version: "0.1.8"
 ---
 
 # The app model and the practice copy
@@ -42,7 +42,11 @@ In a video on the app, `vkit app use <family>/<tool>` (the model travels into `r
 
 `vkit twin <family>/<tool> [--path name]` builds `apps/<family>/<tool>/twin/` (a build product; `vkit twin --build` writes it and stops; the build line names the path and counts its steps and the field rules) and serves it on localhost. It is a page in a practice browser with the sidekick beside it: the real address of each screen (from the captures), back and forward, the page scaled to the width it has and scrolling whole with the product's own bars pinned, a real input when a field is clicked; the sidekick walking the path (the step, why, a ring on the control, Fill it in for me, Show me, Start over). Walk the lesson's path by hand: click, type a name of your own, type a bad one (the sidekick says the rule it breaks and holds Create), type a taken one (the captured refusal, the sidekick's words for it), take the fill, scroll with the wheel, press Create, wander off the step (exploring, and the way back). The typed name must appear everywhere the lesson's did, the address included; a click the model has nothing for shows the notice; nothing opens the real product; nothing the sidekick says appears on the screen. Say in the delivery which path you walked and what you saw.
 
-## 5. What the twin cannot do is a pickup
+## 5. The version and the spokes
+
+A model or a path changed is a change to the app: bump `app.json`'s version and write the `CHANGES.md` line in the same change, then `vkit app use --all family/tool` in the workspace folder brings every video on the app up and checks each, and `vkit twin family/tool --build` remakes the twin (`docs/MAINTENANCE.md`). `vkit status` says what is still behind.
+
+## 6. What the twin cannot do is a pickup
 
 A control a learner reaches for that shows "outside" is either a transition the captures hold and the model lacks (write it) or a screen never captured (a pickup: one line in the app's `capture-request.md`, captured one layer out, then a state, then a transition). "Captured, not built" is a state waiting for `video-recreate`. The model grows for every video and exercise after.
 

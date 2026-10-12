@@ -7,7 +7,8 @@ const core = require('@video-kit/core');
 
 const COMMANDS = {
   'new':            ['<name> [--app family/tool]', 'create a video folder from starter/, engine copied in; --app copies a recreated app in'],
-  'app':            ['new family/tool | use family/tool [video] | add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t] | extract <video> family/tool <id> [--capture f] | crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]', 'recreated apps: make one, add a state that cites a capture, lift a video\'s inline screen into one, or copy a region of a capture (a logo, an icon) into crops/ for the recreation'],
+  'status':         ['[folder]', 'every app (the hub) and every video and twin made from it (the spokes) with the engine and app version each carries, current or behind, and the app\'s changes since each copy; run in the workspace folder'],
+  'app':            ['new family/tool | use family/tool [video] | use --all [family/tool] [--no-check] | build family/tool | add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t] | extract <video> family/tool <id> [--capture f] | crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]', 'recreated apps: make one, add a state that cites a capture, lift a video\'s inline screen into one, copy a region of a capture (a logo, an icon) into crops/ for the recreation, bring one video or every video up to the app, or run the app\'s generator and verify its states'],
   'menu':           ['[dir] [--show] [--set item[.field]=value [--note t]] [--explain item] [--walk]', 'walk through the ten choices one at a time (Enter keeps, a number picks, ? explains, 0 types your own, S saves and runs frames, Q stops); --show prints them; --set answers one from a script'],
   'shoot':          ['start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop', 'the capture browser: Chrome on the kit\'s own profile at 1920x1080, ratio 2, headless (--show for signing in); shoot takes the page-only picture into dir/captures/ after hiding the masks in dir/shoot.json and sweeping the text; status says where the page is and how old the session is'],
   'face':           ['<name> --family "<css family>" [--weights 400,700] [--into dir] [--sample text]', 'a typeface of our own from the page open in the capture browser: each glyph drawn at 1000 px and traced, widths and kerning measured, into dir/faces/; the sample line set in both faces and the differing pixels counted'],
@@ -56,9 +57,11 @@ const MAN = {
     ['Screens: capturing and recreating a tool', ['shoot', 'capture', 'face', 'app']],
     ['Looks and brands', ['look', 'brand']],
     ['The practice copy', ['twin']],
+    ['Keeping the copies current', ['status']],
     ['The kit itself', ['upgrade', 'plugin', 'sync-reference', 'publish']]
   ],
   detail: {
+    'status': ['An app is the hub; the videos and twins made from it are spokes, each carrying a copy of the app and of the engine. vkit status lists every one with what it carries against the kit\'s engine and the app\'s version, says which are behind, and prints the app\'s CHANGES.md lines a copy has not seen. The route of a change is docs/MAINTENANCE.md: capture, the expert\'s what-changed.md, the states, app.json and CHANGES.md, vkit app build, vkit app use --all, the frames looked at.', 'Videos are found in the folder given (or the current one), one level down, and in a videos/ folder; apps in VKIT_APPS or apps/ beside the kit.'],
     'new': ['A video is a folder: storyboard.md, narration/, voice/, rig/ (the page that is the footage) and video.json (the record of its choices). The engine is copied in at the kit\'s version.', 'With --app, the recreated app\'s states are copied into rig/app/ and the page points at them.'],
     'menu': ['The ten choices a video makes: job, sources, layout, brand, look, tone, patterns, voice, characters, fixed lines. Each is recorded in video.json with where it came from and when.', 'After vkit measure, the items that would re-time the video are locked.'],
     'brief': ['The director\'s ask to the subject expert, written into the video folder. The expert\'s chat answers it with the video-brief skill: brief.md, the storyboard rows and capture-request.md.'],
@@ -83,7 +86,9 @@ const MAN = {
   },
   subs: {
     'app': [['new family/tool', 'make an app folder: app.json, tokens.css, screen.css, states/, manifest.csv'],
-      ['use family/tool [video]', 'copy the app into a video that exists, or bring the video\'s copy up to date; writes video.json'],
+      ['use family/tool [video]', 'copy the app into a video that exists, or bring the video\'s copy up to date; writes video.json and prints the CHANGES.md lines the copy had not seen'],
+      ['use --all [family/tool] [--no-check]', 'the sweep: every video under this folder (one level down, or in videos/) brought up to its app, then each one\'s quick check; --no-check skips the checks'],
+      ['build family/tool', 'run the app\'s own generator (make-states.js in the app folder, if it has one), then verify the states against the manifest and the crops'],
       ['add-state family/tool <id> [--capture f] [--screen s] [--state c] [--note t]', 'add a state that cites a capture'],
       ['extract <video> family/tool <id> [--capture f]', 'lift a video\'s inline screen into an app folder'],
       ['crop family/tool <CAP-NNN> <name> --at x,y,w,h [--replace]', 'copy a region of a capture (a logo, an icon) into crops/, in whole screen pixels']],
@@ -153,7 +158,7 @@ function frontDoor() {
     try { for (const h of core.handoffs(cwd, { apps: false })) lines.push(...item('1.', h)); } catch (e) { lines.push('  ' + e.message); }
   } else {
     let list = [], videos = true; try { list = core.handoffs(cwd); } catch (e) { list = core.appHandoffs(); videos = false; }
-    lines.push('Where you are:', '  ' + where + (videos ? ', a folder of videos' : ', not a video folder (no video.json here or one level down)'), '');
+    lines.push('Where you are:', '  ' + where + (videos ? ', a folder of videos' : ', not a video folder (no video.json here, one level down, or in videos/)'), '');
     lines.push(videos ? 'What is waiting:' : 'What is waiting elsewhere:');
     const vids = list.filter((h) => !/^app /.test(h.name)), apps = list.filter((h) => /^app /.test(h.name));
     if (!list.length) lines.push('  nothing');
@@ -172,6 +177,7 @@ function frontDoor() {
     '  vkit handoffs says whose turn it is.',
     '', 'More:',
     '  vkit help        the manual page; vkit help <command> for one command in full',
+    '  vkit status      every app and every video and twin made from it, current or behind',
     '  vkit-start       the skill for the start of a session',
     '  README.md        the two-minute version');
   console.log(lines.join('\n'));
@@ -195,18 +201,31 @@ async function main() {
   }
   if (cmd === 'app') {
     const sub = args[0], rest = args.slice(1), flags = {}, pos = [];
-    for (let i = 0; i < rest.length; i++) { if (rest[i].startsWith('--')) { if (rest[i] === '--replace') flags.replace = true; else flags[rest[i].slice(2)] = rest[++i]; } else pos.push(rest[i]); }
+    for (let i = 0; i < rest.length; i++) { if (rest[i].startsWith('--')) { if (['--replace', '--all', '--no-check'].includes(rest[i])) flags[rest[i].slice(2)] = true; else flags[rest[i].slice(2)] = rest[++i]; } else pos.push(rest[i]); }
     if (sub === 'new') {
       if (!pos[0]) { console.error('vkit app new family/tool [--title "Shown name"] [--extends family/other]'); return 2; }
       const r = core.apps.appNew(pos[0], { title: flags.title, extends: flags.extends });
       console.log('made ' + r.dir + '. Put captures in captures/, then vkit app add-state ' + pos[0] + ' <id> --capture <file>');
       return 0;
     }
+    if (sub === 'use' && rest.includes('--all')) {
+      const ref = pos[0];
+      const s = await core.sweep('.', { ref, check: !rest.includes('--no-check'), progress: progressSink(), channel: process.env.PW_CHANNEL || undefined });
+      console.log(core.formatSweep(s));
+      return s.videos.some((v) => v.check && v.check.failures) ? 1 : 0;
+    }
     if (sub === 'use') {
-      if (!pos[0]) { console.error('vkit app use family/tool [video]'); return 2; }
+      if (!pos[0]) { console.error('vkit app use family/tool [video]   or   vkit app use --all [family/tool] [--no-check]'); return 2; }
       const r = core.apps.appUse(pos[1] || '.', pos[0]);
-      console.log((r.action === 'installed' ? 'put ' + r.ref + ' ' + r.version + ' into the video' : 'brought ' + r.ref + ' up to ' + r.version + (r.from && r.from !== r.version ? ' from ' + r.from : '')) + ': ' + r.states.length + ' state' + (r.states.length === 1 ? '' : 's') + (r.added.length && r.action === 'updated' ? ', added ' + r.added.join(', ') : '') + (r.gone.length ? ', no longer in the app (left on disk): ' + r.gone.join(', ') : '') + '.' + (r.action === 'installed' ? ' Next: vkit brief' : ''));
+      console.log((r.action === 'installed' ? 'put ' + r.ref + ' ' + r.version + ' into the video' : (r.from === r.version ? 'refreshed ' + r.ref + ' ' + r.version + ' (already current)' : 'brought ' + r.ref + ' up to ' + r.version + (r.from ? ' from ' + r.from : ''))) + ': ' + r.states.length + ' state' + (r.states.length === 1 ? '' : 's') + (r.added.length && r.action === 'updated' ? ', added ' + r.added.join(', ') : '') + (r.gone.length ? ', no longer in the app (left on disk): ' + r.gone.join(', ') : '') + '.' + (r.action === 'installed' ? ' Next: vkit brief' : ''));
+      if (r.action === 'updated' && r.from !== r.version) { const since = core.changesSince(core.apps.resolveApp(r.ref).dir, r.from, r.version); console.log(since.length ? 'Since ' + r.from + ':\n' + since.map((c) => '  ' + c.version + ' (' + c.date + '): ' + c.text).join('\n') : 'CHANGES.md has no line between ' + r.from + ' and ' + r.version + '; the app\'s folder should say what moved (docs/MAINTENANCE.md).'); }
       return 0;
+    }
+    if (sub === 'build') {
+      if (!pos[0]) { console.error('vkit app build family/tool'); return 2; }
+      const b = core.buildApp(pos[0]);
+      console.log(core.formatBuild(b));
+      return b.ok ? 0 : 1;
     }
     if (sub === 'add-state') {
       if (!pos[0] || !pos[1]) { console.error('vkit app add-state family/tool <id> [--capture file] [--screen name] [--state condition] [--note text]'); return 2; }
@@ -227,7 +246,7 @@ async function main() {
       console.log('cropped ' + r.width + 'x' + r.height + ' from ' + r.row.capture + ' at ' + [x, y].join(',') + ' into ' + path.relative(process.cwd(), r.file) + ' (' + r.scale + 'x)' + (r.rounded ? '; ' + r.rounded : '') + '; crops.csv has the row. The capture is unchanged.');
       return 0;
     }
-    console.error('vkit app new|add-state|extract|crop'); return 2;
+    console.error('vkit app new|use|build|add-state|extract|crop'); return 2;
   }
   if (cmd === 'twin') {
     const ref = args.find((a) => /^[a-z0-9-]+\/[a-z0-9-]+$/.test(a));
@@ -240,6 +259,10 @@ async function main() {
     const s = await core.serveTwin(r.dir, { port });
     console.log('Serving at ' + s.url + '  (Ctrl-C stops it; R in the page starts over; a click the model has nothing for shows the notice)');
     await new Promise(() => {});   /* until Ctrl-C */
+    return 0;
+  }
+  if (cmd === 'status') {
+    console.log(core.formatStatus(core.status(args[0] || '.')));
     return 0;
   }
   if (cmd === 'upgrade') {

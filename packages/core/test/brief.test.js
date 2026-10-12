@@ -156,7 +156,7 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   assert.ok(/^first: subject expert \(video-brief\): brief-request\.md waits/m.test(c.stdout) && /^second: director \(vkit brief\)/m.test(c.stdout), c.stdout);
   const cu = spawnSync(process.execPath, [VKIT, 'app', 'use', 'example/placeholder', second], { encoding: 'utf8' });
   assert.strictEqual(cu.status, 0, cu.stdout + cu.stderr);
-  assert.ok(/brought example\/placeholder up to 0\.2\.0: 2 states/.test(cu.stdout), cu.stdout);
+  assert.ok(/refreshed example\/placeholder 0\.2\.0 \(already current\): 2 states/.test(cu.stdout), cu.stdout);   /* the copy was at the version already: refreshed, nothing to report since */
   assert.throws(() => core.handoffs(path.join(tmp, 'not-a-video')), /no video folder/);
   console.log('handoffs: ' + c.stdout.trim().split('\n').join(' | ') + ' | app use: ' + cu.stdout.trim());
 });

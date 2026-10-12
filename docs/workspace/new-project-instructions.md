@@ -8,7 +8,7 @@ This project is Matthew Truelove's own video product, `video`, at `~/Developer/v
 
 ## First message of a session
 
-Read `claude/START-HERE.md` and the files it names, run `vkit handoffs videos` and the starter once as it says, and tell me in five lines where the roadmap stands and what you would do next. Do not change anything until I say which milestone we are on.
+Read `claude/START-HERE.md` and the files it names, run `vkit handoffs videos`, `vkit status` and the starter once as it says, and tell me in five lines where the roadmap stands and what you would do next. Do not change anything until I say which milestone we are on.
 
 ## The subject expert's project (the AWS chat): one standing line
 

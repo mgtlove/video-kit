@@ -29,6 +29,7 @@ This is Matthew Truelove's video product: training and explainer videos made fro
 cd ~/Developer/video/video-kit && git fetch && git status --short && git log --oneline origin/main -5
 cd ~/Developer/video/apps/aws && git fetch && git status --short && git log --oneline origin/main -3
 cd ~/Developer/video && vkit handoffs videos
+cd ~/Developer/video && vkit status
 ```
 
 Read the newest commits before building; two people solving the same thing in one morning has happened. A session that works in a cloud sandbox and delivers files to this Mac starts the same way: fetch, then `git diff --stat origin/main` against its own tree, before it builds.
@@ -45,7 +46,7 @@ If the frames render and look like the starter (an opener, three concept cards, 
 ## Things a new session gets wrong without being told
 
 - The command is `vkit`, never `vk`.
-- The engine lives in `video-kit/packages/core/engine/` and is copied into each video by `vkit new`; never edit it inside a video. When the kit's engine moves, `vkit upgrade` in the video brings the copy up and keeps the old one aside.
+- The engine lives in `video-kit/packages/core/engine/` and is copied into each video by `vkit new`; never edit it inside a video. When the kit's engine moves, `vkit upgrade` in the video brings the copy up and keeps the old one aside. An app is the hub and every video and twin made from it carries a copy: `vkit status` says which copies are behind, the app's `CHANGES.md` says what moved, `vkit app use --all` brings every video up and checks each (`video-kit/docs/MAINTENANCE.md`).
 - `video.json` is written by `vkit app use` and `vkit upgrade`; it carries this machine's paths, so a copy from another machine is never put in by hand.
 - A full test run plays and renders the starter in real time, ten to twenty minutes depending on the machine (18 minutes in a cloud sandbox on 10 October 2026, the render proof alone five of them); it prints a progress line every 20 seconds, so a silent minute is the one thing to look into, not a silent run. Watch it with `PW_CHANNEL=chrome npm test 2>&1 | tee ~/Desktop/vkit-test.log | grep -vE "^\s"` (the file keeps everything; the filter hides the indented detail). The exact length of each proof is in the log of the GitHub run (`.github/workflows/test.yml`), which runs the same suite on every push. Node 22 prints the plain `ok` form into a pipe and Node 26 the `✔` form, so never filter on one of them.
 - Matthew runs every git command that writes (commit, push); a session proposes them, copy-paste ready, and the commit message carries the docs changed with the code.

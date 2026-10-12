@@ -8,13 +8,13 @@ Training and explainer videos from screenshots and a script, with no screen reco
 
 **The app is the asset.** A recreated tool is screens (states cited to your captures), behaviour (`model.json`: which control on which state leads where, by a click, typing or a scroll, and what a typed field accepts) and paths (`paths/`: what a lesson asks, in order, in its own words). The engine performs a transition the same way on a video's clock and under a learner's mouse, so a video is a path over the model with a voice and a teaching layer, and the practice copy (`vkit twin`) is the same path with the learner's own hand. One heavy lift per tool; every video and exercise after is a small one.
 
-**Where it stands.** October 2026: the kit is at engine 0.6.0 and plugin 0.1.7, with the first real video (creating an S3 bucket, from the console recreated with nine states) accepted as a proof of concept after four watches, its behaviour moved into the app's model, and the S3 practice copy clickable end to end. Next, in order: looks and brands over the teaching layer, concept scenes for theory, the command line and code as app kinds, then the MCP server and the cloud and voice adapters. `docs/ROADMAP.md` is the plan; `docs/ARCHITECTURE.md` the shape; `docs/ENGINE.md` what a rig page can call; `docs/MODEL.md` the app model; `docs/FINDINGS.md` what is open.
+**Where it stands.** October 2026: the kit is at engine 0.6.0 and plugin 0.1.8, with the first real video (creating an S3 bucket, from the console recreated with nine states) accepted as a proof of concept after four watches, its behaviour moved into the app's model, the S3 practice copy clickable end to end with the sidekick beside it, and the upkeep written down: an app is the hub, its videos and twins are spokes, and `vkit status` says which are behind (`docs/MAINTENANCE.md`). Next, in order: looks and brands over the teaching layer, concept scenes for theory, the command line and code as app kinds, then the MCP server and the cloud and voice adapters. `docs/ROADMAP.md` is the plan; `docs/ARCHITECTURE.md` the shape; `docs/ENGINE.md` what a rig page can call; `docs/MODEL.md` the app model; `docs/MAINTENANCE.md` how a change reaches every copy; `docs/FINDINGS.md` what is open.
 
 ```
 vkit                     the front door: what this is, what is waiting here, the three ways in
 vkit help [command]      the manual page: every command in the order a video is made, or one in full
 vkit new my-video        a video is a folder; --app family/tool puts a recreated app's screens in it
-vkit app new|use|add-state|extract|crop   a recreated app: one folder per tool, built from your own captures; use puts it into a video or brings the copy up to date; crop copies a logo or icon out of a capture
+vkit app new|use|build|add-state|extract|crop   a recreated app: one folder per tool, built from your own captures; use puts it into a video or brings the copy up to date (use --all sweeps every video and checks each); build runs the app's generator and verifies its states; crop copies a logo or icon out of a capture
 vkit capture walkthrough.docx    the screenshots and their steps out of a Word walkthrough into captures/, the shape checked (docs/CAPTURE.md is the brief)
 vkit shoot start|"step" "did"|stop   the capture browser: Chrome on the kit's own profile at 1920x1080, headless; each shot masked, swept for private text, measured, into captures/
 vkit face <name>         the product's typeface traced from the page as a face of our own, widths and kerning measured
@@ -30,6 +30,7 @@ vkit frames              a still per beat: look before you record
 vkit render              every frame, the voice muxed, an MP4 and its captions
 vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick while you work
 vkit twin family/tool    the practice copy: the app's states and model served as a page a learner clicks through, the sidekick beside it, on the same engine
+vkit status              every app and every video and twin made from it, with what each carries, current or behind
 vkit upgrade             a video's engine copy brought to the kit's; the old copy kept aside
 vkit plugin pack         the plugin zipped for the claude.ai upload
 vkit sync-reference      copy the rules, the look packs and the patterns index from video-reference into the kit

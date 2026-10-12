@@ -5,7 +5,7 @@ description: >
   checker", "why did check fail", "is this footage", or before a video is called done. It runs
   vkit check, reads the report by rule id, and says what to change and where.
 metadata:
-  version: "0.1.7"
+  version: "0.1.8"
 ---
 
 # Check a video
