@@ -13,7 +13,7 @@ const COMMANDS = {
   'shoot':          ['start [--show] | status | go <url> | "<step>" "<what was done>" [--into dir] [--allow-hits] | stop', 'the capture browser: Chrome on the kit\'s own profile at 1920x1080, ratio 2, headless (--show for signing in); shoot takes the page-only picture into dir/captures/ after hiding the masks in dir/shoot.json and sweeping the text; status says where the page is and how old the session is'],
   'face':           ['<name> --family "<css family>" [--weights 400,700] [--into dir] [--sample text]', 'a typeface of our own from the page open in the capture browser: each glyph drawn at 1000 px and traced, widths and kerning measured, into dir/faces/; the sample line set in both faces and the differing pixels counted'],
   'capture':        ['<walkthrough.docx> [--into dir]', 'read a walkthrough document (docs/CAPTURE.md) into dir/captures/: CAP-NNN.png in reading order, walkthrough.md, captures.csv; checks PNG, size, unique, under a step; exit 1 on a failing row'],
-  'brief':          ['[dir]', 'write brief-request.md: the ask to the subject expert, with the app\'s states and the storyboard template already in it (the video-brief skill answers it)'],
+  'brief':          ['[dir] [--ask "what is wanted"]', 'write brief-request.md: the ask to the subject expert, with the app\'s states and the storyboard template already in it (the video-brief skill answers it); --ask names an addition to a video that exists, kept as a part of its own'],
   'handoffs':       ['[dir]', 'what is waiting and for whom, per video: dir is a video folder or the folder that holds them; both chats run this instead of asking'],
   'narration':      ['[dir] [--wpm N]', 'check the script parts against the limits, write narration/FULL.md, estimate lengths'],
   'time':           ['[dir] [--redo] [--prompt "labels"] [--model name]', 'word times from each clip (faster-whisper, local) and every sentence\'s start written into storyboard.md; the beats are placed where the words are said'],
@@ -64,7 +64,7 @@ const MAN = {
     'status': ['An app is the hub; the videos and twins made from it are spokes, each carrying a copy of the app and of the engine. vkit status lists every one with what it carries against the kit\'s engine and the app\'s version, says which are behind, and prints the app\'s CHANGES.md lines a copy has not seen. The route of a change is docs/MAINTENANCE.md: capture, the expert\'s what-changed.md, the states, app.json and CHANGES.md, vkit app build, vkit app use --all, the frames looked at.', 'Videos are found in the folder given (or the current one), one level down, and in a videos/ folder; apps in VKIT_APPS or apps/ beside the kit.'],
     'new': ['A video is a folder: storyboard.md, narration/, voice/, rig/ (the page that is the footage) and video.json (the record of its choices). The engine is copied in at the kit\'s version.', 'With --app, the recreated app\'s states are copied into rig/app/ and the page points at them.'],
     'menu': ['The ten choices a video makes: job, sources, layout, brand, look, tone, patterns, voice, characters, fixed lines. Each is recorded in video.json with where it came from and when.', 'After vkit measure, the items that would re-time the video are locked.'],
-    'brief': ['The director\'s ask to the subject expert, written into the video folder. The expert\'s chat answers it with the video-brief skill: brief.md, the storyboard rows and capture-request.md.'],
+    'brief': ['The director\'s ask to the subject expert, written into the video folder. The expert\'s chat answers it with the video-brief skill: brief.md, the storyboard rows and capture-request.md.', 'With --ask, the request is an addition to a video that exists (a theory part before the console, say): the rows and words already there stay, the new rows go in a part of their own so one new clip is recorded and nothing recorded moves.'],
     'handoffs': ['Reads the files in each video folder (and each app folder) and says whose turn it is and with which skill. Both chats run this instead of asking each other.'],
     'narration': ['Reads narration/part-N.md (one sentence per line, one line per storyboard row), holds each part to its limits, writes narration/FULL.md, writes the final sentences into storyboard.md\'s Sentence column and logs every row whose words moved from the expert\'s in narration/changes.md.'],
     'measure': ['The clips are the clock: each voice/part-N file is read to the millisecond and the lengths go into the page\'s PARTS line and video.json. Nothing is stretched or padded.'],
@@ -363,8 +363,10 @@ async function main() {
     return 0;
   }
   if (cmd === 'brief') {
-    const r = core.briefRequest(args[0] || '.');
-    console.log('wrote ' + path.relative(process.cwd(), r.file) + ' for ' + r.name + ' with ' + r.states + ' state' + (r.states === 1 ? '' : 's') + ' of the app listed. Paste it to the subject expert\'s chat; its video-brief skill answers with the outline, the storyboard rows and the pickup list.');
+    const ask = args.indexOf('--ask') >= 0 ? args[args.indexOf('--ask') + 1] : undefined;
+    const dirArg = args.filter((a, i) => a !== '--ask' && args[i - 1] !== '--ask')[0];
+    const r = core.briefRequest(dirArg || '.', { ask });
+    console.log('wrote ' + path.relative(process.cwd(), r.file) + ' for ' + r.name + (r.addition ? ' as an addition (' + ask.slice(0, 60) + (ask.length > 60 ? '...' : '') + ')' : '') + ' with ' + r.states + ' state' + (r.states === 1 ? '' : 's') + ' of the app listed. vkit handoffs now shows the video waiting for the subject expert; that chat\'s video-brief skill answers with the outline, the storyboard rows and the pickup list, in this folder.');
     return 0;
   }
   if (cmd === 'narration') {

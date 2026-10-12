@@ -22,7 +22,8 @@ Three files, written into this video's folder (the one this request sits in), in
 When the three files are written, say so in one line; \`vkit handoffs\` then shows the video waiting for the director. Do not write the final narration; the director writes the words to the craft rules and the narrator's voice. Do not restyle or describe the screen beyond what the states show. Facts first: if a default, a limit or a behaviour is stated, it must be true for this console today.
 `;
 
-function briefRequest(videoDir) {
+function briefRequest(videoDir, opts) {
+  opts = opts || {};
   const dir = path.resolve(videoDir || '.');
   const metaFile = path.join(dir, 'video.json');
   if (!fs.existsSync(metaFile)) throw new Error('no video.json in ' + dir + ' (run inside a video folder made by vkit new)');
@@ -33,6 +34,11 @@ function briefRequest(videoDir) {
   const out = [];
   out.push('# Brief request: ' + name, '');
   out.push('Written by `vkit brief` on ' + new Date().toISOString().slice(0, 10) + '. For the subject expert who knows the tool: the kit needs the teaching, not the pictures. Answer with the `video-brief` skill.', '');
+  const addition = !!(opts.ask && opts.ask.trim());
+  if (addition) {   /* an addition to a video that exists: the ask is named, the rows and words already there stay, the new rows are a part of their own */
+    const has = (f) => fs.existsSync(path.join(dir, f));
+    out.push('## This request: an addition', '', opts.ask.trim(), '', 'This video exists' + (has('brief.md') ? ': `brief.md`' : '') + (has('storyboard.md') ? ', `storyboard.md` with its rows' : '') + (has(path.join('narration', 'FULL.md')) ? ', the narration' : '') + (fs.existsSync(path.join(dir, 'voice')) && fs.readdirSync(path.join(dir, 'voice')).some((f) => /^part-\d+\./i.test(f)) ? ', the recording' : '') + '. Keep every row and every word that is there. Add the new rows as a part of their own (the next part number, or part 0 for an opener) so the producer records one new clip and nothing already recorded moves. Add to `brief.md` only what the addition teaches. If the addition needs no screen, its On screen cell is `scene <name>` and it needs no capture; if it needs a screen the app lacks, that is a pickup in `capture-request.md`.', '');
+  }
   out.push('## The video', '', '- Name: `' + name + '`', '- Task: ' + (meta.job && meta.job.kind ? meta.job.kind : 'to be stated by the producer') + (meta.job && meta.job.title ? ': ' + meta.job.title : ''), '- Recreated app: ' + (meta.app && meta.app.ref ? '`' + meta.app.ref + '` (version ' + (meta.app.version || '?') + ')' : 'none; every screen is a concept scene'), '');
   if (states.length) {
     out.push('## The states the app has', '', 'Every screen moment the video can show. A row of the storyboard names one of these by id. Anything the teaching needs that is not here is a pickup, not an invention.', '', '| State id | Screen | What it shows | Capture |', '|---|---|---|---|');
@@ -44,7 +50,7 @@ function briefRequest(videoDir) {
   out.push('A part is a stretch the narrator records in one go (a scene change or a pause is a part boundary); two to five parts for a video under three minutes. Keep a part under about 1000 characters of narration so it is cheap to record again.', '');
   const file = path.join(dir, 'brief-request.md');
   fs.writeFileSync(file, out.join('\n'));
-  return { file, states: states.length, name };
+  return { file, states: states.length, name, addition };
 }
 
 
@@ -67,8 +73,8 @@ function handoff(dir) {
     const first = all.findIndex((l) => /^#{1,3}\s*Part\b/i.test(l));      /* vkit narration writes a title and a note before the parts */
     fullLines = (first < 0 ? all : all.slice(first)).filter((l) => l && !/^#/.test(l));
   } catch (e) { fullLines = []; }
-  let sbLines = [];
-  try { sbLines = fs.readFileSync(path.join(dir, 'storyboard.md'), 'utf8').split('\n').filter((l) => /^\|\s*\d+\s*\|/.test(l)).map((l) => l.split('|')[2].trim()); } catch (e) { sbLines = []; }
+  let sbLines = [], sbParts = [];
+  try { const rowsSb = fs.readFileSync(path.join(dir, 'storyboard.md'), 'utf8').split('\n').filter((l) => /^\|\s*\d+\s*\|/.test(l)); sbLines = rowsSb.map((l) => l.split('|')[2].trim()); sbParts = [...new Set(rowsSb.map((l) => l.split('|')[1].trim()))]; } catch (e) { sbLines = []; sbParts = []; }
   const rowsDiffer = sb > full && !(sbLines.length === fullLines.length && sbLines.every((t, i) => t === fullLines[i]));
   const checkCurrent = !!(verdicts && verdicts.sentences.length && verdicts.sentences.length === fullLines.length && verdicts.sentences.every((t, i) => t === fullLines[i]));
   let voice = [];
@@ -86,6 +92,7 @@ function handoff(dir) {
   else if (!checkCurrent) { who = 'subject expert'; what = 'narration/FULL.md waits for fact-check.md' + (fact ? ' (the check on file is of other sentences)' : '') + changedNote(dir); skill = 'video-fact-check'; }
   else if (verdicts.open) { who = 'director'; what = 'fact-check.md has ' + verdicts.summary + ' to apply, then vkit narration again'; skill = 'video-script, step 6'; }
   else if (!voice.length) { who = 'producer'; what = 'the narration is checked; the words want a yes and a recording (voice/part-N.m4a)'; skill = 'video-script, step 7'; }
+  else if (sbParts.some((p) => !voice.some((f) => new RegExp('^part-' + p + '\\.', 'i').test(f)))) { const missing = sbParts.filter((p) => !voice.some((f) => new RegExp('^part-' + p + '\\.', 'i').test(f))); who = 'producer'; what = 'part' + (missing.length === 1 ? ' ' : 's ') + missing.join(', ') + ' of the storyboard ' + (missing.length === 1 ? 'has' : 'have') + ' no clip in voice/ (an addition: record that part alone; the clips already there stay)'; skill = 'video-script, step 7'; }   /* a part added after the recording wants its own clip; nothing recorded moves */
   else { who = 'director'; what = voice.length + ' clip' + (voice.length === 1 ? '' : 's') + ' in voice/; the clips are the clock'; skill = 'video-measure'; }
   return { name, dir, who, what, skill };
 }

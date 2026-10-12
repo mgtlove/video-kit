@@ -9,7 +9,7 @@ description: >
   writes the lesson's path for the sidekick (one file per lesson under paths/, in the lesson's words), proves both with
   vkit check and vkit twin, and turns what the twin cannot do into pickups.
 metadata:
-  version: "0.1.8"
+  version: "0.1.9"
 ---
 
 # The app model and the practice copy

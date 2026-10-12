@@ -2,7 +2,7 @@
 name: video-brief
 description: Use in the subject expert's chat when the user has an idea for a video, says a video is ready for them, asks what is waiting, or asks to outline or storyboard a video or which screens are missing. Starts the video folder with brief.md and the screens it needs, and later answers the kit's brief-request.md with the storyboard rows and capture-request.md, all as files in the video folder.
 metadata:
-  version: "0.1.8"
+  version: "0.1.9"
 ---
 
 # The idea, and the brief request
@@ -23,6 +23,10 @@ The videos live in the `videos/` folder beside `video-kit` (on Matthew's Mac, `~
 ## A2. An app with new captures (`vkit handoffs` says `app family/tool: subject expert (video-brief)`)
 
 The product moved and someone captured it: the app folder has captures newer than its states. Before the director touches a state, read the new captures (`apps/<family>/<tool>/captures/CAP-NNN.png` and the `.json` beside each) against the states they replace and against every lesson on the app (`videos/*/storyboard.md` and `narration/FULL.md` where `video.json` names the app), and write `apps/<family>/<tool>/what-changed.md`: a heading per capture; what changed in the product, in plain words; and what it means for each lesson, by video name: a row that no longer holds, a word that moved, a step that is now somewhere else, or nothing. Say so in one line; `vkit handoffs` then shows the app waiting for the director (`video-recreate`). Facts first: say what the picture shows, not what the product probably does now.
+
+## A3. An addition to a video that exists (`brief-request.md` has "This request: an addition")
+
+The director ran `vkit brief --ask` on a video that already has its outline, rows, words and often its recording: a theory part before the console, say. Read the ask at the top of the request and the whole of `brief.md`, `storyboard.md` and `narration/FULL.md` as they stand, then: add to `brief.md` only what the addition teaches (a point or two under the points, in its place); add the new rows to `storyboard.md` as a part of their own, numbered as the ask says (part 0 for an opener; the next number otherwise), in the order the video will run, leaving every existing row and its Start untouched; a beat with no console on screen is `scene <name>` in On screen (a term and its definition, a list that builds, a figure beside a heading) with an empty Capture; a screen the app lacks is a pickup in `capture-request.md` as always. One new part, so the producer records one new clip and nothing recorded moves. Say what was written as in step 5.
 
 ## B. The brief request (the kit wrote `brief-request.md`)
 

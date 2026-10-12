@@ -29,6 +29,8 @@ test('vkit brief writes the ask with the states in it, and check covers the stor
   const c1 = spawnSync(process.execPath, [VKIT, 'brief'], { cwd: backed.dir, encoding: 'utf8' });
   assert.strictEqual(c1.status, 0, c1.stdout + c1.stderr);
   assert.ok(/wrote brief-request\.md for backed with 1 state of the app listed/.test(c1.stdout), c1.stdout + c1.stderr);
+  const c3 = spawnSync(process.execPath, [VKIT, 'brief', backed.dir, '--ask', 'A theory part before the console: what a bucket is.'], { cwd: tmp, encoding: 'utf8' });
+  assert.ok(c3.status === 0 && /as an addition \(A theory part before the console/.test(c3.stdout) && /## This request: an addition\n\nA theory part before the console: what a bucket is\.\n\nThis video exists/.test(fs.readFileSync(path.join(backed.dir, 'brief-request.md'), 'utf8')) && /Add the new rows as a part of their own/.test(fs.readFileSync(path.join(backed.dir, 'brief-request.md'), 'utf8')), 'an addition is named at the top of the request: ' + c3.stdout + c3.stderr);
   const c2 = spawnSync(process.execPath, [VKIT, 'brief', backed.dir], { cwd: tmp, encoding: 'utf8' });
   assert.strictEqual(c2.status, 0, c2.stdout + c2.stderr);
   const inline = core.newVideo('plain', { cwd: tmp });
@@ -102,6 +104,12 @@ test('vkit handoffs says what is waiting and for whom, from the files alone', ()
   step('producer', 'video-script, step 7', /checked; the words want a yes/);
   touch('voice/part-1.m4a', 'x'); touch('voice/part-2.m4a', 'x');
   step('director', 'video-measure', /2 clips in voice/);
+  // an addition: rows in a part with no clip are the producer's to record; the clips already there stay
+  touch('storyboard.md', head + '\n| 0 | What a bucket is. | | | scene bucket | rest | | |\n| 1 | One line, following the rows. | | | state work-item, the form | rest | | |\n');
+  touch('narration/FULL.md', 'What a bucket is.\nOne line, following the rows.'); touch('fact-check.md', '| 1 | What a bucket is. | true | |\n| 2 | One line, following the rows. | true | |');
+  step('producer', 'video-script, step 7', /part 0 of the storyboard has no clip in voice\/ \(an addition: record that part alone/);
+  touch('voice/part-0.m4a', 'x');
+  step('director', 'video-measure', /3 clips in voice/);
   // a redo re-opens the handoff: a newer narration wants a new fact check; a newer request, a new answer
   touch('narration/FULL.md', 'One line, changed.');
   step('subject expert', 'video-fact-check', /waits for fact-check/);

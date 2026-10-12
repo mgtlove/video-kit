@@ -6,7 +6,7 @@ description: >
   made by vkit new. It sets out the order end to end and the rules that decide whether the footage
   is right.
 metadata:
-  version: "0.1.8"
+  version: "0.1.9"
 ---
 
 # Build a video

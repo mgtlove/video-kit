@@ -1,6 +1,6 @@
 {
   "name": "vkit",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Skills over the vkit command line, 14 of them: vkit-start, video-menu, video-build, video-frames, video-check, video-measure, brand-apply, video-capture, capture-walkthrough, video-recreate, video-brief, video-script, video-fact-check, app-model (the model, the field rules and the paths the sidekick walks); the hub and its spokes kept current (vkit status, CHANGES.md, the sweep); and a guardrail hook: no browser download, no force push, no delete without asking, no paid call without a go-ahead.",
   "author": {
     "name": "Matthew Truelove"
