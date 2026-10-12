@@ -103,7 +103,7 @@
      browser's display object.) On every reset #mock goes back to the markup
      the page loaded with, so a beat that changed a state (a highlight, a typed value) never
      leaks into an earlier frame. */
-  var mockHome = '', screenState = null;
+  var mockHome = '', screenState = null, acts = [], actVia = null, cursor = null, stateHooks = [];   /* onState(fn): fn(id, mock) after every state change (a twin substitutes the learner's words) */
   function state(id) {
     var m = $('mock'); if (!m) return;
     stage.classList.toggle('screen', !!id);             /* a brand mark set to `always` hides while a screen is up (rig.css) */
@@ -118,7 +118,9 @@
         var same = screenState && m.classList.contains('on') && window.SCREENS && window.SCREENS[id] && window.SCREENS[id] === window.SCREENS[screenState];
         if (same) { var sec = camNextSec || 1.4; if (morph(m, window.STATES[id], sec) && !snapping) camEndsAt = Math.max(camEndsAt, (firing ? firing.t : clock) + sec); camNextSec = null; }   /* a scroll settles like a camera move: a card named in this beat waits for it */
         else m.innerHTML = window.STATES[id];
+        if (screenState) acts.push({ t: firing ? firing.t : clock, from: screenState, to: id, via: actVia || 'state' });   /* every state change is on record, so the checker can hold the timeline to the model (0.6.0) */
         screenState = id;
+        for (var sh = 0; sh < stateHooks.length; sh++) stateHooks[sh](id, m);
       }
     }
     m.classList.add('on');
@@ -453,17 +455,18 @@
     if (opts && opts.jump) instant(p, move); else move();
     p.classList.add('on');
   }
+  /* press(el): the control answers: it takes the app's `pressed` look at once (the app's CSS from a capture of the button
+     held down; the engine's generic darkening until then) and lets go of it over the next 200 ms, so the press is seen
+     before the ring. A transition, so a seek holds it like any other (engine 0.5.1). A twin presses without a pointer. */
+  function press(el) {
+    if (!el || !el.isConnected) return;
+    instant(el, function () { el.classList.add('pressed'); });
+    el.style.transition = 'filter .2s .18s, background-color .2s .18s, border-color .2s .18s, color .2s .18s, box-shadow .2s .18s';
+    el.classList.remove('pressed');
+  }
   function click() {
     var ring = $('ring'); if (!ring || !pointAt) return;
-    /* the control answers: it takes the app's `pressed` look at once (the app's CSS from a capture of the button held
-       down; the engine's generic darkening until then) and lets go of it over the next 200 ms, so the press is seen
-       before the ring. A transition, so a seek holds it like any other (engine 0.5.1). */
-    if (pointedEl && pointedEl.isConnected) {
-      var el = pointedEl;
-      instant(el, function () { el.classList.add('pressed'); });
-      el.style.transition = 'filter .2s .18s, background-color .2s .18s, border-color .2s .18s, color .2s .18s, box-shadow .2s .18s';
-      el.classList.remove('pressed');
-    }
+    press(pointedEl);
     /* over a recreated screen the press is the click; the ring is a teaching device for concept scenes, and beside
        a real button it competed with the button's own answer (the third watch, 10 October 2026) */
     if (stage.classList.contains('screen')) return;
@@ -508,7 +511,8 @@
   function typeTo(t, stateId, elId, cps) {
     cps = cps || 12;
     var text = stateText(stateId, elId) || '';
-    at(t, function () { state(stateId); var leaf = textLeaf(want(elId, 'typeTo')); if (leaf) { leaf.textContent = ''; leaf.classList.add('caret'); } });
+    at(t, function () { actVia = 'type'; state(stateId); actVia = null; var leaf = textLeaf(want(elId, 'typeTo')); if (leaf) { leaf.textContent = ''; leaf.classList.add('caret'); } });
+    cursor = stateId;
     for (var n = 1; n <= text.length; n++) (function (n) { at(t + n / cps, function () { var leaf = textLeaf($(elId)); if (leaf) leaf.textContent = text.slice(0, n); }, true); })(n);
     var end = t + text.length / cps;
     at(end + 0.6, function () { var leaf = textLeaf($(elId)); if (leaf) leaf.classList.remove('caret'); }, true);
@@ -523,8 +527,67 @@
   function openPage(t, stateId, ms) {
     var sec = (ms || 450) / 1000;
     at(t, function () { var m = $('mock'); if (m) m.classList.add('loading'); });
-    at(t + sec, function () { var m = $('mock'); if (m) m.classList.remove('loading'); state(stateId); }, true);
+    at(t + sec, function () { var m = $('mock'); if (m) m.classList.remove('loading'); actVia = 'open'; state(stateId); actVia = null; }, true);
+    cursor = stateId;
     return t + sec;
+  }
+
+  /* ---------- the app's behaviour (engine 0.6.0, docs/MODEL.md) ----------
+     window.MODEL (written beside STATES by vkit app use) says which control on which state leads to which
+     state, by a click, typing or a scroll. act(t, control, opts) performs the transition the model has for
+     the state the timeline is on at t: at t the control is pressed (the pointer is wherever the author put
+     it; the press lands on the control), then the model's answer follows: a new page through openPage
+     0.6 s later, a change in place through state() 0.5 s later (opts.after moves it, opts.ease paces a
+     scroll in it), typing through typeTo 0.5 s later. The state the timeline is on is read from the calls
+     registered before this one (act, openPage, typeTo, scrollPage set a cursor; the first state is the
+     model's start), so a timeline is written in time order; at the beat the screen is checked against it
+     and a difference is a recorded miss. opts.when picks a conditional transition (when: 'taken').
+     scrollPage(t, stateId, sec) is a scroll the author paces: ease(sec); state(stateId), on the cursor.
+     Every state change, by act or not, is in VK.acts() with the state it came from. A twin performs the
+     same transitions on real time with VK.perform(control, opts). */
+  function samePage(a, b) { return !!(window.SCREENS && window.SCREENS[a] && window.SCREENS[a] === window.SCREENS[b]); }
+  function transitionFor(from, control, when) {
+    var list = (window.MODEL && window.MODEL.transitions) || [], i, tr;
+    for (i = 0; i < list.length; i++) { tr = list[i]; if (tr.from === from && tr.control === control && (when ? tr.when === when : !tr.when)) return tr; }
+    return null;
+  }
+  function act(t, control, opts) {
+    opts = opts || {};
+    var from = cursor || (window.MODEL && window.MODEL.start) || null;
+    var tr = transitionFor(from, control, opts.when);
+    if (!tr) { at(t, function () { miss('act', control + ' on ' + from + (opts.when ? ' when ' + opts.when : '')); }); return t; }
+    at(t, function () {
+      if (screenState !== from) miss('act', control + ': the screen is ' + screenState + ', not ' + from);
+      var el = $(control); if (el) pointedEl = el;
+      click();
+    });
+    var after = opts.after != null ? opts.after : (samePage(from, tr.to) ? 0.5 : 0.6), end;
+    if (tr.action === 'type') end = typeTo(t + after, tr.to, control, opts.cps);
+    else if (samePage(from, tr.to)) { at(t + after, function () { if (opts.ease) ease(opts.ease); actVia = 'act'; state(tr.to); actVia = null; }); cursor = tr.to; end = t + after; }
+    else end = openPage(t + after, tr.to, opts.load);
+    cursor = tr.to;
+    return end;
+  }
+  function scrollPage(t, stateId, sec) {
+    at(t, function () { if (sec) ease(sec); actVia = 'scroll'; state(stateId); actVia = null; });
+    cursor = stateId;
+    return t;
+  }
+  /* perform(control, opts): the same transition on real time, for a twin: the press, the load, the morph, or the
+     field made editable; opts.text is what the learner typed (used on Enter by the twin runner); opts.when as act.
+     Returns the transition taken, or null (the twin shows its notice). */
+  function perform(control, opts) {
+    opts = opts || {};
+    var from = screenState, tr = transitionFor(from, control, opts.when);
+    if (!tr) return null;
+    var el = $(control); if (el) pointedEl = el;
+    if (pointAt) click(); else press(el);   /* no pointer under a learner's hand: the press alone */
+    var go = function () {
+      if (samePage(from, tr.to)) { actVia = 'act'; state(tr.to); actVia = null; }
+      else { var m = $('mock'); if (m) m.classList.add('loading'); setTimeout(function () { if (m) m.classList.remove('loading'); actVia = 'open'; state(tr.to); actVia = null; }, opts.load || 450); }
+    };
+    setTimeout(go, samePage(from, tr.to) ? 200 : 250);
+    return tr;
   }
 
   /* the cast: seeded figures beside an element. who(name, pose, nearId, side); who(null) hides.
@@ -566,6 +629,7 @@
     for (var j = 0; j < baked.length; j++) baked[j][0].style.removeProperty(baked[j][1]);
     baked = [];
     var mk = $('mock'); if (mk && (screenState !== null || mk.innerHTML !== mockHome)) { mk.innerHTML = mockHome; screenState = null; }
+    acts = [];
     var inkL = $('ink'); if (inkL) while (inkL.firstChild) inkL.removeChild(inkL.firstChild);
     var castL = $('cast'); if (castL) while (castL.firstChild) castL.removeChild(castL.firstChild);
     var ptr = $('pointer'); if (ptr) { ptr.style.transform = 'translate(' + (W - 80) + 'px,' + (H - 80) + 'px)'; pointAt = null; }   /* home: bottom right, hidden */
@@ -577,7 +641,7 @@
     snapping = true; home(); snapping = false;
     void stage.offsetHeight;
     stage.classList.remove('snap');
-    beats = []; window.timeline(); brandBeats(); beats.sort(function (a, b) { return a.t - b.t; });
+    beats = []; cursor = null; window.timeline(); brandBeats(); beats.sort(function (a, b) { return a.t - b.t; });   /* the timeline is built again on every reset, from the model's start */
   }
   /* holdAll(anims, msOf): each animation held at msOf(a) and then baked: the value it has at
      that time is read on the main thread, written inline with transitions off for one style
@@ -703,6 +767,7 @@
   /* ---------- start panel and keys ---------- */
   function start() { var ui = $('ui'); if (ui) ui.classList.add('gone'); resetAll(); playing = true; }
   function keys(e) {
+    if (document.activeElement && document.activeElement.isContentEditable) return;   /* a twin's learner typing into a field */
     if (e.key === ' ' || e.key === 's' || e.key === 'S') { e.preventDefault(); if (!playing && clock === 0) start(); else playing = !playing; }
     else if (e.key === 'r' || e.key === 'R') { resetAll(); }
     else if (/^[1-9]$/.test(e.key) && Number(e.key) <= window.PARTS.length) { seekTo(P(Number(e.key) - 1)); playing = true; var ui = $('ui'); if (ui) ui.classList.add('gone'); }
@@ -728,13 +793,14 @@
   }
 
   window.VK = {
-    version: '0.5.3',
+    version: '0.6.0',
     boot: boot, at: at, P: P, total: function () { return TOTAL; }, parts: function () { return window.PARTS.slice(); },
     beats: function () { return beats.filter(function (b) { return !b.minor; }).map(function (b) { return b.t; }); },
     ready: function () { return ready; }, faults: function () { return faults.slice(); }, cardPlace: function () { return cardPlaced; },
     seekTo: seekTo, playTo: playTo, reset: resetAll, onReset: onReset, recording: recording,
     scene: scene, show: show, state: state, fade: fadeTo, card: card,
     ink: ink, pointer: pointer, click: click, type: type, typeTo: typeTo, note: note, open: openPage, who: who, rng: rng,
+    act: act, scrollPage: scrollPage, perform: perform, acts: function () { return acts.slice(); }, transitionFor: transitionFor, screenState: function () { return screenState; }, onState: function (fn) { stateHooks.push(fn); },
     focus: focus, focusEl: focusEl, travel: travel, ease: ease, home: home, camTo: camTo, pos: pos,
     W: W, H: H
   };
@@ -743,4 +809,5 @@
   window.scene = scene; window.show = show; window.state = state; window.fade = fadeTo; window.card = card; window.note = note; window.openPage = openPage;
   window.focusAt = focus; window.focusEl = focusEl; window.travel = travel; window.ease = ease; window.home = home; window.pos = pos;
   window.ink = ink; window.pointer = pointer; window.click = click; window.type = type; window.typeTo = typeTo; window.who = who;
+  window.act = act; window.scrollPage = scrollPage;
 })();

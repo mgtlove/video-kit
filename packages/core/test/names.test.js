@@ -28,7 +28,7 @@ const ENGINE = rig.match(/version: '(\d+\.\d+\.\d+)'/)[1];
 const PLUGIN = JSON.parse(read('packages/plugin/.claude-plugin/plugin.json'));
 const cli = read('packages/cli/bin/vkit.js');
 const table = {};
-for (const m of cli.matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
+for (const m of cli.slice(cli.indexOf('const COMMANDS = {'), cli.indexOf('\n};', cli.indexOf('const COMMANDS = {'))).matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
 
 test('versions and counts in the docs are the current ones', () => {
   for (const d of ['README.md', 'docs/workspace/START-HERE.md']) {
@@ -57,9 +57,11 @@ test('every check row a doc names is a row check.js has', () => {
   const rows = new Set([...check.matchAll(/row\('([a-z-]+)/g)].map((m) => m[1]));
   // names that are hyphenated and backticked but are not rows: skills, repos, attributes, ids on screens
   const cmds = Object.keys(table).concat(...['app', 'shoot'].map((c) => table[c].split('|').map((s) => s.trim().split(/\s/)[0])));
-  const notRows = new Set([...SKILLS, ...cmds, 'create-s3-bucket', 'video-kit', 'video-reference', 'video-apps-aws', 'vkit-local', 'work-item', 'aria-label', 'data-testid', 'data-narration', 'data-scrolls', 'data-chrome', 'data-decor', 'create-name-taken', 'brief-request', 'capture-request', 'fact-check', 'part-N', 'rig-engine', 'faster-whisper', 'large-v3-turbo', 'no-cache', 'user-data-dir', 'training-demo-bucket', 'crumb-buckets', 'crumb-amazon-s3', 'btn-upload', 'bpa-all', 'objects-card', 'name-error', 'bucket-name', 'press-dim', 'stroke-rough', 'size-note', 'note-line', 'note-line-width', 'look-panel-kick', 'panel-kick', 'test-concurrency', 'output-dir', 'allow-hits', 'break-system-packages', 'to-delete']);
+  const notRows = new Set([...SKILLS, ...cmds, 'create-s3-bucket', 'video-kit', 'video-reference', 'video-apps-aws', 'vkit-local', 'work-item', 'aria-label', 'data-testid', 'data-narration', 'data-scrolls', 'data-chrome', 'data-decor', 'create-name-taken', 'brief-request', 'capture-request', 'fact-check', 'part-N', 'rig-engine', 'faster-whisper', 'large-v3-turbo', 'no-cache', 'user-data-dir', 'training-demo-bucket', 'training-demo-bucket-01', 'crumb-buckets', 'crumb-amazon-s3', 'btn-create', 'btn-create-form', 'tab-objects', 'row-name', 'app-model', 'model-json', 'btn-upload', 'bpa-all', 'objects-card', 'name-error', 'bucket-name', 'press-dim', 'stroke-rough', 'size-note', 'note-line', 'note-line-width', 'look-panel-kick', 'panel-kick', 'test-concurrency', 'output-dir', 'allow-hits', 'break-system-packages', 'to-delete']);
+  // the plan and the decisions name things to come by definition: the roadmap from "Next, in order" to the end of the parking lot, and decisions.md
+  const planned = (d, md) => { if (d === 'docs/workspace/decisions.md') return ''; if (d !== 'docs/ROADMAP.md') return md; const a = md.indexOf('## Next, in order'), b = md.indexOf('## History'); return a < 0 ? md : md.slice(0, a) + (b < 0 ? '' : md.slice(b)); };
   const miss = [];
-  for (const [d, md] of Object.entries(texts)) for (const m of md.matchAll(/`([a-z]+(?:-[a-z0-9]+)+)`/g)) {
+  for (const [d, md0] of Object.entries(texts)) for (const m of planned(d, md0).matchAll(/`([a-z]+(?:-[a-z0-9]+)+)`/g)) {
     const id = m[1];
     if (rows.has(id) || notRows.has(id) || /^(--|C-|video-apps-)/.test(id)) continue;
     miss.push(d + ': `' + id + '`');

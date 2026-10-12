@@ -76,10 +76,16 @@ function resolveApp(ref) {
 // statesJs(dir, rows): the page loads states from this file, so it opens from disk
 function statesJs(dir, rows) {
   const states = {};
-  for (const r of rows) states[r.id] = fs.readFileSync(path.join(dir, 'states', r.file || r.id + '.html'), 'utf8').replace(/\s+$/, '');
+  for (const r of rows) {   /* a state captured and not built yet (a capture cited, no file) is in the manifest and not in STATES: the engine records a miss, a twin says "captured, not built" */
+    const f = path.join(dir, 'states', r.file || r.id + '.html');
+    if (fs.existsSync(f)) states[r.id] = fs.readFileSync(f, 'utf8').replace(/\s+$/, '');
+  }
   const screens = {};
   for (const r of rows) if (r.screen) screens[r.id] = r.screen;
-  return '/* written by vkit from the app\'s states/; edit the app, not this file */\nwindow.STATES = ' + JSON.stringify(states, null, 2) + ';\n/* which screen (page) each state is a state of, from manifest.csv: two states of one screen morph in place and scroll; a new screen is a cut (engine 0.5.0) */\nwindow.SCREENS = ' + JSON.stringify(screens, null, 1) + ';\n';
+  const modelFile = path.join(dir, 'model.json');
+  const model = fs.existsSync(modelFile) ? JSON.parse(fs.readFileSync(modelFile, 'utf8')) : null;
+  return '/* written by vkit from the app\'s states/; edit the app, not this file */\nwindow.STATES = ' + JSON.stringify(states, null, 2) + ';\n/* which screen (page) each state is a state of, from manifest.csv: two states of one screen morph in place and scroll; a new screen is a cut (engine 0.5.0) */\nwindow.SCREENS = ' + JSON.stringify(screens, null, 1) + ';\n'
+    + (model ? '/* the app\'s behaviour, from model.json (docs/MODEL.md): act(t, control) performs a transition of it (engine 0.6.0) */\nwindow.MODEL = ' + JSON.stringify(model, null, 1) + ';\n' : '');
 }
 
 // ---- marker blocks in the starter: the inline screen lives between them ----
@@ -95,8 +101,8 @@ function stripBlock(text, marks, replacement) {
 // app no longer has stays on disk (never delete), but states.js lists only the manifest's.
 function copyAppFiles(r, dst) {
   fs.mkdirSync(path.join(dst, 'states'), { recursive: true });
-  for (const f of ['app.json', 'tokens.css', 'screen.css', 'manifest.csv']) if (fs.existsSync(path.join(r.dir, f))) fs.copyFileSync(path.join(r.dir, f), path.join(dst, f));
-  for (const s of r.states) fs.copyFileSync(path.join(r.dir, 'states', s.file || s.id + '.html'), path.join(dst, 'states', s.file || s.id + '.html'));
+  for (const f of ['app.json', 'tokens.css', 'screen.css', 'manifest.csv', 'model.json']) if (fs.existsSync(path.join(r.dir, f))) fs.copyFileSync(path.join(r.dir, f), path.join(dst, f));
+  for (const s of r.states) { const f = path.join(r.dir, 'states', s.file || s.id + '.html'); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(dst, 'states', s.file || s.id + '.html')); }
   for (const folder of ['crops', 'faces']) {   /* copies of the captures' pixels and the app's own face travel with the states */
     const from = path.join(r.dir, folder);
     if (!fs.existsSync(from)) continue;
@@ -259,4 +265,4 @@ function appCrop(ref, captureId, opts) {
   return { file, row, width: w, height: h, scale, rounded };
 }
 
-module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, installApp, appUse, appNew, appAddState, appExtract, appCrop, MARK, MANIFEST_HEAD, CROPS_HEAD };
+module.exports = { appDirs, resolveApp, readManifest, appendManifest, statesJs, copyAppFiles, installApp, appUse, appNew, appAddState, appExtract, appCrop, MARK, MANIFEST_HEAD, CROPS_HEAD };

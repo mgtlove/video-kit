@@ -1,0 +1,84 @@
+/* the twin runner's own page: a dark stage holding two things that are plainly not the product, the practice
+   browser (its chrome around the recreated screen) and the sidekick beside it. The tokens the engine's rig.css reads
+   are here (a video's theme.css supplies these; a twin has no teaching layer, so the few it needs are set once).
+   Nothing here styles anything inside #mock except the hand cursor on a live control, the typing overlay and the
+   sidekick's ring, which are the kit's, not the product's. The sidekick's colour is one the product never uses: the
+   consoles this kit recreates use orange and blue for their own controls, so the sidekick is violet. */
+:root{--stage:#ffffff;--ink:#111;--muted:#666;--dim:#8d928c;--accent:#6b4fd1;--panel:#ffffff;--panel-ink:#111;--panel-bd:#d8d8d8;--shadow:0 12px 40px rgba(0,0,0,.25);--head:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--text:var(--head);--crossfade:.5s;--entrance-ms:.45s;--pointer:#fff;--pointer-edge:#000;--pointer-ring:#6b4fd1;--stroke:#6b4fd1;
+  --chrome-h:44px;--chrome:#f1f3f4;--chrome-bd:#c9ccd1;--chrome-ink:#202124;--chrome-dim:#5f6368;
+  --deck:#1d1f24;--sidekick:#6b4fd1;--sidekick-soft:#efeafb;--sidekick-ink:#1a1a1f;--sidekick-dim:#5c5f6a;--sidekick-bd:#e3e3e8;--sidekick-w:340px;--gap:16px;--bad:#b3261e;--bad-soft:#fbeae9;--explore:#8a5a12;--explore-soft:#fdeeda}
+html,body{margin:0;height:100%;background:var(--deck);font-family:var(--head)}
+body.twin{overflow:hidden;display:flex;gap:var(--gap);padding:var(--gap);box-sizing:border-box;align-items:stretch}
+
+/* ---- the practice browser ---- */
+#browser{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;position:relative;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+#chrome{flex:none;height:var(--chrome-h);display:flex;align-items:center;gap:8px;padding:0 10px;box-sizing:border-box;background:var(--chrome);border-bottom:1px solid var(--chrome-bd);font:14px/1 var(--head);color:var(--chrome-ink)}
+#chrome button{height:30px;min-width:30px;border:0;border-radius:15px;background:transparent;color:var(--chrome-ink);font:20px/1 var(--head);cursor:pointer}
+#chrome button:hover:not(:disabled){background:#e2e4e7}
+#chrome button:disabled{color:#b0b3b8;cursor:default}
+#chrome #sidekick-open{font-size:13px;padding:0 12px;border:1px solid var(--sidekick);color:var(--sidekick);background:#fff}
+#chrome #sidekick-open[hidden]{display:none}
+#url{flex:1;height:30px;border-radius:15px;background:#fff;border:1px solid #d0d3d8;padding:0 12px;display:flex;align-items:center;gap:8px;color:var(--chrome-ink);font-size:14px;overflow:hidden;white-space:nowrap;cursor:default;user-select:none}
+#url-text{overflow:hidden;text-overflow:ellipsis}
+#url-lock{font-size:12px;color:var(--chrome-dim)}
+#brand{color:var(--chrome-dim);font-size:13px;white-space:nowrap}
+#view{flex:1 1 auto;min-height:0;position:relative;overflow-y:scroll;overflow-x:auto;background:#fff}   /* sideways only when the browser is zoomed in and the page is wider than the window */
+/* the scrollbar is always there, in the browser's own colours: macOS hides its scrollbars until a scroll, and a page
+   that does not look scrollable is one a learner never scrolls */
+#view::-webkit-scrollbar{width:14px;height:14px}
+#view::-webkit-scrollbar-track{background:#f1f1f1;border-left:1px solid #e0e0e0}
+#view::-webkit-scrollbar-thumb{background:#b8b8b8;border-radius:7px;border:3px solid #f1f1f1}
+#view::-webkit-scrollbar-thumb:hover{background:#999}
+/* the engine's rig.css fixes #fit to the window and centres a 1920x1080 stage in it; a page is wider than tall and scrolls */
+#fit{position:relative;inset:auto;display:block;width:100%;height:1080px;overflow:clip}   /* clip, not hidden: hidden makes a scroll container, and the sticky bars would stick to it instead of #view; clip only clips (the engine's own layers sit below the page) */
+#stage{overflow:visible;background:#fff}   /* scaled with zoom, not a transform: a sticky bar under a transform moves at the wrong rate */
+#cam{transition:none}
+#fade{pointer-events:none}
+body.twin [data-scrolls]{transition:none !important}   /* the page is shown whole; the browser's own scrollbar scrolls it */
+#mock .twin-live{cursor:pointer}
+/* the typing overlay matches the field's own box and shows no ring of its own: the focus look a learner sees is the
+   one the state carries from its capture, and the caret is the browser's */
+#twin-input{position:absolute;z-index:5;box-sizing:border-box;border:0;outline:none;box-shadow:none;background:transparent;margin:0;font:inherit;color:inherit;letter-spacing:inherit;caret-color:currentColor;border-radius:inherit}
+#twin-input::placeholder{font-style:italic;opacity:.7}
+/* the sidekick's ring around the step's control: the kit's, drawn outside the control, in the sidekick's colour */
+.sidekick-ring{position:absolute;z-index:4;pointer-events:none;border:3px solid var(--sidekick);border-radius:6px;box-shadow:0 0 0 0 rgba(107,79,209,.6);animation:sidekick-pulse 1.6s ease-out infinite}
+.sidekick-ring.loud{animation-duration:.6s}
+@keyframes sidekick-pulse{0%{box-shadow:0 0 0 0 rgba(107,79,209,.6)}70%{box-shadow:0 0 0 14px rgba(107,79,209,0)}100%{box-shadow:0 0 0 0 rgba(107,79,209,0)}}
+#notice{position:absolute;left:50%;bottom:40px;transform:translateX(-50%) translateY(12px);z-index:110;max-width:min(1100px,90%);padding:12px 20px;border-radius:10px;background:#202124;color:#fff;box-shadow:var(--shadow);font:600 17px/1.3 var(--text);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none}
+#notice.on{opacity:1;transform:translateX(-50%)}
+
+/* ---- the sidekick: beside the browser, never inside it ---- */
+#sidekick{flex:none;width:var(--sidekick-w);box-sizing:border-box;display:flex;flex-direction:column;gap:14px;overflow-y:auto;background:#fff;color:var(--sidekick-ink);border-radius:10px;border-top:5px solid var(--sidekick);padding:16px 20px 20px;box-shadow:0 2px 14px rgba(0,0,0,.35);font:15px/1.5 var(--head)}
+body.twin.no-sidekick #sidekick{display:none}
+#sidekick-head{display:flex;align-items:center;justify-content:space-between}
+#sidekick-name{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--sidekick)}
+#sidekick-head button{border:0;background:transparent;color:var(--sidekick-dim);font:20px/1 var(--head);cursor:pointer;width:28px;height:28px;border-radius:14px}
+#sidekick-head button:hover{background:var(--sidekick-soft)}
+#sidekick-goal{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--sidekick-dim);border-bottom:1px solid var(--sidekick-bd);padding-bottom:10px}
+#sidekick-goal-text{font-weight:700;color:var(--sidekick-ink)}
+#sidekick-count{white-space:nowrap}
+#sidekick-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.g-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--sidekick-soft);color:var(--sidekick);border-radius:4px;padding:3px 8px}
+.g-badge.skipped{background:#eee;color:var(--sidekick-dim)}
+#sidekick-label{font-size:19px;font-weight:800;line-height:1.3;margin-bottom:6px}
+#sidekick-do{font-size:15px;font-weight:700;line-height:1.5}
+#sidekick-why{margin-top:10px;background:#f6f5fa;border-left:3px solid var(--sidekick);border-radius:0 6px 6px 0;padding:10px 12px;font-size:14px;color:#3b3b45;line-height:1.55}
+#sidekick-why[hidden]{display:none}
+.g-micro{display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--sidekick);margin-bottom:4px}
+#sidekick-say{display:none;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5}
+#sidekick-say.bad{display:block;background:var(--bad-soft);color:var(--bad);border-left:3px solid var(--bad)}
+#sidekick-say.bad .g-micro{color:var(--bad)}
+#sidekick-say.explore{display:block;background:var(--explore-soft);color:var(--explore);border-left:3px solid var(--explore)}
+#sidekick-say.explore .g-micro{color:var(--explore)}
+#sidekick-say.note{display:block;background:var(--sidekick-soft);color:var(--sidekick-ink);border-left:3px solid var(--sidekick)}
+#sidekick-done{display:none;background:var(--sidekick-soft);border-radius:6px;padding:12px 14px;font-size:15px;line-height:1.5}
+body.twin.done #sidekick-done{display:block}
+#sidekick-tools{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--sidekick-bd)}
+#sidekick-tools button{height:38px;border-radius:8px;border:1px solid var(--sidekick);background:#fff;color:var(--sidekick);font:600 14px var(--head);cursor:pointer;text-align:left;padding:0 14px}
+#sidekick-tools button:hover:not(:disabled){background:var(--sidekick-soft)}
+#sidekick-tools button:disabled{opacity:.45;cursor:default}
+#sidekick-tools #fill{background:var(--sidekick);color:#fff}
+#sidekick-tools #fill[hidden],#sidekick-tools #show[hidden]{display:none}
+#sidekick-foot{font-size:12px;color:var(--sidekick-dim)}
+@media (max-width:1000px){body.twin{flex-direction:column}#sidekick{width:auto;max-height:40vh}#browser{min-height:50vh}}
+@media (max-width:720px){#brand{display:none}}

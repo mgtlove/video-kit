@@ -1,7 +1,7 @@
 {
   "name": "vkit",
-  "version": "0.1.5",
-  "description": "Skills over the vkit command line, 13 of them: vkit-start, video-menu, video-build, video-frames, video-check, video-measure, brand-apply, video-capture, capture-walkthrough, video-recreate, video-brief, video-script, video-fact-check; and a guardrail hook: no browser download, no force push, no delete without asking, no paid call without a go-ahead.",
+  "version": "0.1.7",
+  "description": "Skills over the vkit command line, 14 of them: vkit-start, video-menu, video-build, video-frames, video-check, video-measure, brand-apply, video-capture, capture-walkthrough, video-recreate, video-brief, video-script, video-fact-check, app-model (the model, the field rules and the paths the sidekick walks); and a guardrail hook: no browser download, no force push, no delete without asking, no paid call without a go-ahead.",
   "author": {
     "name": "Matthew Truelove"
   },

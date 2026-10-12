@@ -6,7 +6,9 @@ Training and explainer videos from screenshots and a script, with no screen reco
 
 **Who does what.** Three roles, each a chat with the plugin's skills, and every handoff is a file in the video folder, never a pasted prompt. The producer owns the goal, the words and the first watch. The subject expert owns the teaching: the brief, the storyboard rows, the screens to capture, the fact check of the finished narration. The director owns the words under the craft rules, the recreated screen, the camera and the timeline. `vkit handoffs` says whose turn it is; `vkit` with no command says where a folder stands and the three ways in.
 
-**Where it stands.** October 2026: the kit is at engine 0.5.3 and plugin 0.1.5, with the first real video (creating an S3 bucket, from the console recreated with nine states) accepted as a proof of concept after four watches. Next, in order: the light twin (the recreated app driven by a hand instead of a timeline), looks and brands over the teaching layer, concept scenes for theory, the command line and code as app kinds, then the MCP server and the cloud and voice adapters. `docs/ROADMAP.md` is the plan; `docs/ARCHITECTURE.md` the shape; `docs/ENGINE.md` what a rig page can call; `docs/FINDINGS.md` what is open.
+**The app is the asset.** A recreated tool is screens (states cited to your captures), behaviour (`model.json`: which control on which state leads where, by a click, typing or a scroll, and what a typed field accepts) and paths (`paths/`: what a lesson asks, in order, in its own words). The engine performs a transition the same way on a video's clock and under a learner's mouse, so a video is a path over the model with a voice and a teaching layer, and the practice copy (`vkit twin`) is the same path with the learner's own hand. One heavy lift per tool; every video and exercise after is a small one.
+
+**Where it stands.** October 2026: the kit is at engine 0.6.0 and plugin 0.1.7, with the first real video (creating an S3 bucket, from the console recreated with nine states) accepted as a proof of concept after four watches, its behaviour moved into the app's model, and the S3 practice copy clickable end to end. Next, in order: looks and brands over the teaching layer, concept scenes for theory, the command line and code as app kinds, then the MCP server and the cloud and voice adapters. `docs/ROADMAP.md` is the plan; `docs/ARCHITECTURE.md` the shape; `docs/ENGINE.md` what a rig page can call; `docs/MODEL.md` the app model; `docs/FINDINGS.md` what is open.
 
 ```
 vkit                     the front door: what this is, what is waiting here, the three ways in
@@ -27,13 +29,14 @@ vkit time                where each sentence is said: word times from the clips 
 vkit frames              a still per beat: look before you record
 vkit render              every frame, the voice muxed, an MP4 and its captions
 vkit check               is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick while you work
+vkit twin family/tool    the practice copy: the app's states and model served as a page a learner clicks through, the sidekick beside it, on the same engine
 vkit upgrade             a video's engine copy brought to the kit's; the old copy kept aside
 vkit plugin pack         the plugin zipped for the claude.ai upload
 vkit sync-reference      copy the rules, the look packs and the patterns index from video-reference into the kit
 vkit publish             a host adapter and a URL (the adapter is not built yet)
 ```
 
-`packages/plugin/` holds the Claude plugin: 13 skills over `vkit` (start, menu, build, frames, check, measure, brand, capture, capture-walkthrough, recreate, brief, script, fact-check) and a guardrail hook that blocks the four things an agent must never do (download a browser, force push, delete without asking, call a paid service without a go-ahead). `docs/workspace/` is the workspace's orientation files (the folder `claude/` beside the repos links to it).
+`packages/plugin/` holds the Claude plugin: 14 skills over `vkit` (start, menu, build, frames, check, measure, brand, capture, capture-walkthrough, recreate, app-model, brief, script, fact-check) and a guardrail hook that blocks the four things an agent must never do (download a browser, force push, delete without asking, call a paid service without a go-ahead). `docs/workspace/` is the workspace's orientation files (the folder `claude/` beside the repos links to it).
 
 The research behind it (seven creator studies, 96 craft rules, 35 named moves, seven look packs) lives in [video-reference](https://github.com/mgtlove/video-reference). `npm test` proves all of it on every push (GitHub's runner, with its own Chrome); the run's log says how long each proof takes.
 

@@ -8,7 +8,7 @@ description: >
   recreated. When the tool is reachable in a browser on this machine, capture-walkthrough shoots
   instead.
 metadata:
-  version: "0.1.5"
+  version: "0.1.7"
 ---
 
 # Captures from a walkthrough document

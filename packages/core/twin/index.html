@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{{TITLE}}: practice copy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="engine/rig.css">
+<link rel="stylesheet" href="app/tokens.css">
+<link rel="stylesheet" href="app/screen.css">
+<link rel="stylesheet" href="twin.css">
+<script src="app/states.js"></script>
+<script>window.TWIN_URLS = {{URLS}}; window.TWIN_PATH = {{PATH}};</script>
+</head>
+<body class="twin">
+<div id="browser">
+  <div id="chrome" role="toolbar" aria-label="Practice browser">
+    <button id="back" type="button" title="Back" aria-label="Back">&#8249;</button>
+    <button id="forward" type="button" title="Forward" aria-label="Forward">&#8250;</button>
+    <button id="reload" type="button" title="Reload" aria-label="Reload" disabled>&#8635;</button>
+    <div id="url" title="The page's address. Not editable in the practice copy."><span id="url-lock" aria-hidden="true">&#128274;</span><span id="url-text"></span></div>
+    <div id="brand">Practice copy of {{TITLE}}. Not the product.</div>
+    <button id="sidekick-open" type="button" title="Show the sidekick" aria-label="Show the sidekick" hidden>Sidekick</button>
+  </div>
+  <div id="view">
+    <div id="fit"><div id="stage"><div id="cam">
+      <div id="mock"></div>
+    </div><!-- /cam -->
+      <div id="fade"></div>
+    </div></div>
+  </div>
+  <div id="notice" role="status"></div>
+</div>
+<aside id="sidekick" aria-label="Sidekick">
+  <div id="sidekick-head"><span id="sidekick-name">Sidekick</span><button id="sidekick-close" type="button" title="Hide the sidekick" aria-label="Hide the sidekick">&#215;</button></div>
+  <div id="sidekick-goal"><span id="sidekick-goal-text"></span><span id="sidekick-count"></span></div>
+  <div id="sidekick-step">
+    <div id="sidekick-badges"></div>
+    <div id="sidekick-label"></div>
+    <div id="sidekick-do"></div>
+    <div id="sidekick-why"><span class="g-micro">Why</span><span id="sidekick-why-text"></span></div>
+  </div>
+  <div id="sidekick-say" role="status"></div>
+  <div id="sidekick-done"><div class="g-micro">Done</div><div id="sidekick-done-text"></div></div>
+  <div id="sidekick-tools">
+    <button id="fill" type="button">Fill it in for me</button>
+    <button id="show" type="button">Show me</button>
+    <button id="restart" type="button" title="Start over (R)">Start over</button>
+    <div id="sidekick-foot">Practice aids. Not the product.</div>
+  </div>
+</aside>
+<script>var PARTS = [1]; function timeline() {}</script>
+<script src="engine/rig.js"></script>
+<script>VK.boot();</script>
+<script src="twin.js"></script>
+</body></html>

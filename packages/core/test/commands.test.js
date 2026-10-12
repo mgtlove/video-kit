@@ -91,7 +91,7 @@ test('vkit with no command is the front door', () => {
   const h = spawnSync('node', [VKIT, 'help'], { encoding: 'utf8' });
   assert.ok(/^VKIT\(1\)\n\nNAME\n/.test(h.stdout) && /\nSYNOPSIS\n/.test(h.stdout) && /\nCOMMANDS\n/.test(h.stdout) && /\nENVIRONMENT\n/.test(h.stdout) && /\nFILES\n/.test(h.stdout) && /\nSEE ALSO\n/.test(h.stdout), 'the sections');
   const cli = fs.readFileSync(VKIT, 'utf8');
-  const table = {}; for (const m of cli.matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
+  const table = {}; for (const m of cli.slice(cli.indexOf('const COMMANDS = {'), cli.indexOf('\n};', cli.indexOf('const COMMANDS = {'))).matchAll(/^\s+'([a-z-]+)':\s+\['([^']*)'/gm)) table[m[1]] = m[2];
   for (const c of Object.keys(table)) {
     const heads = h.stdout.split('\n').filter((l) => l === '    ' + c || l.startsWith('    ' + c + ' '));
     assert.strictEqual(heads.length, 1, 'vkit help names ' + c + ' once as a heading: ' + JSON.stringify(heads));

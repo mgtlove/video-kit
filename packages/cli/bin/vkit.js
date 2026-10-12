@@ -22,6 +22,7 @@ const COMMANDS = {
   'check':          ['[dir] [--quick]', 'is it footage, is it well made: offline, deterministic, seek-correct, craft rules, contrast, fidelity; --quick skips the slow proofs'],
   'brand':          ['<name>|none [dir] [--check]', 'apply a brand from brands/ (copied to rig/brand/, tokens in rig/brand.css); no name rebuilds from rig/brand/brand.json; --check reports what it does to the rules'],
   'look':           ['<name>|none [dir]', 'apply a look pack from looks/ as tokens in rig/look.css; none empties it'],
+  'twin':           ['family/tool [--path name] [--port N] [--build]', 'the practice copy: the app\'s states and model served as a page a learner clicks through, with the sidekick beside it walking one of the app\'s paths, on the same engine as a video; built into the app\'s twin/ and served on localhost until Ctrl-C; --build writes it and stops'],
   'upgrade':        ['[dir]', 'bring a video\'s engine copy (rig/engine/) up to the kit\'s; the old copy is kept in the video\'s _suggested-trash/'],
   'plugin':         ['pack [--out file]', 'zip packages/plugin/ for the claude.ai upload (no node_modules, no .DS_Store) to ~/Desktop/vkit-plugin.zip or --out'],
   'sync-reference': ['[path] [--only rules|looks|patterns]', 'copy rules.json, looks/ and patterns/index.json from ../video-reference'],
@@ -54,6 +55,7 @@ const MAN = {
     ['Making a video', ['new', 'menu', 'brief', 'handoffs', 'narration', 'measure', 'time', 'frames', 'render', 'check']],
     ['Screens: capturing and recreating a tool', ['shoot', 'capture', 'face', 'app']],
     ['Looks and brands', ['look', 'brand']],
+    ['The practice copy', ['twin']],
     ['The kit itself', ['upgrade', 'plugin', 'sync-reference', 'publish']]
   ],
   detail: {
@@ -73,6 +75,7 @@ const MAN = {
     'app': ['A recreated app is its own folder beside the videos (apps/<family>/<tool>/), built from your own captures and used by many videos.'],
     'look': ['A look pack from looks/ written as --look-* tokens in rig/look.css; the theme reads brand, then look, then its defaults. Seven packs from the research.'],
     'brand': ['A brand is one folder: five colours, two faces, a mark and a banner placed by when and where. Written as --brand-* tokens; --check measures each colour against the surface it sits on.'],
+    'twin': ['The app model (docs/MODEL.md) run by a hand, as a page in a practice browser with the sidekick beside it: the real address of each screen (from its capture), back and forward, the page scaled to the width it has and scrolling whole with the product\'s top bar and footer pinned. A click on a control the model answers performs its transition with the press, the load and the morph a video shows; a click on anything else shows the notice (captured but not built, or outside the practice); a field named in a type transition takes the learner\'s own text in a real input, and the text then appears wherever the lesson\'s value did, the address included.', 'The sidekick (outside the simulated screen, in a colour the product never uses) walks one of the app\'s paths (paths/<name>.json, the lesson\'s steps in its own words): the step, why, a Fill it in for me on a typed field, Show me, the rules a name breaks in the console\'s words, and Start over. --path picks a path; the first by name otherwise.', 'The built folder is a build product in the app folder; nothing in it is edited by hand.'],
     'upgrade': ['The kit\'s engine copied into a video\'s rig/engine/, VERSION and video.json.engine written. The old copy goes to the video\'s _suggested-trash/, never deleted; a copy that was edited inside the video is named.'],
     'plugin': ['The Claude plugin (packages/plugin/) zipped the way claude.ai\'s upload takes it. Then: claude.ai, Customize, Plugins, Upload a plugin.'],
     'sync-reference': ['Copies the craft rules, the look packs and the patterns index from the research repo beside this one, with the source commit recorded.'],
@@ -225,6 +228,19 @@ async function main() {
       return 0;
     }
     console.error('vkit app new|add-state|extract|crop'); return 2;
+  }
+  if (cmd === 'twin') {
+    const ref = args.find((a) => /^[a-z0-9-]+\/[a-z0-9-]+$/.test(a));
+    if (!ref) { console.error('vkit twin family/tool [--path name] [--port N] [--build]'); return 2; }
+    const port = args.indexOf('--port') >= 0 ? Number(args[args.indexOf('--port') + 1]) : 0;
+    const walk = args.indexOf('--path') >= 0 ? args[args.indexOf('--path') + 1] : undefined;
+    const r = core.buildTwin(ref, { path: walk });
+    console.log('built ' + path.relative(process.cwd(), r.dir) + ': ' + r.title + ', ' + r.built + ' of ' + r.states + ' states built, ' + r.transitions + ' transitions, starts at ' + r.start + ', ' + r.urls + ' addresses (from the captures, else the model)' + (r.swept.length ? ' (' + r.swept.join(', ') + ' left without one: a 12-digit number in the address)' : '') + ', ' + (r.path ? 'the sidekick walks ' + r.path + ' (' + r.steps + ' steps' + (r.paths.length > 1 ? '; also ' + r.paths.filter((n) => n !== r.path).join(', ') : '') + ')' : 'no path for the sidekick (paths/ is empty)') + ', ' + r.rules + ' field rules, engine ' + r.engine + '.');
+    if (args.includes('--build')) return 0;
+    const s = await core.serveTwin(r.dir, { port });
+    console.log('Serving at ' + s.url + '  (Ctrl-C stops it; R in the page starts over; a click the model has nothing for shows the notice)');
+    await new Promise(() => {});   /* until Ctrl-C */
+    return 0;
   }
   if (cmd === 'upgrade') {
     console.log(core.formatUpgrade(core.upgradeEngine(args[0] || '.')));

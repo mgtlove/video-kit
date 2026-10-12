@@ -16,6 +16,7 @@ const { narration, measure } = require('./words');
 const { briefRequest, handoffs, appHandoffs, formatHandoffs } = require('./brief');
 const { timeVideo } = require('./time');
 const upgrade = require('./upgrade');
+const twin = require('./twin');
 const brand = require('./brand');
 const captureMod = require('./capture');
 const shoot = require('./shoot');
@@ -41,6 +42,8 @@ module.exports = {
   upgradeEngine: upgrade.upgradeEngine,     // the kit's engine into a video (rig/engine/, VERSION, video.json.engine); the old copy kept aside
   formatUpgrade: upgrade.formatUpgrade,
   packPlugin: upgrade.packPlugin,           // packages/plugin/ as the zip claude.ai's upload takes
+  buildTwin: twin.buildTwin,                 // the app's states and model as a page a learner clicks through: apps/<family>/<tool>/twin/
+  serveTwin: twin.serveTwin,                 // serve a built twin on localhost
   timeVideo: timeVideo,                      // the beats placed where the words are said: word times from the clips into the storyboard's Start column
   measure: measure,                          // clip files -> exact PARTS in the page and video.json; re-timing items lock
   frames: frames,                            // rig -> a PNG per beat (seek-correct)

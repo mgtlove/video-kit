@@ -8,7 +8,7 @@ description: >
   captures, the face traced from the page, and a fidelity ledger of what is true, substituted,
   invented or missing.
 metadata:
-  version: "0.1.5"
+  version: "0.1.7"
 ---
 
 Who runs this: the director's chat (this project). The captures come from `capture-walkthrough`, run in a Claude Code session on the machine with the browser against the app's `capture-request.md` (the expert's coverage) with the person signed in; `vkit handoffs` shows an app whose captures are newer than its `manifest.csv` as waiting here. The app is its own asset, versioned, built before or without any video; a video takes it with `vkit new --app` or, when the video exists first, `vkit app use family/tool`, which also brings a video's copy up to date after a re-capture.
@@ -48,6 +48,10 @@ Make a test video with `vkit new <name> --app family/tool` and run `vkit check -
 ## 7. The ledger
 
 Write `fidelity.md` in the app folder: the face; every token; the geometry per part; every crop and its source; every text value as true, substituted, invented or missing (a masked account label and a user name are invented stand-ins; a real timestamp is invented); the behaviours the states show; the behaviours no capture shows yet, which wait for their own capture. Name the next session's masks there so they are not forgotten.
+
+## 8. The behaviour
+
+The screens are half the app. `app-model` writes `model.json` (which control on which state leads where) from the same captures and serves the practice copy; a recreation is not finished until the model covers the path a lesson takes and `vkit check` passes its model rows.
 
 ## What not to do
 

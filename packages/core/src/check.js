@@ -124,7 +124,7 @@ function measureInPage(t) {
     cover.sort(function (a, b) { return b.area - a.area; });
     card.covers = cover.slice(0, 4); card.coveredArea = cover.reduce(function (a, c) { return a + c.area; }, 0);
   }
-  return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale, faults: window.VK.faults ? window.VK.faults() : [], card: card };
+  return { t: t, stageBg: stageBg, tokens: tokens, texts: texts, strokes: strokes, camScale: camScale, faults: window.VK.faults ? window.VK.faults() : [], acts: window.VK.acts ? window.VK.acts() : [], card: card };
 }
 
 /* ---------- pixel work on a PNG buffer ---------- */
@@ -455,6 +455,40 @@ async function check(videoDir, opts) {
     const unknown = allRows.filter((r, i) => named[i] && !ids.has(named[i])).map((r, i2, arr) => 'part ' + r.part + ' "' + r.text.slice(0, 32) + (r.text.length > 32 ? '...' : '') + '" names state ' + /^\s*state\s+`?([a-z0-9][a-z0-9-]*)`?/i.exec(r.on)[1] + ', which the app does not have');
     const unnamed = allRows.filter((r, i) => !named[i] && !/^\s*scene\b/i.test(r.on || '')).length;
     add('craft', row('storyboard-covered', ['C-COMP-16'], unknown.length ? 'fail' : (allRows.length ? 'pass' : 'not measured'), unknown.length ? unknown.slice(0, 6).join('; ') : (allRows.length ? named.filter(Boolean).length + ' rows name a state the app has' + (unnamed ? '; ' + unnamed + ' name neither a state nor a scene (a concept scene says "scene <name>")' : '') : 'no storyboard rows yet'), 'every state a row names exists in rig/app/manifest.csv', 'storyboard.md, rig/app/manifest.csv'));
+  }
+  // ---- the app model (docs/MODEL.md, engine 0.6.0): every transition leads to a state the app has and is built, every control is in its state,
+  //      and every state change the timeline made is a transition the model has ----
+  if (meta.app && meta.app.ref) {
+    const modelFile = path.join(rig, 'app', 'model.json');
+    if (!fs.existsSync(modelFile)) {
+      add('fidelity', row('model-states', ['C-COMP-16'], 'not measured', 'the app has no model.json; its behaviour is not written (docs/MODEL.md)', 'every transition between built states', 'rig/app/model.json'));
+    } else {
+      const model = JSON.parse(fs.readFileSync(modelFile, 'utf8'));
+      const rowsM = apps.readManifest(path.join(rig, 'app'));
+      const byId = Object.fromEntries(rowsM.map((r) => [r.id, r]));
+      const built = (id) => byId[id] && fs.existsSync(path.join(rig, 'app', 'states', byId[id].file || id + '.html'));
+      const trs = Array.isArray(model.transitions) ? model.transitions : [];
+      const name = (t) => t.from + (t.control ? ' ' + t.control : '') + ' ' + (t.action || '?') + (t.when ? ' when ' + t.when : '') + ' > ' + t.to;
+      const badState = [], unbuilt = [];   /* a state the manifest cites and has no file for is a pickup, named and not failed: the twin says "captured, not built" there */
+      if (model.start && !byId[model.start]) badState.push('start ' + model.start + ' is not a state the app has');
+      for (const t of trs) for (const end of ['from', 'to']) {
+        if (!byId[t[end]]) badState.push(name(t) + ': ' + t[end] + ' is not a state the app has');
+        else if (!built(t[end])) unbuilt.push(name(t) + ': ' + t[end] + ' is captured (' + (byId[t[end]].capture || 'no capture') + ') and not built');
+      }
+      add('fidelity', row('model-states', ['C-COMP-16'], badState.length ? 'fail' : (unbuilt.length ? 'info' : (trs.length ? 'pass' : 'info')), badState.length ? badState.slice(0, 6).join('; ') : (unbuilt.length ? unbuilt.slice(0, 6).join('; ') + ' (pickups)' : trs.length + ' transitions over ' + new Set(trs.flatMap((t) => [t.from, t.to])).size + ' built states'), 'every state a transition names exists; one with no file is a pickup', 'rig/app/model.json, rig/app/manifest.csv'));
+      const badCtl = [];
+      for (const t of trs) {
+        if (!t.control) { if (t.action !== 'scroll') badCtl.push(name(t) + ': no control and not a scroll'); continue; }
+        if (!byId[t.from] || !built(t.from)) continue;
+        const html = fs.readFileSync(path.join(rig, 'app', 'states', byId[t.from].file || t.from + '.html'), 'utf8');
+        if (!new RegExp('id="' + t.control.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"').test(html)) badCtl.push(name(t) + ': no element with id ' + t.control + ' in ' + t.from);
+      }
+      add('fidelity', row('model-controls', ['C-COMP-16'], badCtl.length ? 'fail' : (trs.length ? 'pass' : 'info'), badCtl.length ? badCtl.slice(0, 6).join('; ') : trs.filter((t) => t.control).length + ' controls, each an element of its state', 'every control is an id in its from state', 'rig/app/model.json, rig/app/states/'));
+      const acts = (pass1[pass1.length - 1].data && pass1[pass1.length - 1].data.acts) || [];
+      const has = (a) => trs.some((t) => t.from === a.from && t.to === a.to);
+      const off = acts.filter((a) => !has(a)).map((a) => a.from + ' > ' + a.to + ' at ' + a.t.toFixed(1) + ' s (' + a.via + ')');
+      add('craft', row('actions-in-model', ['C-COMP-16'], off.length ? 'fail' : (acts.length ? 'pass' : 'not measured'), off.length ? off.slice(0, 6).join('; ') : (acts.length ? acts.length + ' state changes, each a transition the model has' : 'the timeline changed no state'), 'every state change is a transition of model.json', 'rig/index.html timeline, rig/app/model.json'));
+    }
   }
   const measured = meta.parts && meta.parts.measured_on;
   if (!measured) add('craft', row('narration-rate', ['C-PACE-1', 'C-PACE-2'], 'not measured', 'PARTS are estimates until vkit measure writes the clip lengths', Pa.wordsPerMinute.join(' to ') + ' wpm, floor ' + Pa.wordsPerMinuteFloor, 'vkit measure (the video-build skill, step 4)'));
