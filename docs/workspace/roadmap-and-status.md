@@ -41,7 +41,7 @@ Not started: F the MCP server and the adapters (cloud render, Amazon Polly, a ho
 
 ## Next, in order
 
-A and A2 done (11 and 12 October 2026). B. Looks and brands over the teaching layer (F5 closed). C. Concept scenes for theory. D. The command line and code as app kinds (CloudShell first). E. The front door for a stranger, finished. F. The MCP server and the adapters. G. The twin runner. Each is defined, with what done looks like, in `video-kit/docs/ROADMAP.md`.
+A and A2 done (11 and 12 October 2026). From here the S3 video is the control: the same subject, words and recording through every milestone, so a change seen is the layer's (the producer, 12 October). C first: a theory part before the console, as concept scenes the kit draws (the expert's rows, scripted, checked, recorded as a part of its own). Then B: looks and brands over the teaching layer and the concept scenes, the same video under each, F5 closed. D. The command line and code as app kinds (CloudShell first). E. The front door for a stranger, finished. F. The MCP server and the adapters. G. The twin runner. Each is defined, with what done looks like, in `video-kit/docs/ROADMAP.md`.
 
 ## The research lane
 
